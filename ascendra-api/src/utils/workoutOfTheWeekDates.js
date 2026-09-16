@@ -1,11 +1,10 @@
 import { DateTime } from "luxon";
 import BadRequestError from "../errors/BadRequestError.js";
-
-export const WOTW_TIME_ZONE = "America/New_York";
+import { APP_TIME_ZONE } from "../config/app.js";
 
 export const getWorkoutOfTheWeekWindow = (startDate) => {
   const weekStart = DateTime.fromISO(startDate, {
-    zone: WOTW_TIME_ZONE,
+    zone: APP_TIME_ZONE,
   }).startOf("day");
 
   if (!weekStart.isValid) {
@@ -27,7 +26,7 @@ export const getWorkoutOfTheWeekWindow = (startDate) => {
 };
 
 export const getCurrentWorkoutOfTheWeekWindow = () => {
-  const now = DateTime.now().setZone(WOTW_TIME_ZONE);
+  const now = DateTime.now().setZone(APP_TIME_ZONE);
 
   const weekStart = now.startOf("day").minus({ days: now.weekday - 1 });
 

@@ -1,7 +1,7 @@
 import cron from "node-cron";
 
 import { reconcileWorkoutOfTheWeekOccurrences } from "../services/workoutOfTheWeek.service.js";
-import { WOTW_TIME_ZONE } from "../utils/workoutOfTheWeekDates.js";
+import { APP_TIME_ZONE } from "../config/app.js";
 
 import logger from "../utils/logger.js";
 
@@ -14,13 +14,13 @@ export const startWorkoutOfTheWeekJob = () => {
 
         logger.info("Workout of the Week reconciliation completed");
       } catch (error) {
-        logger.info("Workout of the Week reconciliation completed", {
+        logger.info("Workout of the Week reconciliation failed", {
           error: error.message,
         });
       }
     },
     {
-      timezone: WOTW_TIME_ZONE,
+      timezone: APP_TIME_ZONE,
     },
   );
 };

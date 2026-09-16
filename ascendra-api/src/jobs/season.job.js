@@ -1,7 +1,7 @@
 import cron from "node-cron";
 import { reconcileSeasons } from "../services/season.service.js";
 import logger from "../utils/logger.js";
-import { WOTW_TIME_ZONE } from "../utils/workoutOfTheWeekDates.js";
+import { APP_TIME_ZONE } from "../config/app.js";
 
 export const startSeasonJob = () => {
   cron.schedule(
@@ -16,7 +16,7 @@ export const startSeasonJob = () => {
       }
     },
     {
-      timezone: WOTW_TIME_ZONE,
+      timezone: APP_TIME_ZONE,
     },
   );
 };

@@ -88,6 +88,7 @@ export const completeActiveWorkoutSessionController = async (
       newPersonalRecords: result.newPersonalRecords,
       echelonRewards: result.echelonRewards,
       xpEarned: result.xpEarned,
+      dailyXP: result.dailyXP,
     });
   } catch (error) {
     next(error);

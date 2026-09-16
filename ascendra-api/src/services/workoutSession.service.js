@@ -12,6 +12,7 @@ import {
   calculateWorkoutXP,
   calculatePersonalRecordXP,
   processEchelonRewards,
+  getDailyXPStatus,
 } from "./xp.service.js";
 
 export const startWorkoutSession = async ({ userId, workoutId }) => {
@@ -397,8 +398,12 @@ export const completeActiveWorkoutSession = async ({ userId }) => {
       }
     }
 
+    let workoutXPResult = null;
+    let personalRecordXPResult = null;
+    let workoutOfTheWeekXPResult = null;
+
     if (workoutXP > 0) {
-      await awardXP({
+      workoutXPResult = await awardXP({
         userId: workoutSession.user,
         amount: workoutXP,
         sourceType: "workout_completion",
@@ -410,7 +415,7 @@ export const completeActiveWorkoutSession = async ({ userId }) => {
     }
 
     if (personalRecordXP > 0) {
-      await awardXP({
+      personalRecordXPResult = await awardXP({
         userId: workoutSession.user,
         amount: personalRecordXP,
         sourceType: "personal_record",
@@ -422,19 +427,13 @@ export const completeActiveWorkoutSession = async ({ userId }) => {
     }
 
     if (workoutOfTheWeekXP > 0) {
-      await awardXP({
+      workoutOfTheWeekXPResult = await awardXP({
         userId,
-
         amount: workoutOfTheWeekXP,
-
         sourceType: "workout_of_the_week",
-
         sourceId: workoutSession.workoutOfTheWeekOccurrence,
-
         reason: "Workout of the Week bonus",
-
         idempotencyKey: `wotw:${userId}:${workoutSession.workoutOfTheWeekOccurrence}:bonus`,
-
         mongoSession,
       });
     }
@@ -449,6 +448,26 @@ export const completeActiveWorkoutSession = async ({ userId }) => {
       0,
     );
 
+    const awardedWorkoutXP = workoutXPResult?.awardedAmount ?? 0;
+    const awardedPersonalRecordXP = personalRecordXPResult?.awardedAmount ?? 0;
+    const awardedWorkoutOfTheWeekXP =
+      workoutOfTheWeekXPResult?.awardedAmount ?? 0;
+
+    const totalAwardedXP =
+      awardedWorkoutXP +
+      awardedPersonalRecordXP +
+      awardedWorkoutOfTheWeekXP +
+      echelonXP;
+
+    const dailyXPStatus = await getDailyXPStatus({
+      userId: workoutSession.user,
+      mongoSession,
+    });
+
+    const wasDailyXPCapped =
+      (workoutXPResult?.wasCapped ?? false) ||
+      (personalRecordXPResult?.wasCapped ?? false);
+
     await mongoSession.commitTransaction();
 
     return {
@@ -456,11 +475,18 @@ export const completeActiveWorkoutSession = async ({ userId }) => {
       newPersonalRecords,
       echelonRewards,
       xpEarned: {
-        workout: workoutXP,
-        personalRecords: personalRecordXP,
+        workout: awardedWorkoutXP,
+        personalRecords: awardedPersonalRecordXP,
         echelons: echelonXP,
-        workoutOfTheWeek: workoutOfTheWeekXP,
-        total: workoutXP + personalRecordXP + echelonXP + workoutOfTheWeekXP,
+        workoutOfTheWeek: awardedWorkoutOfTheWeekXP,
+        total: totalAwardedXP,
+      },
+      dailyXP: {
+        earned: dailyXPStatus.earned,
+        cap: dailyXPStatus.cap,
+        remaining: dailyXPStatus.remaining,
+        isCapped: dailyXPStatus.isCapped,
+        wasCapped: wasDailyXPCapped,
       },
     };
   } catch (error) {

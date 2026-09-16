@@ -6,12 +6,66 @@ import { getProgressFromXP } from "../utils/progression.js";
 import { ECHELON_REWARDS } from "../config/progression.js";
 import NotFoundError from "../errors/NotFoundError.js";
 import { addSeasonContribution } from "./seasonContribution.service.js";
+import { DateTime } from "luxon";
+import { APP_TIME_ZONE } from "../config/app.js";
+import mongoose from "mongoose";
+import { DAILY_XP_CAP } from "../config/xp.js";
 
 const SEASON_ELIGIBLE_XP_SOURCES = new Set([
   "workout_completion",
   "personal_record",
   "workout_of_the_week",
 ]);
+
+const DAILY_CAPPED_XP_SOURCES = new Set([
+  "workout_completion",
+  "personal_record",
+]);
+
+// TODO: Add atomic daily XP cap enforcement for concurrent XP awards.
+
+const getDailyCappedXP = async ({ userId, mongoSession = null }) => {
+  const now = DateTime.now().setZone(APP_TIME_ZONE);
+
+  const dayStart = now.startOf("day");
+  const dayEnd = dayStart.plus({ days: 1 });
+
+  const result = await XPTransaction.aggregate([
+    {
+      $match: {
+        user: new mongoose.Types.ObjectId(userId),
+        sourceType: {
+          $in: [...DAILY_CAPPED_XP_SOURCES],
+        },
+        createdAt: {
+          $gte: dayStart.toUTC().toJSDate(),
+          $lt: dayEnd.toUTC().toJSDate(),
+        },
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        totalXP: {
+          $sum: "$amount",
+        },
+      },
+    },
+  ]).session(mongoSession);
+
+  return result[0]?.totalXP ?? 0;
+};
+
+export const getDailyXPStatus = async ({ userId, mongoSession = null }) => {
+  const earned = await getDailyCappedXP({ userId, mongoSession });
+
+  return {
+    earned,
+    cap: DAILY_XP_CAP,
+    remaining: Math.max(DAILY_XP_CAP - earned, 0),
+    isCapped: earned >= DAILY_XP_CAP,
+  };
+};
 
 export const awardXP = async ({
   userId,
@@ -30,9 +84,23 @@ export const awardXP = async ({
     throw new BadRequestError("XP award requires an idempotency key");
   }
 
+  const countsTowardDailyCap = DAILY_CAPPED_XP_SOURCES.has(sourceType);
+
+  let awardedAmount = amount;
+
+  let dailyCappedXP = null;
+
+  if (countsTowardDailyCap) {
+    dailyCappedXP = await getDailyCappedXP({ userId, mongoSession });
+
+    const remainingDailyXP = Math.max(DAILY_XP_CAP - dailyCappedXP, 0);
+
+    awardedAmount = Math.min(amount, remainingDailyXP);
+  }
+
   const xpTransaction = new XPTransaction({
     user: userId,
-    amount,
+    amount: awardedAmount,
     sourceType,
     sourceId,
     reason,
@@ -43,7 +111,7 @@ export const awardXP = async ({
 
   const updatedUser = await User.findByIdAndUpdate(
     userId,
-    { $inc: { lifetimeXP: amount } },
+    { $inc: { lifetimeXP: awardedAmount } },
     { returnDocument: "after", runValidators: true, session: mongoSession },
   );
 
@@ -52,11 +120,27 @@ export const awardXP = async ({
   }
 
   const countsTowardSeason = SEASON_ELIGIBLE_XP_SOURCES.has(sourceType);
-  if (countsTowardSeason) {
-    await addSeasonContribution({ userId, amount, mongoSession });
+  if (countsTowardSeason && awardedAmount > 0) {
+    await addSeasonContribution({
+      userId,
+      amount: awardedAmount,
+      mongoSession,
+    });
   }
 
-  return { updatedUser, xpTransaction };
+  const dailyXPAfterAward = countsTowardDailyCap
+    ? dailyCappedXP + awardedAmount
+    : null;
+
+  return {
+    updatedUser,
+    xpTransaction,
+    requestedAmount: amount,
+    awardedAmount,
+    dailyXP: dailyXPAfterAward,
+    dailyXPCap: countsTowardDailyCap ? DAILY_XP_CAP : null,
+    wasCapped: awardedAmount < amount,
+  };
 };
 
 export const calculateWorkoutXP = async ({
@@ -112,9 +196,9 @@ export const calculatePersonalRecordXP = (newPersonalRecords) => {
 
   const numberOfPRs = newPersonalRecords.length;
 
-  const calculateXP = numberOfPRs * XP_PER_PR;
+  const calculatedXP = numberOfPRs * XP_PER_PR;
 
-  return Math.min(calculateXP, MAX_PR_XP);
+  return Math.min(calculatedXP, MAX_PR_XP);
 };
 
 export const processEchelonRewards = async ({
