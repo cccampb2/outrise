@@ -11,7 +11,7 @@ import personalRecordRoutes from "./routes/personalRecord.routes.js";
 import leaderboardRoutes from "./routes/leaderboard.routes.js";
 import seasonRoutes from "./routes/season.routes.js";
 import workoutOfTheWeekRoutes from "./routes/workoutOfTheWeek.routes.js";
-
+import verificationRoutes from "./routes/verification.routes.js";
 const app = express();
 
 app.use(cors());
@@ -27,7 +27,7 @@ app.use("/personal-records", personalRecordRoutes);
 app.use("/leaderboards", leaderboardRoutes);
 app.use("/seasons", seasonRoutes);
 app.use("/workouts-of-the-week", workoutOfTheWeekRoutes);
-
+app.use("/verifications", verificationRoutes);
 app.use(errorHandler);
 
 export default app;

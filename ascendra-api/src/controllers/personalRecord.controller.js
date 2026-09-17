@@ -25,14 +25,14 @@ export const getCurrentPersonalRecordHistoryController = async (
 
     const { exerciseId } = req.params;
 
-    const { page, limit, distanceMiles } = req.query;
+    const { page, limit, recordCategory } = req.query;
 
     const result = await getPersonalRecordHistory({
       userId,
       exerciseId,
       page,
       limit,
-      distanceMiles,
+      recordCategory,
     });
 
     return res.status(200).json({

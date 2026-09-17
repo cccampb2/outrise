@@ -1,36 +1,60 @@
 import PersonalRecord from "../models/PersonalRecord.js";
 import mongoose from "mongoose";
 
+// Rep counts that Ascendra recognizes as official strength PR categories.
+export const STRENGTH_PR_REPS = new Set([1, 3, 5, 8, 10, 12]);
+
+// Official running distances stored in Ascendra's canonical distance unit: miles.
+export const RUNNING_PR_DISTANCES = [
+  { category: "100m", distanceMiles: 0.0621371 },
+  { category: "200m", distanceMiles: 0.124274 },
+  { category: "400m", distanceMiles: 0.248548 },
+  { category: "800m", distanceMiles: 0.497097 },
+  { category: "1_mile", distanceMiles: 1 },
+  { category: "1_5_miles", distanceMiles: 1.5 },
+  { category: "2_miles", distanceMiles: 2 },
+  { category: "5k", distanceMiles: 3.10686 },
+  { category: "10k", distanceMiles: 6.21371 },
+  { category: "half_marathon", distanceMiles: 13.1094 },
+  { category: "marathon", distanceMiles: 26.2188 },
+];
+
+// Allows tiny differences when comparing stored distances.
+export const DISTANCE_TOLERANCE_MILES = 0.001;
+
 export const getPRCandidate = (sessionExercise) => {
   const measurementType = sessionExercise.measurementType;
 
   const actual = sessionExercise.actual;
 
   if (sessionExercise.skipped) {
-    return null;
+    return [];
   }
 
   if (measurementType === "weight_reps") {
-    const weightedSets = actual.sets.filter(
-      (set) => set.weightLbs !== undefined,
+    const eligibleSets = actual.sets.filter(
+      (set) => STRENGTH_PR_REPS.has(set.reps) && set.weightLbs !== undefined,
     );
-    if (weightedSets.length === 0) {
-      return null;
+    if (eligibleSets.length === 0) {
+      return [];
     }
-    const heaviestSet = actual.sets.reduce((currentHeaviest, currentSet) => {
-      if (currentSet.weightLbs > currentHeaviest.weightLbs) {
-        return currentSet;
+
+    const bestSetsByReps = new Map();
+
+    for (const set of eligibleSets) {
+      const currentBest = bestSetsByReps.get(set.reps);
+
+      if (!currentBest || set.weightLbs > currentBest.weightLbs) {
+        bestSetsByReps.set(set.reps, set);
       }
-      return currentHeaviest;
-    });
+    }
 
-    return {
+    return [...bestSetsByReps.values()].map((set) => ({
       recordType: "max_weight",
-
-      value: heaviestSet.weightLbs,
-
+      recordCategory: `${set.reps}RM`,
+      value: set.weightLbs,
       distanceMiles: null,
-    };
+    }));
   }
 
   if (measurementType === "reps") {
@@ -41,37 +65,59 @@ export const getPRCandidate = (sessionExercise) => {
       return currentHighest;
     });
 
-    return {
-      recordType: "max_reps",
-      value: highestRepSet.reps,
-      distanceMiles: null,
-    };
+    return [
+      {
+        recordType: "max_reps",
+        recordCategory: null,
+        value: highestRepSet.reps,
+        distanceMiles: null,
+      },
+    ];
   }
   if (measurementType === "time") {
-    return {
-      recordType: "fastest_time",
-      value: actual.timeSeconds,
-      distanceMiles: null,
-    };
+    return [
+      {
+        recordType: "fastest_time",
+        recordCategory: null,
+        value: actual.timeSeconds,
+        distanceMiles: null,
+      },
+    ];
   }
 
   if (measurementType === "distance_time") {
-    return {
-      recordType: "fastest_distance_time",
-      value: actual.timeSeconds,
-      distanceMiles: actual.distanceMiles,
-    };
+    const matchedDistance = RUNNING_PR_DISTANCES.find(
+      (distance) =>
+        Math.abs(actual.distanceMiles - distance.distanceMiles) <=
+        DISTANCE_TOLERANCE_MILES,
+    );
+
+    if (!matchedDistance) {
+      return [];
+    }
+
+    return [
+      {
+        recordType: "fastest_distance_time",
+        recordCategory: matchedDistance.category,
+        value: actual.timeSeconds,
+        distanceMiles: matchedDistance.distanceMiles,
+      },
+    ];
   }
 
   if (measurementType === "duration") {
-    return {
-      recordType: "longest_duration",
-      value: actual.timeSeconds,
-      distanceMiles: null,
-    };
+    return [
+      {
+        recordType: "longest_duration",
+        recordCategory: null,
+        value: actual.timeSeconds,
+        distanceMiles: null,
+      },
+    ];
   }
 
-  return null;
+  return [];
 };
 
 export const isBetterPR = ({ recordType, candidateValue, currentValue }) => {
@@ -80,7 +126,7 @@ export const isBetterPR = ({ recordType, candidateValue, currentValue }) => {
   }
 
   if (recordType === "max_reps") {
-    return candidateValue > candidateValue;
+    return candidateValue > currentValue;
   }
 
   if (recordType === "fastest_time") {
@@ -101,20 +147,27 @@ export const isBetterPR = ({ recordType, candidateValue, currentValue }) => {
 export const processPRCandidate = async ({
   userId,
   exerciseId,
-  workoutSessionId,
+  workoutSessionId = null,
+  verificationId = null,
   achievedAt,
   candidate,
-  mongoSession,
+  sourceType,
+  mongoSession = null,
 }) => {
+  if (
+    (sourceType === "workout" && !workoutSessionId) ||
+    (sourceType === "verification" && !verificationId) ||
+    !["workout", "verification"].includes(sourceType)
+  ) {
+    throw new Error("Invalid personal record source.");
+  }
+
   const query = {
     user: userId,
     exercise: exerciseId,
     recordType: candidate.recordType,
+    recordCategory: candidate.recordCategory,
   };
-
-  if (candidate.recordType === "fastest_distance_time") {
-    query.distanceMiles = candidate.distanceMiles;
-  }
 
   const currentPR = await PersonalRecord.findOne(query)
     .sort({
@@ -129,8 +182,11 @@ export const processPRCandidate = async ({
       recordType: candidate.recordType,
       value: candidate.value,
       distanceMiles: candidate.distanceMiles,
-      workoutSession: workoutSessionId,
+      workoutSession: sourceType === "workout" ? workoutSessionId : null,
+      verification: sourceType === "verification" ? verificationId : null,
       achievedAt,
+      recordCategory: candidate.recordCategory,
+      sourceType,
     });
 
     await newPR.save({ session: mongoSession });
@@ -155,6 +211,10 @@ export const processPRCandidate = async ({
     distanceMiles: candidate.distanceMiles,
     workoutSession: workoutSessionId,
     achievedAt,
+    recordCategory: candidate.recordCategory,
+    sourceType,
+    workoutSession: sourceType === "workout" ? workoutSessionId : null,
+    verification: sourceType === "verification" ? verificationId : null,
   });
   await newPR.save({ session: mongoSession });
 
@@ -168,26 +228,25 @@ export const processWorkoutSessionPRs = async ({
   const newPersonalRecords = [];
 
   for (const sessionExercise of workoutSession.exercises) {
-    const candidate = getPRCandidate(sessionExercise);
+    const candidates = getPRCandidate(sessionExercise);
 
-    if (!candidate) {
-      continue;
+    for (const candidate of candidates) {
+      const newPersonalRecord = await processPRCandidate({
+        userId: workoutSession.user,
+        exerciseId: sessionExercise.exercise,
+        workoutSessionId: workoutSession._id,
+        achievedAt: workoutSession.completedAt,
+        candidate,
+        mongoSession,
+        sourceType: "workout",
+      });
+      if (!newPersonalRecord) {
+        continue;
+      }
+      newPersonalRecords.push(newPersonalRecord);
     }
-
-    const newPersonalRecord = await processPRCandidate({
-      userId: workoutSession.user,
-      exerciseId: sessionExercise.exercise,
-      workoutSessionId: workoutSession._id,
-      achievedAt: workoutSession.completedAt,
-      candidate,
-      mongoSession,
-    });
-
-    if (!newPersonalRecord) {
-      continue;
-    }
-    newPersonalRecords.push(newPersonalRecord);
   }
+
   return newPersonalRecords;
 };
 
@@ -200,7 +259,7 @@ export const getCurrentPersonalRecords = async ({ userId }) => {
         _id: {
           exercise: "$exercise",
           recordType: "$recordType",
-          distanceMiles: "$distanceMiles",
+          recordCategory: "$recordCategory",
         },
         personalRecords: { $first: "$$ROOT" },
       },
@@ -217,12 +276,12 @@ export const getPersonalRecordHistory = async ({
   exerciseId,
   page,
   limit,
-  distanceMiles,
+  recordCategory,
 }) => {
   const query = { user: userId, exercise: exerciseId };
 
-  if (distanceMiles !== undefined) {
-    query.distanceMiles = distanceMiles;
+  if (recordCategory !== undefined) {
+    query.recordCategory = recordCategory;
   }
 
   const skip = (page - 1) * limit;
