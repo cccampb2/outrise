@@ -27,6 +27,7 @@ const xpTransactionSchema = new Schema(
         "challenge",
         "workout_of_the_week",
         "admin_adjustment",
+        "achievement",
       ],
       required: true,
     },

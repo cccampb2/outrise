@@ -83,13 +83,7 @@ export const completeActiveWorkoutSessionController = async (
 
     const result = await completeActiveWorkoutSession({ userId });
 
-    return res.status(200).json({
-      workoutSession: result.workoutSession,
-      newPersonalRecords: result.newPersonalRecords,
-      echelonRewards: result.echelonRewards,
-      xpEarned: result.xpEarned,
-      dailyXP: result.dailyXP,
-    });
+    return res.status(200).json(result);
   } catch (error) {
     next(error);
   }

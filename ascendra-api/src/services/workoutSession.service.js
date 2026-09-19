@@ -14,6 +14,7 @@ import {
   processEchelonRewards,
   getDailyXPStatus,
 } from "./xp.service.js";
+import { checkWorkoutCountAchievements } from "./achievement.service.js";
 
 export const startWorkoutSession = async ({ userId, workoutId }) => {
   await ensureNoActiveSession({ userId });
@@ -438,6 +439,12 @@ export const completeActiveWorkoutSession = async ({ userId }) => {
       });
     }
 
+    const unlockedAchievements = await checkWorkoutCountAchievements({
+      userId: workoutSession.user,
+      workoutSessionId: workoutSession._id,
+      mongoSession,
+    });
+
     const echelonRewards = await processEchelonRewards({
       userId: workoutSession.user,
       mongoSession,
@@ -452,12 +459,27 @@ export const completeActiveWorkoutSession = async ({ userId }) => {
     const awardedPersonalRecordXP = personalRecordXPResult?.awardedAmount ?? 0;
     const awardedWorkoutOfTheWeekXP =
       workoutOfTheWeekXPResult?.awardedAmount ?? 0;
+    const awardedAchievementXP = unlockedAchievements.reduce(
+      (total, unlock) => total + (unlock.xpResult?.awardedAmount ?? 0),
+      0,
+    );
+
+    const achievementUnlocks = unlockedAchievements.map((unlock) => ({
+      id: unlock.achievement._id,
+      name: unlock.achievement.name,
+      description: unlock.achievement.description,
+      category: unlock.achievement.category,
+      badgeKey: unlock.achievement.badgeKey,
+      xpAwarded: unlock.xpResult?.awardedAmount ?? 0,
+      unlockedAt: unlock.userAchievement.unlockedAt,
+    }));
 
     const totalAwardedXP =
       awardedWorkoutXP +
       awardedPersonalRecordXP +
       awardedWorkoutOfTheWeekXP +
-      echelonXP;
+      echelonXP +
+      awardedAchievementXP;
 
     const dailyXPStatus = await getDailyXPStatus({
       userId: workoutSession.user,
@@ -473,12 +495,14 @@ export const completeActiveWorkoutSession = async ({ userId }) => {
     return {
       workoutSession,
       newPersonalRecords,
+      unlockedAchievements: achievementUnlocks,
       echelonRewards,
       xpEarned: {
         workout: awardedWorkoutXP,
         personalRecords: awardedPersonalRecordXP,
         echelons: echelonXP,
         workoutOfTheWeek: awardedWorkoutOfTheWeekXP,
+        achievements: awardedAchievementXP,
         total: totalAwardedXP,
       },
       dailyXP: {
