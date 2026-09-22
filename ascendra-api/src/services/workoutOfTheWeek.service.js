@@ -2,6 +2,7 @@ import WorkoutOfTheWeek from "../models/WorkoutOfTheWeek.js";
 import WorkoutOfTheWeekOccurrence from "../models/WorkoutOfTheWeekOccurrence.js";
 import NotFoundError from "../errors/NotFoundError.js";
 import ConflictError from "../errors/ConflictError.js";
+import NoEligibleWorkoutOfTheWeekError from "../errors/NoEligibleWorkoutOfTheWeekError.js";
 import Exercise from "../models/Exercise.js";
 import { validateWorkoutTarget } from "../utils/workoutTargetValidation.js";
 import {
@@ -120,9 +121,7 @@ const getRandomEligibleWorkoutOfTheWeek = async ({ weekStart, weekEnd }) => {
   });
 
   if (eligibleTemplates.length === 0) {
-    throw new ConflictError(
-      "No eligible Workout of the Week templates are available",
-    );
+    throw new NoEligibleWorkoutOfTheWeekError();
   }
 
   const randomIndex = Math.floor(Math.random() * eligibleTemplates.length);

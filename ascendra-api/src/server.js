@@ -9,6 +9,7 @@ import { startWorkoutOfTheWeekJob } from "./jobs/workoutOfTheWeek.job.js";
 import { reconcileWorkoutOfTheWeekOccurrences } from "./services/workoutOfTheWeek.service.js";
 import WorkoutOfTheWeekOccurrence from "./models/WorkoutOfTheWeekOccurrence.js";
 import WorkoutSession from "./models/WorkoutSession.js";
+import NoEligibleWorkoutOfTheWeekError from "./errors/NoEligibleWorkoutOfTheWeekError.js";
 const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
@@ -18,7 +19,17 @@ const startServer = async () => {
     await WorkoutOfTheWeekOccurrence.init();
     await WorkoutSession.init();
     await reconcileSeasons();
-    await reconcileWorkoutOfTheWeekOccurrences();
+    try {
+      await reconcileWorkoutOfTheWeekOccurrences();
+    } catch (error) {
+      if (error instanceof NoEligibleWorkoutOfTheWeekError) {
+        logger.warn("Workout of the Week is unavailable during startup", {
+          error: error.message,
+        });
+      } else {
+        throw error;
+      }
+    }
     startSeasonJob();
     startWorkoutOfTheWeekJob();
     app.listen(PORT, () => {

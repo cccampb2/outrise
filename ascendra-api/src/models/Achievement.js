@@ -49,7 +49,6 @@ const achievementSchema = new Schema(
         "workout_streak",
         "workout_total_reps",
         "workout_time_of_day",
-        "redemption_arc",
       ],
     },
     requirement: {
@@ -64,6 +63,11 @@ const achievementSchema = new Schema(
       },
       recordCategory: {
         type: String,
+        default: null,
+      },
+      operator: {
+        type: String,
+        enum: ["before", "after"],
         default: null,
       },
     },
@@ -94,6 +98,54 @@ const achievementSchema = new Schema(
 achievementSchema.pre("validate", function () {
   if (this.isModified("name")) {
     this.slug = this.name.toLowerCase().replace(/[^a-z0-9]/g, "");
+  }
+});
+
+// Validates that achievement requirements match the selected rule.
+achievementSchema.pre("validate", function () {
+  // These achievement types require a numeric threshold.
+  const typesRequiringValue = [
+    "workout_count",
+    "personal_record_count",
+    "level_reached",
+    "echelon_reached",
+    "verification_count",
+    "wotw_count",
+    "workout_streak",
+    "workout_total_reps",
+    "workout_time_of_day",
+  ];
+
+  if (
+    typesRequiringValue.includes(this.requirementType) &&
+    this.requirement?.value == null
+  ) {
+    throw new Error(
+      `${this.requirementType} achievements require a requirement value.`,
+    );
+  }
+
+  if (this.requirementType === "workout_time_of_day") {
+    if (!this.requirement?.operator) {
+      throw new Error("Workout time-of-day achievements require an operator");
+    }
+    if (this.requirement.value < 0 || this.requirement.value >= 24) {
+      throw new Error(
+        "Workout time-of-day achievement values must be between 0 and 24",
+      );
+    }
+  }
+
+  if (this.requirementType === "verified_performance") {
+    if (!this.requirement?.exercise) {
+      throw new Error("Verified performance achievements require an exercise.");
+    }
+
+    if (this.requirement?.value == null) {
+      throw new Error(
+        "Verified performance achievements require a requirement value.",
+      );
+    }
   }
 });
 

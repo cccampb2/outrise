@@ -11,10 +11,18 @@ import {
   awardXP,
   calculateWorkoutXP,
   calculatePersonalRecordXP,
-  processEchelonRewards,
   getDailyXPStatus,
 } from "./xp.service.js";
-import { checkWorkoutCountAchievements } from "./achievement.service.js";
+import {
+  checkWorkoutCountAchievements,
+  checkPersonalRecordCountAchievements,
+  checkWorkoutOfTheWeekCountAchievements,
+  checkWorkoutStreakAchievements,
+  checkWorkoutTotalRepsAchievement,
+  checkWorkoutTimeOfDayAchievements,
+} from "./achievement.service.js";
+
+import { processProgressionAchievements } from "./progression.service.js";
 
 export const startWorkoutSession = async ({ userId, workoutId }) => {
   await ensureNoActiveSession({ userId });
@@ -439,16 +447,75 @@ export const completeActiveWorkoutSession = async ({ userId }) => {
       });
     }
 
-    const unlockedAchievements = await checkWorkoutCountAchievements({
+    const workoutCountAchievements = await checkWorkoutCountAchievements({
       userId: workoutSession.user,
       workoutSessionId: workoutSession._id,
       mongoSession,
     });
 
-    const echelonRewards = await processEchelonRewards({
+    let workoutOfTheWeekCountAchievements = [];
+    if (workoutSession.sourceType === "workout_of_the_week") {
+      workoutOfTheWeekCountAchievements =
+        await checkWorkoutOfTheWeekCountAchievements({
+          userId: workoutSession.user,
+          workoutSessionId: workoutSession._id,
+          mongoSession,
+        });
+    }
+    const workoutStreakAchievements = await checkWorkoutStreakAchievements({
+      userId: workoutSession.user,
+      workoutSessionId: workoutSession._id,
+      mongoSession,
+    });
+
+    const workoutTotalRepsAchievements = await checkWorkoutTotalRepsAchievement(
+      {
+        workoutSession,
+        mongoSession,
+      },
+    );
+
+    const workoutTimeOfTheDayAchievements =
+      await checkWorkoutTimeOfDayAchievements({
+        workoutSession,
+        mongoSession,
+      });
+
+    let personalRecordAchievements = [];
+
+    if (newPersonalRecords.length > 0) {
+      const triggeringPersonalRecord =
+        newPersonalRecords[newPersonalRecords.length - 1];
+
+      personalRecordAchievements = await checkPersonalRecordCountAchievements({
+        userId: workoutSession.user,
+        personalRecordId: triggeringPersonalRecord._id,
+        mongoSession,
+      });
+    }
+
+    const activityAchievements = [
+      ...personalRecordAchievements,
+      ...workoutCountAchievements,
+      ...workoutOfTheWeekCountAchievements,
+      ...workoutStreakAchievements,
+      ...workoutTotalRepsAchievements,
+      ...workoutTimeOfTheDayAchievements,
+    ];
+
+    const progressionResult = await processProgressionAchievements({
       userId: workoutSession.user,
       mongoSession,
     });
+
+    const progressionAchievements = progressionResult.unlockedAchievements;
+
+    const echelonRewards = progressionResult.echelonRewards;
+
+    const unlockedAchievements = [
+      ...activityAchievements,
+      ...progressionAchievements,
+    ];
 
     const echelonXP = echelonRewards.reduce(
       (total, reward) => total + reward.xp,
@@ -459,6 +526,7 @@ export const completeActiveWorkoutSession = async ({ userId }) => {
     const awardedPersonalRecordXP = personalRecordXPResult?.awardedAmount ?? 0;
     const awardedWorkoutOfTheWeekXP =
       workoutOfTheWeekXPResult?.awardedAmount ?? 0;
+
     const awardedAchievementXP = unlockedAchievements.reduce(
       (total, unlock) => total + (unlock.xpResult?.awardedAmount ?? 0),
       0,

@@ -11,7 +11,14 @@ import {
   DISTANCE_TOLERANCE_MILES,
 } from "./personalRecord.service.js";
 
+import { processProgressionAchievements } from "./progression.service.js";
+
 import mongoose from "mongoose";
+import {
+  checkPersonalRecordCountAchievements,
+  checkVerificationCountAchievements,
+  checkVerifiedPerformanceAchievements,
+} from "./achievement.service.js";
 
 const hasValue = (value) => value !== undefined && value !== null;
 
@@ -276,11 +283,57 @@ export const approveVerification = async ({ verificationId, adminId }) => {
       });
     }
 
+    const verificationAchievements = await checkVerificationCountAchievements({
+      userId: verification.user,
+      verificationId: verification._id,
+      mongoSession,
+    });
+
+    const verifiedPerformanceAchievements =
+      await checkVerifiedPerformanceAchievements({
+        verification,
+        mongoSession,
+      });
+
+    let personalRecordAchievements = [];
+
+    if (newPersonalRecord) {
+      personalRecordAchievements = await checkPersonalRecordCountAchievements({
+        userId: verification.user,
+        personalRecordId: newPersonalRecord._id,
+        mongoSession,
+      });
+    }
+
+    const progressionResult = await processProgressionAchievements({
+      userId: verification.user,
+      mongoSession,
+    });
+
+    const unlockedAchievements = [
+      ...verificationAchievements,
+      ...verifiedPerformanceAchievements,
+      ...personalRecordAchievements,
+      ...progressionResult.unlockedAchievements,
+    ];
+
+    const achievementUnlocks = unlockedAchievements.map((unlock) => ({
+      id: unlock.achievement._id,
+      name: unlock.achievement.name,
+      description: unlock.achievement.description,
+      category: unlock.achievement.category,
+      badgeKey: unlock.achievement.badgeKey,
+      xpAwarded: unlock.xpResult?.awardedAmount ?? 0,
+      unlockedAt: unlock.userAchievement.unlockedAt,
+    }));
+
     await mongoSession.commitTransaction();
 
     return {
       verification,
       newPersonalRecord,
+      unlockedAchievements: achievementUnlocks,
+      echelonRewards: progressionResult.echelonRewards,
     };
   } catch (error) {
     await mongoSession.abortTransaction();
