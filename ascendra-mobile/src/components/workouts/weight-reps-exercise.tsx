@@ -1,0 +1,511 @@
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { useState, useEffect } from "react";
+
+import type {
+  ActualSetInput,
+  WorkoutSessionExercise,
+} from "@/api/workout-sessions";
+import { Colors } from "@/constants/theme";
+
+type WeightRepsExerciseProps = {
+  exercise: WorkoutSessionExercise;
+  onSave: (sets: ActualSetInput[]) => Promise<void>;
+  isSaving: boolean;
+  errorMessage?: string;
+};
+
+type EditableSet = {
+  order: number;
+  weight: string;
+  reps: string;
+  isSaved: boolean;
+  isEditing: boolean;
+};
+
+function createBlankSet(): EditableSet {
+  return {
+    order: 0,
+    weight: "",
+    reps: "",
+    isSaved: false,
+    isEditing: true,
+  };
+}
+
+function reindexSets(sets: EditableSet[]): EditableSet[] {
+  return sets.map((set, index) => ({
+    ...set,
+    order: index,
+  }));
+}
+
+function createEditableSets(exercise: WorkoutSessionExercise): EditableSet[] {
+  const savedSets = exercise.actual.sets ?? [];
+
+  if (savedSets.length === 0) {
+    return [createBlankSet()];
+  }
+
+  return savedSets.map((set) => ({
+    order: set.order,
+    weight: String(set.weightLbs ?? ""),
+    reps: String(set.reps ?? ""),
+    isSaved: true,
+    isEditing: false,
+  }));
+}
+
+export function WeightRepsExercise({
+  exercise,
+  onSave,
+  isSaving,
+  errorMessage,
+}: WeightRepsExerciseProps) {
+  const [sets, setSets] = useState<EditableSet[]>(() =>
+    createEditableSets(exercise),
+  );
+
+  useEffect(() => {
+    setSets(createEditableSets(exercise));
+  }, [exercise.actual.sets]);
+
+  const hasUnsavedSet = sets.some((set) => !set.isSaved);
+
+  function addSet() {
+    setSets((currentSets) => [
+      ...currentSets,
+      {
+        order: currentSets.length,
+        weight: "",
+        reps: "",
+        isSaved: false,
+        isEditing: true,
+      },
+    ]);
+  }
+
+  function editSet(order: number) {
+    setSets((currentSets) =>
+      currentSets.map((set) =>
+        set.order === order
+          ? {
+              ...set,
+              isEditing: true,
+            }
+          : set,
+      ),
+    );
+  }
+
+  async function deleteSet(order: number) {
+    const setToDelete = sets.find((set) => set.order === order);
+
+    if (!setToDelete) {
+      return;
+    }
+
+    const remainingSets = reindexSets(
+      sets.filter((set) => set.order !== order),
+    );
+
+    if (!setToDelete.isSaved) {
+      setSets(remainingSets.length > 0 ? remainingSets : [createBlankSet()]);
+      return;
+    }
+
+    const savedSetsToPersist: ActualSetInput[] = remainingSets
+      .filter((set) => set.isSaved)
+      .map((set, index) => ({
+        order: index,
+        weightLbs: Number(set.weight),
+        reps: Number(set.reps),
+      }));
+
+    try {
+      await onSave(savedSetsToPersist);
+
+      setSets(remainingSets.length > 0 ? remainingSets : [createBlankSet()]);
+    } catch {
+      // Parent displays the mutation error.
+    }
+  }
+
+  function updateSetField(
+    order: number,
+    field: "weight" | "reps",
+    value: string,
+  ) {
+    setSets((currentSets) =>
+      currentSets.map((set) =>
+        set.order === order
+          ? {
+              ...set,
+              [field]: value,
+            }
+          : set,
+      ),
+    );
+  }
+
+  async function saveSet(order: number) {
+    const setToSave = sets.find((set) => set.order === order);
+
+    if (!setToSave) {
+      return;
+    }
+
+    const weightNumber = Number(setToSave.weight);
+    const repsNumber = Number(setToSave.reps);
+
+    const isValid =
+      setToSave.weight.trim() !== "" &&
+      setToSave.reps.trim() !== "" &&
+      Number.isFinite(weightNumber) &&
+      Number.isFinite(repsNumber) &&
+      weightNumber > 0 &&
+      repsNumber > 0;
+
+    if (!isValid) {
+      return;
+    }
+
+    const setsToSave: ActualSetInput[] = sets
+      .filter((set) => set.isSaved || set.order === order)
+      .map((set) => ({
+        order: set.order,
+        weightLbs: Number(set.weight),
+        reps: Number(set.reps),
+      }));
+
+    try {
+      await onSave(setsToSave);
+
+      setSets((currentSets) =>
+        currentSets.map((set) =>
+          set.order === order
+            ? {
+                ...set,
+                isSaved: true,
+                isEditing: false,
+              }
+            : set,
+        ),
+      );
+    } catch {
+      // The mutation error is displayed through errorMessage.
+    }
+  }
+
+  return (
+    <View>
+      <View style={styles.targetHeader}>
+        <Text style={styles.targetLabel}>TARGET_</Text>
+
+        <Text style={styles.target}>
+          {exercise.target.sets ?? "—"} SETS // {exercise.target.reps ?? "—"}{" "}
+          REPS
+        </Text>
+      </View>
+
+      <Text style={styles.sectionLabel}>PERFORMANCE_SETS_</Text>
+
+      {sets.map((set) => {
+        const weightNumber = Number(set.weight);
+        const repsNumber = Number(set.reps);
+
+        const canSave =
+          set.weight.trim() !== "" &&
+          set.reps.trim() !== "" &&
+          Number.isFinite(weightNumber) &&
+          Number.isFinite(repsNumber) &&
+          weightNumber > 0 &&
+          repsNumber > 0;
+
+        const showInputs = !set.isSaved || set.isEditing;
+
+        return (
+          <View key={set.order} style={styles.setRow}>
+            <View style={styles.setIdentifier}>
+              <Text style={styles.setIndex}>
+                {String(set.order + 1).padStart(2, "0")}
+              </Text>
+              <Text style={styles.setLabel}>SET</Text>
+            </View>
+
+            {showInputs ? (
+              <View style={styles.setInputs}>
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={styles.input}
+                    value={set.weight}
+                    onChangeText={(value) =>
+                      updateSetField(set.order, "weight", value)
+                    }
+                    keyboardType="decimal-pad"
+                    placeholder="0"
+                    placeholderTextColor={Colors.dark.textDim}
+                  />
+                  <Text style={styles.inputUnit}>LB</Text>
+                </View>
+
+                <Text style={styles.multiply}>×</Text>
+
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={styles.input}
+                    value={set.reps}
+                    onChangeText={(value) =>
+                      updateSetField(set.order, "reps", value)
+                    }
+                    keyboardType="number-pad"
+                    placeholder="0"
+                    placeholderTextColor={Colors.dark.textDim}
+                  />
+                  <Text style={styles.inputUnit}>REP</Text>
+                </View>
+
+                <Pressable
+                  style={[
+                    styles.checkButton,
+                    (!canSave || isSaving) && styles.checkButtonDisabled,
+                  ]}
+                  disabled={!canSave || isSaving}
+                  onPress={() => saveSet(set.order)}
+                >
+                  <Text style={styles.checkText}>✓</Text>
+                </Pressable>
+
+                <Pressable
+                  style={styles.deleteButton}
+                  disabled={isSaving}
+                  onPress={() => deleteSet(set.order)}
+                >
+                  <Text style={styles.deleteButtonText}>×</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <Pressable
+                style={({ pressed }) => [
+                  styles.completedSet,
+                  pressed && styles.completedSetPressed,
+                ]}
+                onPress={() => editSet(set.order)}
+              >
+                <View style={styles.completedIndicator} />
+
+                <Text style={styles.completedSetText}>
+                  {set.weight} LB × {set.reps} REPS
+                </Text>
+
+                <Text style={styles.completedCheck}>✓</Text>
+              </Pressable>
+            )}
+          </View>
+        );
+      })}
+
+      <Pressable
+        style={[
+          styles.addSetButton,
+          hasUnsavedSet && styles.addSetButtonDisabled,
+        ]}
+        disabled={hasUnsavedSet}
+        onPress={addSet}
+      >
+        <Text style={styles.addSetText}>+ ADD_SET</Text>
+      </Pressable>
+
+      {!!errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
+    </View>
+  );
+}
+const styles = StyleSheet.create({
+  targetHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingBottom: 14,
+    marginBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.dark.borderSubtle,
+  },
+
+  targetLabel: {
+    color: Colors.dark.textDim,
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 1.2,
+  },
+
+  target: {
+    color: Colors.dark.textSecondary,
+    fontSize: 11,
+    fontWeight: "700",
+  },
+
+  sectionLabel: {
+    color: Colors.dark.textDim,
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 1.2,
+    marginBottom: 12,
+  },
+
+  setRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 10,
+  },
+
+  setIdentifier: {
+    width: 38,
+    alignItems: "center",
+  },
+
+  setIndex: {
+    color: Colors.dark.accent,
+    fontSize: 11,
+    fontWeight: "800",
+  },
+
+  setLabel: {
+    color: Colors.dark.textDim,
+    fontSize: 7,
+    fontWeight: "800",
+    letterSpacing: 0.7,
+    marginTop: 1,
+  },
+
+  setInputs: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+
+  inputContainer: {
+    flex: 1,
+    minWidth: 0,
+    height: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.dark.backgroundDeep,
+    borderWidth: 1,
+    borderColor: Colors.dark.borderStrong,
+  },
+
+  input: {
+    flex: 1,
+    minWidth: 0,
+    height: "100%",
+    paddingLeft: 8,
+    color: Colors.dark.text,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+
+  inputUnit: {
+    color: Colors.dark.textDim,
+    fontSize: 7,
+    fontWeight: "800",
+    marginRight: 6,
+  },
+
+  multiply: {
+    color: Colors.dark.textDim,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+
+  checkButton: {
+    width: 38,
+    height: 48,
+    backgroundColor: Colors.dark.accent,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  checkButtonDisabled: {
+    opacity: 0.25,
+  },
+
+  checkText: {
+    color: Colors.dark.backgroundDeep,
+    fontSize: 16,
+    fontWeight: "900",
+  },
+
+  deleteButton: {
+    width: 28,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  deleteButtonText: {
+    color: Colors.dark.danger,
+    fontSize: 20,
+    fontWeight: "700",
+  },
+
+  completedSet: {
+    flex: 1,
+    minHeight: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.dark.backgroundSelected,
+    borderWidth: 1,
+    borderColor: Colors.dark.borderStrong,
+    overflow: "hidden",
+  },
+
+  completedSetPressed: {
+    backgroundColor: Colors.dark.backgroundDeep,
+  },
+
+  completedIndicator: {
+    alignSelf: "stretch",
+    width: 3,
+    backgroundColor: Colors.dark.accent,
+  },
+
+  completedSetText: {
+    flex: 1,
+    color: Colors.dark.text,
+    fontSize: 13,
+    fontWeight: "700",
+    paddingHorizontal: 11,
+  },
+
+  completedCheck: {
+    color: Colors.dark.accent,
+    fontSize: 16,
+    fontWeight: "800",
+    marginRight: 12,
+  },
+
+  addSetButton: {
+    alignSelf: "flex-start",
+    marginLeft: 46,
+    paddingVertical: 10,
+    paddingHorizontal: 2,
+  },
+
+  addSetButtonDisabled: {
+    opacity: 0.25,
+  },
+
+  addSetText: {
+    color: Colors.dark.accent,
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 0.8,
+  },
+
+  errorText: {
+    color: Colors.dark.danger,
+    fontSize: 11,
+    marginTop: 8,
+  },
+});

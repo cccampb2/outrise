@@ -37,6 +37,10 @@ const actualPerformanceSchema = new Schema(
       type: Number,
       min: 0,
     },
+    roundsCompleted: {
+      type: Number,
+      min: 0,
+    },
   },
   {
     _id: false,
@@ -65,6 +69,18 @@ const sessionTargetSchema = new Schema(
       type: Number,
       min: 0,
     },
+    workSeconds: {
+      type: Number,
+      min: 1,
+    },
+    recoverySeconds: {
+      type: Number,
+      min: 0,
+    },
+    rounds: {
+      type: Number,
+      min: 1,
+    },
   },
   {
     _id: false,
@@ -85,7 +101,14 @@ const sessionExerciseSchema = new Schema(
     },
     measurementType: {
       type: String,
-      enum: ["weight_reps", "reps", "time", "distance_time", "duration"],
+      enum: [
+        "weight_reps",
+        "reps",
+        "time",
+        "distance_time",
+        "duration",
+        "intervals",
+      ],
       required: true,
     },
     order: {

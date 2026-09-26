@@ -20,6 +20,7 @@ export const updateSessionExerciseSchema = {
     sets: Joi.array().items(actualSetSchema),
     distanceMiles: Joi.number().min(0),
     timeSeconds: Joi.number().integer().min(0),
+    roundsCompleted: Joi.number().integer().min(0),
   }).min(1),
 };
 

@@ -1,0 +1,1636 @@
+import {
+  Text,
+  View,
+  Pressable,
+  StyleSheet,
+  Image,
+  Platform,
+} from "react-native";
+import { Screen } from "@/components/screen";
+import { deleteToken } from "@/storage/auth-storage";
+import { router } from "expo-router";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "@/store/store";
+import { clearCurrentUser } from "@/store/auth-slice";
+import { Colors, TAB_BAR_HEIGHT } from "@/constants/theme";
+import { getFactions } from "@/api/factions";
+import { factionEmblems } from "@/constants/faction-assets";
+import { useQuery } from "@tanstack/react-query";
+import { getWorkoutHistory, type WorkoutSession } from "@/api/workout-sessions";
+import { EchelonEmblem } from "@/components/echelon-emblem";
+
+function formatTime(totalSeconds: number) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
+function getWorkoutSummary(workout: WorkoutSession) {
+  const exercise = workout.exercises[0];
+
+  if (!exercise) {
+    return "NO DATA RECORDED";
+  }
+
+  const { actual } = exercise;
+
+  switch (exercise.measurementType) {
+    case "distance_time": {
+      const parts = [exercise.exerciseName];
+
+      if (actual.distanceMiles !== undefined) {
+        parts.push(`${actual.distanceMiles} MI`);
+      }
+
+      if (actual.timeSeconds !== undefined) {
+        parts.push(formatTime(actual.timeSeconds));
+      }
+
+      return parts.join(" // ");
+    }
+
+    case "reps": {
+      const totalReps =
+        actual.sets?.reduce((total, set) => total + (set.reps ?? 0), 0) ?? 0;
+
+      return `${exercise.exerciseName} // ${totalReps} REPS`;
+    }
+
+    case "time":
+    case "duration": {
+      if (actual.timeSeconds === undefined) {
+        return exercise.exerciseName;
+      }
+
+      return `${exercise.exerciseName} // ${formatTime(actual.timeSeconds)}`;
+    }
+
+    case "weight_reps": {
+      const setCount = actual.sets?.length ?? 0;
+
+      return `${exercise.exerciseName} // ${setCount} ${
+        setCount === 1 ? "SET" : "SETS"
+      }`;
+    }
+
+    case "intervals": {
+      if (actual.roundsCompleted === undefined) {
+        return exercise.exerciseName;
+      }
+
+      return `${exercise.exerciseName} // ${actual.roundsCompleted} ROUNDS`;
+    }
+
+    default:
+      return exercise.exerciseName;
+  }
+}
+
+function formatMemberSince(date: string) {
+  const dateObject = new Date(date);
+
+  return dateObject
+    .toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric",
+    })
+    .toUpperCase();
+}
+
+export default function ProfileScreen() {
+  const dispatch = useDispatch<AppDispatch>();
+
+  const user = useSelector((state: RootState) => state.auth.user);
+
+  const workoutHistoryQuery = useQuery({
+    queryKey: ["workout-history", 1, 5],
+    queryFn: () => getWorkoutHistory(1, 5),
+  });
+
+  const factionsQuery = useQuery({
+    queryKey: ["factions"],
+    queryFn: getFactions,
+  });
+
+  const recentWorkouts = workoutHistoryQuery.data?.workoutSessions ?? [];
+
+  const faction = factionsQuery.data?.factions.find(
+    (f) => f._id === user?.faction,
+  );
+
+  async function signOut() {
+    await deleteToken();
+    dispatch(clearCurrentUser());
+    router.replace("/(auth)/login");
+  }
+
+  if (!user) {
+    return (
+      <Screen>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>
+            {"// SYSTEM_ERROR: PROFILE_NOT_FOUND"}
+          </Text>
+        </View>
+      </Screen>
+    );
+  }
+
+  const factionEmblem = faction ? factionEmblems[faction.slug] : null;
+
+  const accent = faction?.colors.primary ?? Colors.dark.accent;
+
+  const accentBorder = faction?.colors.border ?? Colors.dark.border;
+
+  const progressPercent = Math.min(
+    Math.max(user.progression.progressPercent, 0),
+    100,
+  );
+
+  const progressTipPercent = Math.min(Math.max(progressPercent, 0), 99);
+
+  return (
+    <Screen scroll hideTabBarOnScroll bottomInSet={TAB_BAR_HEIGHT}>
+      <View style={styles.page}>
+        {/* PROFILE HERO */}
+
+        <View
+          style={[
+            styles.hero,
+            {
+              borderBottomColor: accentBorder,
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.heroGlow,
+              {
+                backgroundColor: accent,
+              },
+            ]}
+          />
+
+          <View style={styles.topBar}>
+            <View style={styles.systemStatus}>
+              <View
+                style={[
+                  styles.statusDot,
+                  {
+                    backgroundColor: accent,
+                  },
+                ]}
+              />
+
+              <Text style={styles.systemStatusText}>ASCENDRA_ID // ACTIVE</Text>
+            </View>
+
+            <View style={styles.badgeCode}>
+              <Text
+                style={[
+                  styles.memberCode,
+                  {
+                    color: accent,
+                  },
+                ]}
+              >
+                {`LEVEL_${String(user.progression.level).padStart(3, "0")}`}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.heroIdentity}>
+            {factionEmblem ? (
+              <View style={styles.emblemArea}>
+                <View
+                  style={[
+                    styles.emblemOuterRing,
+                    {
+                      borderColor: accentBorder,
+                    },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.emblemRing,
+                      {
+                        borderColor: accent,
+                      },
+                    ]}
+                  >
+                    <Image
+                      source={factionEmblem}
+                      style={styles.emblem}
+                      resizeMode="contain"
+                    />
+                  </View>
+                </View>
+
+                <View
+                  style={[
+                    styles.emblemStatus,
+                    {
+                      backgroundColor: accent,
+                    },
+                  ]}
+                />
+              </View>
+            ) : null}
+
+            <View style={styles.heroIdentityText}>
+              <Text style={styles.callsign}>{"// CALLSIGN_"}</Text>
+
+              <Text style={styles.username} numberOfLines={1}>
+                {user.username.toUpperCase()}
+              </Text>
+
+              {faction ? (
+                <View style={styles.factionIdentity}>
+                  <View
+                    style={[
+                      styles.factionLine,
+                      {
+                        backgroundColor: accent,
+                      },
+                    ]}
+                  />
+
+                  <Text
+                    style={[
+                      styles.factionName,
+                      {
+                        color: accent,
+                      },
+                    ]}
+                  >
+                    {faction.name.toUpperCase()}
+                  </Text>
+                </View>
+              ) : null}
+
+              <Text style={styles.memberSince}>
+                {`MEMBER_SINCE // ${formatMemberSince(user.createdAt)}`}
+              </Text>
+            </View>
+          </View>
+
+          {faction ? (
+            <Text style={styles.factionTagline}>{`"${faction.tagline}"`}</Text>
+          ) : null}
+
+          <View style={styles.heroDivider} />
+
+          <View style={styles.heroStats}>
+            <View style={styles.heroStat}>
+              <Text style={styles.heroStatLabel}>LEVEL</Text>
+
+              <Text style={styles.heroStatValue}>{user.progression.level}</Text>
+            </View>
+
+            <View style={styles.heroStatDivider} />
+
+            <View style={styles.heroStat}>
+              <Text style={styles.heroStatLabel}>TOTAL_XP</Text>
+
+              <Text style={styles.heroStatValue}>
+                {user.lifetimeXP.toLocaleString()}
+              </Text>
+            </View>
+
+            <View style={styles.heroStatDivider} />
+
+            <View style={styles.heroStat}>
+              <Text style={styles.heroStatLabel}>WORKOUTS</Text>
+
+              <Text style={styles.heroStatValue}>{user.totalWorkouts}</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.content}>
+          {/* PROGRESSION */}
+
+          <View style={styles.sectionHeader}>
+            <View>
+              <Text style={styles.sectionEyebrow}>SYSTEM_TELEMETRY</Text>
+
+              <Text style={styles.sectionTitle}>Progression</Text>
+            </View>
+
+            <Text style={styles.sectionNumber}>01</Text>
+          </View>
+
+          <View
+            style={[
+              styles.progressionCard,
+              {
+                borderColor: accentBorder,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.hudCornerTL,
+                {
+                  borderColor: accent,
+                },
+              ]}
+            />
+
+            <View
+              style={[
+                styles.hudCornerBR,
+                {
+                  borderColor: accent,
+                },
+              ]}
+            />
+
+            <View style={styles.progressionHeader}>
+              <View>
+                <Text style={styles.dataLabel}>CURRENT_LEVEL</Text>
+
+                <Text style={styles.levelValue}>{user.progression.level}</Text>
+              </View>
+
+              <View style={styles.nextLevelBlock}>
+                <Text style={styles.dataLabel}>NEXT_LEVEL</Text>
+
+                <Text style={styles.nextLevelValue}>
+                  {user.progression.level + 1}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.progressInformation}>
+              <Text style={styles.progressText}>LEVEL_PROGRESS</Text>
+
+              <Text style={styles.progressRemaining}>
+                {`${user.progression.xpRemaining.toLocaleString()} XP TO GO`}
+              </Text>
+            </View>
+
+            <View style={styles.progressTrack}>
+              <View
+                style={[
+                  styles.progressFill,
+                  {
+                    width: `${progressPercent}%`,
+                    backgroundColor: accent,
+                  },
+                ]}
+              />
+
+              <View
+                style={[
+                  styles.progressTip,
+                  {
+                    left: `${progressTipPercent}%`,
+                    backgroundColor: accent,
+                  },
+                ]}
+              />
+            </View>
+
+            <View style={styles.progressFooter}>
+              <Text style={styles.progressFooterText}>
+                {`${user.progression.xpIntoCurrentLevel.toLocaleString()} XP`}
+              </Text>
+
+              <Text
+                style={[
+                  styles.progressPercentage,
+                  {
+                    color: accent,
+                  },
+                ]}
+              >
+                {`[${Math.round(progressPercent)}%]`}
+              </Text>
+
+              <Text style={styles.progressFooterText}>
+                {`${user.progression.xpRequiredForNextLevel.toLocaleString()} XP`}
+              </Text>
+            </View>
+          </View>
+
+          {/* ECHELON */}
+
+          <View style={styles.subsystemHeader}>
+            <Text style={styles.subsystemLabel}>ECHELON_STATUS</Text>
+
+            <View style={styles.subsystemLine} />
+          </View>
+
+          {user.progression.echelon !== null ? (
+            <View style={styles.echelonShowcase}>
+              <View style={styles.echelonGrid}>
+                <View style={styles.echelonGridVertical} />
+                <View style={styles.echelonGridHorizontal} />
+
+                <View style={styles.echelonOrbitLarge} />
+                <View style={styles.echelonOrbitSmall} />
+              </View>
+
+              <View style={styles.echelonTopBar}>
+                <Text style={styles.echelonSystemText}>
+                  ASCENDRA // PROGRESSION
+                </Text>
+
+                <View style={styles.echelonActive}>
+                  <View style={styles.echelonActiveDot} />
+
+                  <Text style={styles.echelonActiveText}>ACTIVE</Text>
+                </View>
+              </View>
+
+              <View style={styles.echelonEmblemArea}>
+                <View style={styles.echelonGlow} />
+
+                <EchelonEmblem echelon={user.progression.echelon} size={170} />
+              </View>
+
+              <View style={styles.echelonInformation}>
+                <View>
+                  <Text style={styles.echelonInfoLabel}>CURRENT_ECHELON</Text>
+
+                  <Text style={styles.echelonInfoValue}>
+                    {String(user.progression.echelon).padStart(2, "0")}
+                  </Text>
+                </View>
+
+                <View style={styles.echelonDivider} />
+
+                <View style={styles.echelonMilestone}>
+                  <Text style={styles.echelonInfoLabel}>MILESTONE</Text>
+
+                  <Text style={styles.echelonMilestoneValue}>
+                    {`LEVEL_${String(user.progression.echelon * 50).padStart(
+                      3,
+                      "0",
+                    )}`}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.echelonLocked}>
+              <View>
+                <Text style={styles.echelonInfoLabel}>ECHELON_STATUS</Text>
+
+                <Text style={styles.echelonLockedTitle}>NOT_YET_UNLOCKED</Text>
+              </View>
+
+              <Text style={styles.echelonLockedValue}>—</Text>
+            </View>
+          )}
+
+          {/* RANKINGS */}
+
+          <View style={styles.sectionHeader}>
+            <View>
+              <Text style={styles.sectionEyebrow}>GLOBAL_STANDING</Text>
+
+              <Text style={styles.sectionTitle}>Rankings</Text>
+            </View>
+
+            <Text style={styles.sectionNumber}>02</Text>
+          </View>
+
+          <View style={styles.rankingLayout}>
+            <View style={styles.globalRankCard}>
+              <Text style={styles.dataLabel}>GLOBAL_RANK</Text>
+
+              <View style={styles.rankValueRow}>
+                <Text style={styles.rankHash}>#</Text>
+
+                <Text style={styles.globalRankValue}>
+                  {user.ranking.globalRank !== null
+                    ? user.ranking.globalRank
+                    : "---"}
+                </Text>
+              </View>
+
+              <Text style={styles.rankDescription}>WORLDWIDE_POSITION</Text>
+            </View>
+
+            <View
+              style={[
+                styles.zenithCard,
+                user.ranking.zenithRank !== null
+                  ? styles.zenithCardActive
+                  : null,
+              ]}
+            >
+              <View style={styles.zenithTop}>
+                <Text
+                  style={[
+                    styles.dataLabel,
+                    user.ranking.zenithRank !== null ? styles.zenithGold : null,
+                  ]}
+                >
+                  ZENITH_ELITE
+                </Text>
+
+                {user.ranking.zenithRank !== null ? (
+                  <View style={styles.zenithActiveBadge}>
+                    <View style={styles.zenithActiveDot} />
+
+                    <Text style={styles.zenithActiveText}>ACTIVE</Text>
+                  </View>
+                ) : null}
+              </View>
+
+              <View style={styles.rankValueRow}>
+                <Text
+                  style={[
+                    styles.rankHash,
+                    user.ranking.zenithRank !== null ? styles.zenithGold : null,
+                  ]}
+                >
+                  #
+                </Text>
+
+                <Text
+                  style={[
+                    styles.globalRankValue,
+                    user.ranking.zenithRank !== null
+                      ? styles.zenithRankValue
+                      : null,
+                  ]}
+                >
+                  {user.ranking.zenithRank !== null
+                    ? user.ranking.zenithRank
+                    : "---"}
+                </Text>
+              </View>
+
+              <Text style={styles.rankDescription}>
+                {user.ranking.zenithRank !== null
+                  ? "TOP_25_STATUS"
+                  : "STATUS_NOT_ACQUIRED"}
+              </Text>
+            </View>
+          </View>
+
+          {/* RECENT ACTIVITY */}
+
+          <View style={styles.sectionHeader}>
+            <View>
+              <Text style={styles.sectionEyebrow}>WORKOUT_HISTORY</Text>
+
+              <Text style={styles.sectionTitle}>Recent Activity</Text>
+            </View>
+
+            <Text style={styles.sectionNumber}>03</Text>
+          </View>
+
+          <View style={styles.activityContainer}>
+            {workoutHistoryQuery.isPending ? (
+              <Text style={styles.emptyText}>
+                {"// LOADING_WORKOUT_HISTORY..."}
+              </Text>
+            ) : workoutHistoryQuery.isError ? (
+              <Text style={styles.emptyText}>
+                {"// ERROR: UNABLE_TO_LOAD_HISTORY"}
+              </Text>
+            ) : recentWorkouts.length === 0 ? (
+              <Text style={styles.emptyText}>{"// NO_WORKOUTS_RECORDED"}</Text>
+            ) : (
+              recentWorkouts.map((workout, index) => (
+                <Pressable
+                  key={workout._id}
+                  onPress={() => router.push(`/workout-session/${workout._id}`)}
+                  style={({ pressed }) => [
+                    styles.activityRow,
+                    pressed ? styles.activityRowPressed : null,
+                  ]}
+                >
+                  <View style={styles.activityTimeline}>
+                    <View
+                      style={[
+                        styles.activityNode,
+                        {
+                          borderColor: accent,
+                        },
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.activityNodeInner,
+                          {
+                            backgroundColor:
+                              index === 0 ? accent : "transparent",
+                          },
+                        ]}
+                      />
+                    </View>
+
+                    {index < recentWorkouts.length - 1 ? (
+                      <View style={styles.activityTimelineLine} />
+                    ) : null}
+                  </View>
+
+                  <View style={styles.activityContent}>
+                    <View style={styles.activityTop}>
+                      <Text style={styles.workoutName} numberOfLines={1}>
+                        {workout.workoutName.toUpperCase()}
+                      </Text>
+
+                      <Text style={styles.workoutDate}>
+                        {new Date(workout.completedAt ?? workout.startedAt)
+                          .toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                          })
+                          .toUpperCase()}
+                      </Text>
+                    </View>
+
+                    <Text style={styles.workoutSummary} numberOfLines={1}>
+                      {getWorkoutSummary(workout)}
+                    </Text>
+
+                    <View style={styles.activityFooter}>
+                      <Text
+                        style={[
+                          styles.activityStatus,
+                          {
+                            color: accent,
+                          },
+                        ]}
+                      >
+                        {"[COMPLETED]"}
+                      </Text>
+
+                      <Text
+                        style={[
+                          styles.activityArrow,
+                          {
+                            color: accent,
+                          },
+                        ]}
+                      >
+                        →
+                      </Text>
+                    </View>
+                  </View>
+                </Pressable>
+              ))
+            )}
+          </View>
+
+          {/* ACCOUNT */}
+
+          <View style={styles.sectionHeader}>
+            <View>
+              <Text style={styles.sectionEyebrow}>ACCOUNT_DETAILS</Text>
+
+              <Text style={styles.sectionTitle}>Account</Text>
+            </View>
+
+            <Text style={styles.sectionNumber}>04</Text>
+          </View>
+
+          <View style={styles.accountCard}>
+            <View style={styles.accountRow}>
+              <View style={styles.accountText}>
+                <Text style={styles.dataLabel}>USERNAME</Text>
+
+                <Text style={styles.accountValue}>{user.username}</Text>
+              </View>
+
+              <Text style={styles.accountMeta}>{"[VERIFIED]"}</Text>
+            </View>
+
+            <View style={styles.accountDivider} />
+
+            <View style={styles.accountRow}>
+              <View style={styles.accountText}>
+                <Text style={styles.dataLabel}>EMAIL</Text>
+
+                <Text style={styles.accountValue} numberOfLines={1}>
+                  {user.email}
+                </Text>
+              </View>
+
+              <Text style={styles.accountMeta}>{"[PRIVATE]"}</Text>
+            </View>
+          </View>
+
+          {/* SIGN OUT */}
+
+          <Pressable
+            onPress={signOut}
+            style={({ pressed }) => [
+              styles.signOutButton,
+              pressed ? styles.signOutButtonPressed : null,
+            ]}
+          >
+            <View style={styles.signOutLine} />
+
+            <Text style={styles.signOutText}>SIGN_OUT</Text>
+
+            <View style={styles.signOutLine} />
+          </Pressable>
+
+          {/* BRAND */}
+
+          <View style={styles.brandFooter}>
+            <View style={styles.brandLine} />
+
+            <Text style={styles.brandWordmark}>ASCENDRA</Text>
+
+            <View style={styles.brandLine} />
+          </View>
+        </View>
+      </View>
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  page: {
+    flexGrow: 1,
+    marginHorizontal: -16,
+    marginTop: -8,
+    backgroundColor: Colors.dark.background,
+  },
+
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  errorText: {
+    color: Colors.dark.accent,
+    fontSize: 12,
+    letterSpacing: 1.5,
+    fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+  },
+
+  /* HERO */
+
+  hero: {
+    position: "relative",
+    overflow: "hidden",
+    backgroundColor: Colors.dark.backgroundElement,
+    borderBottomWidth: 1,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 22,
+  },
+
+  heroGlow: {
+    position: "absolute",
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    opacity: 0.08,
+    top: -160,
+    left: -100,
+  },
+
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 26,
+  },
+
+  systemStatus: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+
+  systemStatusText: {
+    color: Colors.dark.textTechnical,
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 1.5,
+  },
+
+  badgeCode: {
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    backgroundColor: Colors.dark.backgroundDeep,
+  },
+
+  memberCode: {
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+  },
+
+  heroIdentity: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 20,
+  },
+
+  emblemArea: {
+    position: "relative",
+  },
+
+  emblemOuterRing: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    borderWidth: 1,
+    padding: 4,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  emblemRing: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 44,
+    borderWidth: 1,
+    backgroundColor: Colors.dark.backgroundDeep,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  emblem: {
+    width: 68,
+    height: 68,
+  },
+
+  emblemStatus: {
+    position: "absolute",
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    right: 4,
+    bottom: 8,
+    borderWidth: 2,
+    borderColor: Colors.dark.backgroundElement,
+  },
+
+  heroIdentityText: {
+    flex: 1,
+  },
+
+  callsign: {
+    color: Colors.dark.textDim,
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 2,
+  },
+
+  username: {
+    color: Colors.dark.text,
+    fontSize: 28,
+    fontWeight: "900",
+    letterSpacing: 1,
+    marginTop: 2,
+  },
+
+  factionIdentity: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 6,
+  },
+
+  factionLine: {
+    width: 14,
+    height: 2,
+  },
+
+  factionName: {
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 2,
+  },
+
+  memberSince: {
+    color: Colors.dark.textDim,
+    fontSize: 8,
+    fontWeight: "800",
+    letterSpacing: 1.2,
+    marginTop: 8,
+  },
+
+  factionTagline: {
+    color: Colors.dark.textMuted,
+    fontSize: 11,
+    fontStyle: "italic",
+    marginTop: 18,
+    lineHeight: 16,
+  },
+
+  heroDivider: {
+    height: 1,
+    backgroundColor: Colors.dark.borderSubtle,
+    marginTop: 20,
+    marginBottom: 16,
+  },
+
+  heroStats: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  heroStat: {
+    flex: 1,
+  },
+
+  heroStatLabel: {
+    color: Colors.dark.textDim,
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+    marginBottom: 4,
+  },
+
+  heroStatValue: {
+    color: Colors.dark.text,
+    fontSize: 18,
+    fontWeight: "900",
+  },
+
+  heroStatDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: Colors.dark.borderSubtle,
+    marginHorizontal: 12,
+  },
+
+  /* CONTENT */
+
+  content: {
+    paddingHorizontal: 20,
+    paddingTop: 28,
+    paddingBottom: 34,
+  },
+
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    marginBottom: 12,
+    marginTop: 10,
+  },
+
+  sectionEyebrow: {
+    color: Colors.dark.textDim,
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 2,
+    marginBottom: 2,
+  },
+
+  sectionTitle: {
+    color: Colors.dark.text,
+    fontSize: 20,
+    fontWeight: "800",
+    letterSpacing: -0.2,
+  },
+
+  sectionNumber: {
+    color: Colors.dark.border,
+    fontSize: 20,
+    fontWeight: "900",
+  },
+
+  hudCornerTL: {
+    position: "absolute",
+    top: -1,
+    left: -1,
+    width: 8,
+    height: 8,
+    borderTopWidth: 2,
+    borderLeftWidth: 2,
+    zIndex: 2,
+  },
+
+  hudCornerBR: {
+    position: "absolute",
+    bottom: -1,
+    right: -1,
+    width: 8,
+    height: 8,
+    borderBottomWidth: 2,
+    borderRightWidth: 2,
+    zIndex: 2,
+  },
+
+  /* PROGRESSION */
+
+  progressionCard: {
+    position: "relative",
+    backgroundColor: Colors.dark.backgroundSelected,
+    borderWidth: 1,
+    padding: 18,
+    marginBottom: 20,
+  },
+
+  progressionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 22,
+  },
+
+  dataLabel: {
+    color: Colors.dark.textTechnical,
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1.5,
+  },
+
+  levelValue: {
+    color: Colors.dark.text,
+    fontSize: 46,
+    lineHeight: 52,
+    fontWeight: "900",
+    letterSpacing: -1.5,
+    marginTop: 2,
+  },
+
+  nextLevelBlock: {
+    alignItems: "flex-end",
+  },
+
+  nextLevelValue: {
+    color: Colors.dark.textMuted,
+    fontSize: 28,
+    fontWeight: "900",
+    marginTop: 5,
+  },
+
+  progressInformation: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+
+  progressText: {
+    color: Colors.dark.textSecondary,
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 1,
+  },
+
+  progressRemaining: {
+    color: Colors.dark.textMuted,
+    fontSize: 8,
+    fontWeight: "700",
+    letterSpacing: 0.8,
+  },
+
+  progressTrack: {
+    position: "relative",
+    height: 4,
+    backgroundColor: Colors.dark.borderSubtle,
+  },
+
+  progressFill: {
+    height: "100%",
+  },
+
+  progressTip: {
+    position: "absolute",
+    width: 2,
+    height: 10,
+    top: -3,
+    marginLeft: -1,
+  },
+
+  progressFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 8,
+  },
+
+  progressFooterText: {
+    color: Colors.dark.textDim,
+    fontSize: 8,
+    fontWeight: "700",
+  },
+
+  progressPercentage: {
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+
+  /* ECHELON */
+
+  subsystemHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 8,
+  },
+
+  subsystemLabel: {
+    color: Colors.dark.textTechnical,
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1.7,
+  },
+
+  subsystemLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: Colors.dark.border,
+  },
+
+  echelonShowcase: {
+    position: "relative",
+    overflow: "hidden",
+    minHeight: 265,
+    backgroundColor: Colors.dark.echelonSurface,
+    borderWidth: 1,
+    borderColor: Colors.dark.echelonBorder,
+    marginBottom: 34,
+  },
+
+  echelonGrid: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.4,
+  },
+
+  /*
+   * These four colors are intentionally local.
+   * They're decorative details specific to the Echelon artwork,
+   * not global UI colors.
+   */
+  echelonGridVertical: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: "50%",
+    width: StyleSheet.hairlineWidth,
+    backgroundColor: "#18314A",
+  },
+
+  echelonGridHorizontal: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: "50%",
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: "#18314A",
+  },
+
+  echelonOrbitLarge: {
+    position: "absolute",
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#163047",
+    alignSelf: "center",
+    top: 18,
+  },
+
+  echelonOrbitSmall: {
+    position: "absolute",
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#1C3C59",
+    alignSelf: "center",
+    top: 48,
+  },
+
+  echelonTopBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingTop: 12,
+    zIndex: 2,
+  },
+
+  echelonSystemText: {
+    color: Colors.dark.echelonMuted,
+    fontSize: 7,
+    fontWeight: "900",
+    letterSpacing: 1.4,
+  },
+
+  echelonActive: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+
+  echelonActiveDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.dark.echelon,
+  },
+
+  echelonActiveText: {
+    color: Colors.dark.echelonMuted,
+    fontSize: 7,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+  },
+
+  echelonEmblemArea: {
+    height: 175,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1,
+  },
+
+  echelonGlow: {
+    position: "absolute",
+    width: 135,
+    height: 135,
+    borderRadius: 68,
+    backgroundColor: Colors.dark.echelonGlow,
+    opacity: 0.08,
+  },
+
+  echelonInformation: {
+    minHeight: 62,
+    flexDirection: "row",
+    alignItems: "center",
+    borderTopWidth: 1,
+    borderTopColor: Colors.dark.echelonBorder,
+    backgroundColor: Colors.dark.backgroundDeep,
+    paddingHorizontal: 16,
+    zIndex: 3,
+  },
+
+  echelonInfoLabel: {
+    color: Colors.dark.textTechnical,
+    fontSize: 7,
+    fontWeight: "900",
+    letterSpacing: 1.3,
+  },
+
+  echelonInfoValue: {
+    color: Colors.dark.text,
+    fontSize: 18,
+    fontWeight: "900",
+    marginTop: 2,
+  },
+
+  echelonDivider: {
+    width: 1,
+    height: 27,
+    backgroundColor: Colors.dark.echelonBorder,
+    marginHorizontal: 20,
+  },
+
+  echelonMilestone: {
+    flex: 1,
+  },
+
+  echelonMilestoneValue: {
+    color: Colors.dark.textMuted,
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+    marginTop: 4,
+  },
+
+  echelonLocked: {
+    minHeight: 100,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: Colors.dark.backgroundElement,
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
+    paddingHorizontal: 18,
+    marginBottom: 34,
+  },
+
+  echelonLockedTitle: {
+    color: Colors.dark.textMuted,
+    fontSize: 13,
+    fontWeight: "900",
+    letterSpacing: 1,
+    marginTop: 5,
+  },
+
+  echelonLockedValue: {
+    color: Colors.dark.borderStrong,
+    fontSize: 36,
+    fontWeight: "900",
+  },
+
+  /* RANKINGS */
+
+  rankingLayout: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 32,
+  },
+
+  globalRankCard: {
+    flex: 1,
+    minHeight: 140,
+    backgroundColor: Colors.dark.backgroundSelected,
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
+    padding: 16,
+    justifyContent: "space-between",
+  },
+
+  zenithCard: {
+    flex: 1,
+    minHeight: 140,
+    backgroundColor: Colors.dark.backgroundSelected,
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
+    padding: 16,
+    justifyContent: "space-between",
+  },
+
+  zenithCardActive: {
+    backgroundColor: Colors.dark.zenithSurface,
+    borderColor: Colors.dark.zenithBorder,
+  },
+
+  zenithTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  zenithGold: {
+    color: Colors.dark.zenith,
+  },
+
+  zenithActiveBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderWidth: 1,
+    borderColor: Colors.dark.zenithBorder,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+  },
+
+  zenithActiveDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.dark.zenith,
+  },
+
+  zenithActiveText: {
+    color: Colors.dark.zenith,
+    fontSize: 6,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+
+  rankValueRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+
+  rankHash: {
+    color: Colors.dark.textDim,
+    fontSize: 16,
+    fontWeight: "700",
+    marginTop: 6,
+    marginRight: 2,
+  },
+
+  globalRankValue: {
+    color: Colors.dark.text,
+    fontSize: 38,
+    fontWeight: "900",
+    letterSpacing: -1,
+  },
+
+  zenithRankValue: {
+    color: Colors.dark.zenith,
+  },
+
+  rankDescription: {
+    color: Colors.dark.textDim,
+    fontSize: 7,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+
+  /* ACTIVITY */
+
+  activityContainer: {
+    marginBottom: 32,
+  },
+
+  activityRow: {
+    flexDirection: "row",
+    minHeight: 92,
+  },
+
+  activityRowPressed: {
+    opacity: 0.5,
+  },
+
+  activityTimeline: {
+    width: 26,
+    alignItems: "center",
+  },
+
+  activityNode: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 4,
+  },
+
+  activityNodeInner: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+  },
+
+  activityTimelineLine: {
+    width: 1,
+    flex: 1,
+    backgroundColor: Colors.dark.borderSubtle,
+    marginTop: 4,
+  },
+
+  activityContent: {
+    flex: 1,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.dark.borderSubtle,
+    paddingBottom: 14,
+    marginBottom: 14,
+    paddingLeft: 6,
+  },
+
+  activityTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+
+  workoutName: {
+    flex: 1,
+    color: Colors.dark.text,
+    fontSize: 13,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+  },
+
+  workoutDate: {
+    color: Colors.dark.textDim,
+    fontSize: 8,
+    fontWeight: "800",
+    letterSpacing: 0.8,
+  },
+
+  workoutSummary: {
+    color: Colors.dark.textMuted,
+    fontSize: 10,
+    fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+    marginTop: 6,
+  },
+
+  activityFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 10,
+  },
+
+  activityStatus: {
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+
+  activityArrow: {
+    fontSize: 12,
+    fontWeight: "900",
+  },
+
+  emptyText: {
+    color: Colors.dark.textDim,
+    fontSize: 11,
+    fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+    marginBottom: 24,
+  },
+
+  /* ACCOUNT */
+
+  accountCard: {
+    backgroundColor: Colors.dark.backgroundElement,
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
+    paddingHorizontal: 16,
+    marginBottom: 20,
+  },
+
+  accountRow: {
+    minHeight: 64,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 16,
+  },
+
+  accountText: {
+    flex: 1,
+  },
+
+  accountValue: {
+    color: Colors.dark.textSecondary,
+    fontSize: 12,
+    fontWeight: "600",
+    marginTop: 4,
+  },
+
+  accountMeta: {
+    color: Colors.dark.textDim,
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+
+  accountDivider: {
+    height: 1,
+    backgroundColor: Colors.dark.borderSubtle,
+  },
+
+  /* SIGN OUT */
+
+  signOutButton: {
+    height: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    marginTop: 6,
+    backgroundColor: Colors.dark.dangerSurface,
+    borderWidth: 1,
+    borderColor: Colors.dark.dangerBorder,
+  },
+
+  signOutButtonPressed: {
+    backgroundColor: Colors.dark.dangerSurfacePressed,
+  },
+
+  signOutLine: {
+    width: 24,
+    height: 1,
+    backgroundColor: Colors.dark.dangerBorder,
+  },
+
+  signOutText: {
+    color: Colors.dark.danger,
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 2,
+  },
+
+  /* BRAND */
+
+  brandFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    marginTop: 40,
+    marginBottom: 12,
+    paddingHorizontal: 20,
+  },
+
+  brandLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: Colors.dark.borderSubtle,
+  },
+
+  brandWordmark: {
+    color: Colors.dark.textDim,
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 4.5,
+  },
+});

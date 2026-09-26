@@ -35,6 +35,18 @@ const workoutExerciseSchema = new Schema(
         type: Number,
         min: 0,
       },
+      workSeconds: {
+        type: Number,
+        min: 1,
+      },
+      recoverySeconds: {
+        type: Number,
+        min: 0,
+      },
+      rounds: {
+        type: Number,
+        min: 1,
+      },
     },
   },
   {

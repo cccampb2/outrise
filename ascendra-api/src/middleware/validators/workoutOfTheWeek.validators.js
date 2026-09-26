@@ -16,6 +16,9 @@ export const createWorkoutOfTheWeekSchema = {
             weightLbs: Joi.number().min(0),
             distanceMiles: Joi.number().min(0),
             timeSeconds: Joi.number().min(0),
+            workSeconds: Joi.number().integer().greater(0),
+            recoverySeconds: Joi.number().integer().min(0),
+            rounds: Joi.number().integer().min(1),
           }).required(),
         }),
       )
@@ -99,6 +102,9 @@ export const updateWorkoutOfTheWeekSchema = {
             distanceMiles: Joi.number().min(0),
 
             timeSeconds: Joi.number().min(0),
+            workSeconds: Joi.number().integer().greater(0),
+            recoverySeconds: Joi.number().integer().min(0),
+            rounds: Joi.number().integer().min(1),
           }).required(),
         }),
       ),

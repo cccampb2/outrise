@@ -58,7 +58,14 @@ const exerciseSchema = new Schema(
     },
     measurementType: {
       type: String,
-      enum: ["weight_reps", "reps", "time", "distance_time", "duration"],
+      enum: [
+        "weight_reps",
+        "reps",
+        "time",
+        "distance_time",
+        "duration",
+        "intervals",
+      ],
       required: true,
     },
     baseXP: {

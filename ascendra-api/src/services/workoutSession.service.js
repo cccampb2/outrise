@@ -185,7 +185,23 @@ export const updateSessionExercise = async ({
       }
     });
   }
+  if (measurementType === "intervals") {
+    if (actual.roundsCompleted === undefined) {
+      throw new BadRequestError(
+        `${sessionExercise.exerciseName} requires completed rounds`,
+      );
+    }
 
+    if (
+      actual.sets !== undefined ||
+      actual.distanceMiles !== undefined ||
+      actual.timeSeconds !== undefined
+    ) {
+      throw new BadRequestError(
+        `${sessionExercise.exerciseName} only accepts completed rounds`,
+      );
+    }
+  }
   if (measurementType === "reps") {
     if (!actual.sets) {
       throw new BadRequestError("Sets are required for this exercise");
@@ -318,6 +334,9 @@ export const hasValidActualPerformance = (sessionExercise) => {
 
   if (measurementType === "duration") {
     return actual.timeSeconds !== undefined && actual.timeSeconds > 0;
+  }
+  if (measurementType === "intervals") {
+    return actual.roundsCompleted !== undefined && actual.roundsCompleted > 0;
   }
 
   return false;
@@ -700,6 +719,15 @@ const buildSessionExercisesFromWorkout = (workout) => {
         }),
         ...(workoutExercise.target.timeSeconds !== undefined && {
           timeSeconds: workoutExercise.target.timeSeconds,
+        }),
+        ...(workoutExercise.target.workSeconds !== undefined && {
+          workSeconds: workoutExercise.target.workSeconds,
+        }),
+        ...(workoutExercise.target.recoverySeconds !== undefined && {
+          recoverySeconds: workoutExercise.target.recoverySeconds,
+        }),
+        ...(workoutExercise.target.rounds !== undefined && {
+          rounds: workoutExercise.target.rounds,
         }),
       },
     };

@@ -17,7 +17,14 @@ export const createExerciseSchema = {
     instructions: Joi.array().items(Joi.string().trim().min(1)).default([]),
     videoUrl: Joi.string().trim().uri().allow(null).default(null),
     measurementType: Joi.string()
-      .valid("weight_reps", "reps", "time", "distance_time", "duration")
+      .valid(
+        "weight_reps",
+        "reps",
+        "time",
+        "distance_time",
+        "duration",
+        "intervals",
+      )
       .required(),
     baseXP: Joi.number().integer().min(5).max(30).required(),
     isActive: Joi.boolean().default(true),

@@ -10,6 +10,7 @@ const allowedTargetFields = {
   distance_time: ["distanceMiles", "timeSeconds"],
 
   duration: ["timeSeconds"],
+  intervals: ["workSeconds", "recoverySeconds", "rounds"],
 };
 
 export const validateWorkoutTarget = ({
@@ -81,5 +82,21 @@ export const validateWorkoutTarget = ({
     if (target.timeSeconds === undefined) {
       throw new BadRequestError(`${exerciseName} requires a duration`);
     }
+  }
+
+  if (measurementType === "intervals") {
+    if (target.workSeconds === undefined) {
+      throw new BadRequestError(`${exerciseName} requires a work duration`);
+    }
+
+    if (target.recoverySeconds === undefined) {
+      throw new BadRequestError(`${exerciseName} requires a recovery duration`);
+    }
+
+    if (target.rounds === undefined) {
+      throw new BadRequestError(`${exerciseName} requires rounds`);
+    }
+
+    return;
   }
 };

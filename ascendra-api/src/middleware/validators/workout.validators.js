@@ -6,6 +6,9 @@ const workoutTargetSchema = Joi.object({
   weightLbs: Joi.number().min(0),
   distanceMiles: Joi.number().greater(0),
   timeSeconds: Joi.number().integer().greater(0),
+  workSeconds: Joi.number().integer().greater(0),
+  recoverySeconds: Joi.number().integer().min(0),
+  rounds: Joi.number().integer().min(1),
 });
 
 const workoutExerciseSchema = Joi.object({
