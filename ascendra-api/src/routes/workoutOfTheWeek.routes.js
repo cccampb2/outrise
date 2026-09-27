@@ -54,14 +54,14 @@ router.get(
   authenticate,
   requireFaction,
   getCurrentWorkoutOfTheWeekForUserController,
+);
 
-  router.get(
-    "/history",
-    authenticate,
-    requireFaction,
-    validate(getWorkoutOfTheWeekHistorySchema),
-    getWorkoutOfTheWeekHistoryController,
-  ),
+router.get(
+  "/history",
+  authenticate,
+  requireFaction,
+  validate(getWorkoutOfTheWeekHistorySchema),
+  getWorkoutOfTheWeekHistoryController,
 );
 
 router.post(

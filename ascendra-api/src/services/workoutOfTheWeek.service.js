@@ -66,6 +66,13 @@ const hasWorkoutOfTheWeekChanges = (workoutOfTheWeek, updates) => {
     return true;
   }
 
+  if (
+    updates.difficulty !== undefined &&
+    updates.difficulty !== workoutOfTheWeek.difficulty
+  ) {
+    return true;
+  }
+
   if (updates.exercises !== undefined) {
     const currentExercises = workoutOfTheWeek.exercises.map(
       (workoutExercise) => ({
@@ -153,6 +160,7 @@ const createWorkoutOfTheWeekOccurrenceFromTemplate = async ({
     name: workoutOfTheWeek.name,
     description: workoutOfTheWeek.description,
     bonusXP: workoutOfTheWeek.bonusXP,
+    difficulty: workoutOfTheWeek.difficulty,
     startsAt: weekStart,
     endsAt: weekEnd,
     status: "upcoming",
@@ -249,6 +257,7 @@ export const createWorkoutOfTheWeek = async ({
   name,
   description,
   bonusXP,
+  difficulty,
   exercises,
   createdBy,
 }) => {
@@ -258,6 +267,7 @@ export const createWorkoutOfTheWeek = async ({
     name,
     description,
     bonusXP,
+    difficulty,
     exercises,
     createdBy,
   });
@@ -373,6 +383,7 @@ export const updateWorkoutOfTheWeek = async ({
     description: updates.description ?? workoutOfTheWeek.description,
 
     bonusXP: updates.bonusXP ?? workoutOfTheWeek.bonusXP,
+    difficulty: updates.difficulty ?? workoutOfTheWeek.difficulty,
 
     exercises: updates.exercises ?? existingExercises,
 

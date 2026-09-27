@@ -14,12 +14,13 @@ import {
 export const createWorkoutOfTheWeekController = async (req, res, next) => {
   try {
     const createdBy = req.user.userId;
-    const { name, description, bonusXP, exercises } = req.body;
+    const { name, description, bonusXP, exercises, difficulty } = req.body;
 
     const workoutOfTheWeek = await createWorkoutOfTheWeek({
       name,
       description,
       bonusXP,
+      difficulty,
       exercises,
       createdBy,
     });

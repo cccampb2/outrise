@@ -418,9 +418,16 @@ export const completeActiveWorkoutSession = async ({ userId }) => {
 
       const completedBeforeDeadline = completedAt < occurrence.endsAt;
 
+      const completedAllExercises = workoutSession.exercises.every(
+        (sessionExercise) =>
+          !sessionExercise.skipped &&
+          hasValidActualPerformance(sessionExercise),
+      );
+
       if (
         workoutSession.sourceType === "workout_of_the_week" &&
-        completedBeforeDeadline
+        completedBeforeDeadline &&
+        completedAllExercises
       ) {
         workoutOfTheWeekXP = occurrence.bonusXP;
       }

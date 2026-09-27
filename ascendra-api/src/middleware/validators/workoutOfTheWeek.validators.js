@@ -5,6 +5,9 @@ export const createWorkoutOfTheWeekSchema = {
     name: Joi.string().trim().required(),
     description: Joi.string().trim().allow("").default(""),
     bonusXP: Joi.number().integer().min(1).required(),
+    difficulty: Joi.string()
+      .valid("easy", "medium", "hard", "impossible", "just_fun")
+      .required(),
     exercises: Joi.array()
       .items(
         Joi.object({
@@ -69,6 +72,13 @@ export const updateWorkoutOfTheWeekSchema = {
       .integer()
 
       .min(1),
+    difficulty: Joi.string().valid(
+      "easy",
+      "medium",
+      "hard",
+      "impossible",
+      "just_fun",
+    ),
 
     exercises: Joi.array()
 

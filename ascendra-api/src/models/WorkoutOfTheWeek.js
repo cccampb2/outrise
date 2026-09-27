@@ -19,6 +19,13 @@ const workoutOfTheWeekSchema = new Schema(
       required: true,
       min: 1,
     },
+    difficulty: {
+      type: String,
+
+      enum: ["easy", "medium", "hard", "impossible", "just_fun"],
+
+      required: true,
+    },
 
     createdBy: {
       type: Schema.Types.ObjectId,

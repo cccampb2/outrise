@@ -32,6 +32,13 @@ const workoutOfTheWeekOccurrenceSchema = new Schema(
 
       min: 1,
     },
+    difficulty: {
+      type: String,
+
+      enum: ["easy", "medium", "hard", "impossible", "just_fun"],
+
+      required: true,
+    },
 
     startsAt: {
       type: Date,
