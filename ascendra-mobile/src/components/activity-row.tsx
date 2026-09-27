@@ -10,21 +10,28 @@ type ActivityRowProps = {
   xp: number;
 
   isLast?: boolean;
+
+  accentColor?: string;
 };
 
 export function ActivityRow({
   name,
-
   date,
-
   xp,
-
   isLast = false,
+  accentColor = Colors.dark.accent,
 }: ActivityRowProps) {
   return (
     <View style={[styles.row, isLast && styles.lastRow]}>
       <View style={styles.activityInfo}>
-        <View style={styles.node} />
+        <View
+          style={[
+            styles.node,
+            {
+              backgroundColor: accentColor,
+            },
+          ]}
+        />
 
         <View style={styles.textContent}>
           <Text style={styles.name}>{name}</Text>
@@ -36,7 +43,16 @@ export function ActivityRow({
       <View style={styles.xpContainer}>
         <Text style={styles.xpLabel}>XP_GAIN</Text>
 
-        <Text style={styles.xp}>+{xp}</Text>
+        <Text
+          style={[
+            styles.xp,
+            {
+              color: accentColor,
+            },
+          ]}
+        >
+          +{xp}
+        </Text>
       </View>
     </View>
   );
@@ -79,8 +95,6 @@ const styles = StyleSheet.create({
     height: 6,
 
     marginRight: 12,
-
-    backgroundColor: Colors.dark.echelon,
 
     transform: [{ rotate: "45deg" }],
   },
@@ -128,8 +142,6 @@ const styles = StyleSheet.create({
   },
 
   xp: {
-    color: Colors.dark.echelon,
-
     fontSize: 14,
 
     fontWeight: "800",

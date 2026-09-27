@@ -1,11 +1,67 @@
-import { StyleSheet, Text, View, Pressable } from "react-native";
-import { Screen } from "@/components/screen";
-import { Colors, TAB_BAR_HEIGHT } from "@/constants/theme";
-import { ActivityRow } from "@/components/activity-row";
-import { useSelector } from "react-redux";
-import type { RootState } from "@/store/store";
-import { getFactions } from "@/api/factions";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { router } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
+import { useSelector } from "react-redux";
+
+import { Screen } from "@/components/screen";
+import { ActivityRow } from "@/components/activity-row";
+import { Colors, TAB_BAR_HEIGHT } from "@/constants/theme";
+import { getFactions } from "@/api/factions";
+import {
+  getCurrentWorkoutOfTheWeek,
+  type WorkoutOfTheWeekDifficulty,
+} from "@/api/workout-of-the-week";
+import type { RootState } from "@/store/store";
+
+function formatDifficulty(difficulty: WorkoutOfTheWeekDifficulty) {
+  switch (difficulty) {
+    case "easy":
+      return "EASY";
+
+    case "medium":
+      return "MEDIUM";
+
+    case "hard":
+      return "HARD";
+
+    case "impossible":
+      return "IMPOSSIBLE";
+
+    case "just_fun":
+      return "JUST FUN";
+  }
+}
+
+function getRemainingSeconds(endsAt: string) {
+  const endMilliseconds = new Date(endsAt).getTime();
+  const currentMilliseconds = Date.now();
+
+  return Math.max(
+    0,
+    Math.floor((endMilliseconds - currentMilliseconds) / 1000),
+  );
+}
+
+function formatRemainingTime(totalSeconds: number) {
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+
+  if (days > 0) {
+    return `${days}D ${hours}H LEFT`;
+  }
+
+  if (hours > 0) {
+    return `${hours} HRS LEFT`;
+  }
+
+  const minutes = Math.floor(totalSeconds / 60);
+
+  if (minutes > 0) {
+    return `${minutes} MIN LEFT`;
+  }
+
+  return "<1 MIN LEFT";
+}
 
 export default function HomeScreen() {
   const user = useSelector((state: RootState) => state.auth.user);
@@ -15,9 +71,21 @@ export default function HomeScreen() {
     queryFn: getFactions,
   });
 
+  const currentWorkoutOfTheWeekQuery = useQuery({
+    queryKey: ["workout-of-the-week", "current"],
+    queryFn: getCurrentWorkoutOfTheWeek,
+  });
+
   const faction = factionsQuery.data?.factions.find(
     (faction) => faction._id === user?.faction,
   );
+
+  const currentWorkoutOfTheWeek =
+    currentWorkoutOfTheWeekQuery.data?.currentWorkoutOfTheWeek;
+
+  const workoutOfTheWeekOccurrence = currentWorkoutOfTheWeek?.occurrence;
+
+  const workoutOfTheWeekSession = currentWorkoutOfTheWeek?.workoutSession;
 
   const accent = faction?.colors.primary ?? Colors.dark.accent;
 
@@ -29,6 +97,10 @@ export default function HomeScreen() {
   );
 
   const progressTipPercent = Math.min(Math.max(progressPercent, 0), 99);
+
+  const workoutOfTheWeekRemainingSeconds = workoutOfTheWeekOccurrence
+    ? getRemainingSeconds(workoutOfTheWeekOccurrence.endsAt)
+    : 0;
 
   return (
     <Screen scroll bottomInSet={TAB_BAR_HEIGHT} hideTabBarOnScroll>
@@ -224,128 +296,165 @@ export default function HomeScreen() {
           <Text style={styles.sectionNumber}>02</Text>
         </View>
 
-        <View style={styles.wotwCard}>
-          <View style={styles.wotwTopBar}>
-            <View style={styles.wotwStatus}>
-              <View
-                style={[
-                  styles.wotwStatusDot,
-                  {
-                    backgroundColor: accent,
-                  },
-                ]}
-              />
-
-              <Text
-                style={[
-                  styles.wotwStatusText,
-                  {
-                    color: accent,
-                  },
-                ]}
-              >
-                WOTW // ACTIVE
-              </Text>
-            </View>
-
-            <Text style={styles.sectionBadge}>72 HRS LEFT</Text>
-          </View>
-
-          <View style={styles.wotwTitleArea}>
-            <Text style={styles.wotwName}>Operation Overload</Text>
-
-            <Text style={styles.wotwDescription}>
-              Complete this week's featured workout to earn bonus XP.
+        {currentWorkoutOfTheWeekQuery.isPending ? (
+          <View style={styles.wotwSystemMessage}>
+            <Text style={styles.wotwSystemMessageText}>
+              {"// LOADING_WEEKLY_CHALLENGE..."}
             </Text>
           </View>
-
-          <View style={styles.wotwStats}>
-            <View style={styles.wotwStat}>
-              <Text style={styles.statLabel}>EXERCISES</Text>
-
-              <Text style={styles.statValue}>5</Text>
-            </View>
-
-            <View style={styles.wotwStatDivider} />
-
-            <View style={styles.wotwStat}>
-              <Text style={styles.statLabel}>DIFFICULTY</Text>
-
-              <Text style={styles.statValue}>Intermediate</Text>
-            </View>
-
-            <View style={styles.wotwStatDivider} />
-
-            <View style={styles.wotwStat}>
-              <Text style={styles.statLabel}>BONUS_XP</Text>
-
-              <Text
-                style={[
-                  styles.bonusValue,
-                  {
-                    color: accent,
-                  },
-                ]}
-              >
-                +100
-              </Text>
-            </View>
+        ) : currentWorkoutOfTheWeekQuery.isError ? (
+          <View style={styles.wotwSystemMessage}>
+            <Text style={styles.wotwSystemMessageText}>
+              {"// UNABLE_TO_LOAD_WEEKLY_CHALLENGE"}
+            </Text>
           </View>
-
-          <View style={styles.divider} />
-
-          <Pressable
-            style={({ pressed }) => [
-              styles.startWorkoutButton,
-              {
-                borderColor: accent,
-              },
-              pressed ? styles.startWorkoutButtonPressed : null,
-            ]}
-          >
-            {({ pressed }) => (
-              <>
+        ) : workoutOfTheWeekOccurrence ? (
+          <View style={styles.wotwCard}>
+            <View style={styles.wotwTopBar}>
+              <View style={styles.wotwStatus}>
                 <View
                   style={[
-                    styles.buttonMarker,
+                    styles.wotwStatusDot,
                     {
                       backgroundColor: accent,
-                      opacity: pressed ? 1 : 0.7,
                     },
                   ]}
                 />
 
                 <Text
                   style={[
-                    styles.startWorkoutText,
+                    styles.wotwStatusText,
                     {
                       color: accent,
                     },
                   ]}
                 >
-                  VIEW_WORKOUT
+                  {workoutOfTheWeekSession?.status === "active"
+                    ? "WOTW // IN_PROGRESS"
+                    : workoutOfTheWeekSession?.status === "completed"
+                      ? "WOTW // COMPLETED"
+                      : workoutOfTheWeekSession?.status === "cancelled"
+                        ? "WOTW // CANCELLED"
+                        : "WOTW // ACTIVE"}
                 </Text>
+              </View>
+
+              <Text style={styles.sectionBadge}>
+                {workoutOfTheWeekRemainingSeconds > 0
+                  ? formatRemainingTime(workoutOfTheWeekRemainingSeconds)
+                  : "EXPIRED"}
+              </Text>
+            </View>
+
+            <View style={styles.wotwTitleArea}>
+              <Text style={styles.wotwName}>
+                {workoutOfTheWeekOccurrence.name}
+              </Text>
+
+              <Text style={styles.wotwDescription} numberOfLines={2}>
+                {workoutOfTheWeekOccurrence.description}
+              </Text>
+            </View>
+
+            <View style={styles.wotwStats}>
+              <View style={styles.wotwStat}>
+                <Text style={styles.statLabel}>EXERCISES</Text>
+
+                <Text style={styles.statValue}>
+                  {workoutOfTheWeekOccurrence.exercises.length}
+                </Text>
+              </View>
+
+              <View style={styles.wotwStatDivider} />
+
+              <View style={styles.wotwStat}>
+                <Text style={styles.statLabel}>DIFFICULTY</Text>
+
+                <Text style={styles.statValue}>
+                  {formatDifficulty(workoutOfTheWeekOccurrence.difficulty)}
+                </Text>
+              </View>
+
+              <View style={styles.wotwStatDivider} />
+
+              <View style={styles.wotwStat}>
+                <Text style={styles.statLabel}>BONUS_XP</Text>
 
                 <Text
                   style={[
-                    styles.buttonArrow,
+                    styles.bonusValue,
                     {
                       color: accent,
                     },
                   ]}
                 >
-                  →
+                  +{workoutOfTheWeekOccurrence.bonusXP}
                 </Text>
-              </>
-            )}
-          </Pressable>
-        </View>
+              </View>
+            </View>
+
+            <View style={styles.divider} />
+
+            <Pressable
+              onPress={() => router.push("/workout-of-the-week")}
+              style={({ pressed }) => [
+                styles.startWorkoutButton,
+                {
+                  borderColor: accent,
+                },
+                pressed ? styles.startWorkoutButtonPressed : null,
+              ]}
+            >
+              {({ pressed }) => (
+                <>
+                  <View
+                    style={[
+                      styles.buttonMarker,
+                      {
+                        backgroundColor: accent,
+                        opacity: pressed ? 1 : 0.7,
+                      },
+                    ]}
+                  />
+
+                  <Text
+                    style={[
+                      styles.startWorkoutText,
+                      {
+                        color: accent,
+                      },
+                    ]}
+                  >
+                    VIEW_WORKOUT
+                  </Text>
+
+                  <Text
+                    style={[
+                      styles.buttonArrow,
+                      {
+                        color: accent,
+                      },
+                    ]}
+                  >
+                    →
+                  </Text>
+                </>
+              )}
+            </Pressable>
+          </View>
+        ) : (
+          <View style={styles.wotwSystemMessage}>
+            <Text style={styles.wotwSystemMessageText}>
+              {"// NO_ACTIVE_WEEKLY_CHALLENGE"}
+            </Text>
+          </View>
+        )}
 
         {/* RECENT ACTIVITY */}
 
         <View style={styles.sectionHeader}>
           <View>
-            <Text style={styles.sectionEyebrow}>WORKOUT_HISTORY</Text>
+            <Text style={styles.sectionEyebrow}>ACTIVITY_FEED</Text>
 
             <Text style={styles.sectionTitle}>Recent Activity</Text>
           </View>
@@ -365,7 +474,7 @@ export default function HomeScreen() {
                 ]}
               />
 
-              <Text style={styles.activityStatusText}>LATEST_WORKOUTS</Text>
+              <Text style={styles.activityStatusText}>LATEST_UPDATES</Text>
             </View>
 
             <Pressable
@@ -394,6 +503,7 @@ export default function HomeScreen() {
                 name={activity.name}
                 date={activity.date}
                 xp={activity.xp}
+                accentColor={accent}
                 isLast={index === recentActivity.length - 1}
               />
             ))}
@@ -664,6 +774,21 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
 
+  wotwSystemMessage: {
+    backgroundColor: Colors.dark.backgroundElement,
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
+    padding: 18,
+    marginBottom: 30,
+  },
+
+  wotwSystemMessageText: {
+    color: Colors.dark.textTechnical,
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 1.2,
+  },
+
   wotwTopBar: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -878,20 +1003,20 @@ const styles = StyleSheet.create({
 const recentActivity = [
   {
     id: "1",
-    name: "Upper Body Strength",
+    name: "NovaRift sent you a friend request",
     date: "Today",
-    xp: 180,
+    xp: 0,
   },
   {
     id: "2",
-    name: "5K Run",
-    date: "Yesterday",
-    xp: 125,
+    name: "Your faction moved up in the standings",
+    date: "Today",
+    xp: 0,
   },
   {
     id: "3",
-    name: "Operation Ironclad",
-    date: "Sep 19",
-    xp: 210,
+    name: "New Workout of the Week is now active",
+    date: "Yesterday",
+    xp: 0,
   },
 ];

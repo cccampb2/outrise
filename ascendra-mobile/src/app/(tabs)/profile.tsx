@@ -415,76 +415,185 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          {/* ECHELON */}
+          {/* ASCENDRA STATUS */}
 
           <View style={styles.subsystemHeader}>
-            <Text style={styles.subsystemLabel}>ECHELON_STATUS</Text>
+            <Text style={styles.subsystemLabel}>ASCENDRA_STATUS</Text>
 
             <View style={styles.subsystemLine} />
           </View>
 
-          {user.progression.echelon !== null ? (
-            <View style={styles.echelonShowcase}>
-              <View style={styles.echelonGrid}>
-                <View style={styles.echelonGridVertical} />
-                <View style={styles.echelonGridHorizontal} />
+          <View style={styles.statusShowcase}>
+            {/* ECHELON */}
 
-                <View style={styles.echelonOrbitLarge} />
-                <View style={styles.echelonOrbitSmall} />
+            <View style={styles.statusPanel}>
+              <View style={styles.statusPanelGrid}>
+                <View style={styles.statusGridVertical} />
+                <View style={styles.statusGridHorizontal} />
+
+                <View style={styles.statusOrbitLarge} />
+                <View style={styles.statusOrbitSmall} />
               </View>
 
-              <View style={styles.echelonTopBar}>
-                <Text style={styles.echelonSystemText}>
-                  ASCENDRA // PROGRESSION
+              <View style={styles.statusPanelTop}>
+                <Text style={styles.echelonPanelLabel}>ECHELON</Text>
+
+                {user.progression.echelon !== null ? (
+                  <View style={styles.echelonActive}>
+                    <View style={styles.echelonActiveDot} />
+
+                    <Text style={styles.echelonActiveText}>ACTIVE</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.statusLockedLabel}>LOCKED</Text>
+                )}
+              </View>
+
+              <View style={styles.statusEmblemArea}>
+                {user.progression.echelon !== null ? (
+                  <>
+                    <View style={styles.echelonGlow} />
+
+                    <EchelonEmblem
+                      echelon={user.progression.echelon}
+                      size={118}
+                    />
+                  </>
+                ) : (
+                  <Text style={styles.statusLockedSymbol}>—</Text>
+                )}
+              </View>
+
+              <View style={styles.statusInformation}>
+                <Text style={styles.statusInfoLabel}>CURRENT_ECHELON</Text>
+
+                <Text style={styles.statusInfoValue}>
+                  {user.progression.echelon !== null
+                    ? String(user.progression.echelon).padStart(2, "0")
+                    : "--"}
                 </Text>
 
-                <View style={styles.echelonActive}>
-                  <View style={styles.echelonActiveDot} />
-
-                  <Text style={styles.echelonActiveText}>ACTIVE</Text>
-                </View>
-              </View>
-
-              <View style={styles.echelonEmblemArea}>
-                <View style={styles.echelonGlow} />
-
-                <EchelonEmblem echelon={user.progression.echelon} size={170} />
-              </View>
-
-              <View style={styles.echelonInformation}>
-                <View>
-                  <Text style={styles.echelonInfoLabel}>CURRENT_ECHELON</Text>
-
-                  <Text style={styles.echelonInfoValue}>
-                    {String(user.progression.echelon).padStart(2, "0")}
-                  </Text>
-                </View>
-
-                <View style={styles.echelonDivider} />
-
-                <View style={styles.echelonMilestone}>
-                  <Text style={styles.echelonInfoLabel}>MILESTONE</Text>
-
-                  <Text style={styles.echelonMilestoneValue}>
-                    {`LEVEL_${String(user.progression.echelon * 50).padStart(
-                      3,
-                      "0",
-                    )}`}
-                  </Text>
-                </View>
+                <Text style={styles.statusInfoMeta}>
+                  {user.progression.echelon !== null
+                    ? `LEVEL_${String(user.progression.echelon * 50).padStart(
+                        3,
+                        "0",
+                      )}`
+                    : "NOT_YET_UNLOCKED"}
+                </Text>
               </View>
             </View>
-          ) : (
-            <View style={styles.echelonLocked}>
-              <View>
-                <Text style={styles.echelonInfoLabel}>ECHELON_STATUS</Text>
 
-                <Text style={styles.echelonLockedTitle}>NOT_YET_UNLOCKED</Text>
+            {/* ZENITH - TEMPORARILY USING ECHELON EMBLEM */}
+
+            <View
+              style={[
+                styles.statusPanel,
+                user.ranking.zenithRank !== null
+                  ? styles.zenithStatusPanel
+                  : null,
+              ]}
+            >
+              <View style={styles.statusPanelGrid}>
+                <View
+                  style={[
+                    styles.statusGridVertical,
+                    user.ranking.zenithRank !== null
+                      ? styles.zenithGridLine
+                      : null,
+                  ]}
+                />
+
+                <View
+                  style={[
+                    styles.statusGridHorizontal,
+                    user.ranking.zenithRank !== null
+                      ? styles.zenithGridLine
+                      : null,
+                  ]}
+                />
+
+                <View
+                  style={[
+                    styles.statusOrbitLarge,
+                    user.ranking.zenithRank !== null
+                      ? styles.zenithOrbit
+                      : null,
+                  ]}
+                />
+
+                <View
+                  style={[
+                    styles.statusOrbitSmall,
+                    user.ranking.zenithRank !== null
+                      ? styles.zenithOrbit
+                      : null,
+                  ]}
+                />
               </View>
 
-              <Text style={styles.echelonLockedValue}>—</Text>
+              <View style={styles.statusPanelTop}>
+                <Text
+                  style={[
+                    styles.zenithPanelLabel,
+                    user.ranking.zenithRank === null
+                      ? styles.statusInactiveLabel
+                      : null,
+                  ]}
+                >
+                  ZENITH
+                </Text>
+
+                {user.ranking.zenithRank !== null ? (
+                  <View style={styles.zenithActiveBadge}>
+                    <View style={styles.zenithActiveDot} />
+
+                    <Text style={styles.zenithActiveText}>ACTIVE</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.statusLockedLabel}>UNRANKED</Text>
+                )}
+              </View>
+
+              <View style={styles.statusEmblemArea}>
+                {user.ranking.zenithRank !== null ? (
+                  <>
+                    <View style={styles.zenithGlow} />
+
+                    <EchelonEmblem
+                      echelon={user.ranking.zenithRank}
+                      size={118}
+                    />
+                  </>
+                ) : (
+                  <Text style={styles.statusLockedSymbol}>—</Text>
+                )}
+              </View>
+
+              <View style={styles.statusInformation}>
+                <Text style={styles.statusInfoLabel}>ZENITH_RANK</Text>
+
+                <Text
+                  style={[
+                    styles.statusInfoValue,
+                    user.ranking.zenithRank !== null
+                      ? styles.zenithInfoValue
+                      : null,
+                  ]}
+                >
+                  {user.ranking.zenithRank !== null
+                    ? String(user.ranking.zenithRank).padStart(2, "0")
+                    : "--"}
+                </Text>
+
+                <Text style={styles.statusInfoMeta}>
+                  {user.ranking.zenithRank !== null
+                    ? "GLOBAL_TOP_25"
+                    : "STATUS_NOT_ACQUIRED"}
+                </Text>
+              </View>
             </View>
-          )}
+          </View>
 
           {/* RANKINGS */}
 
@@ -498,78 +607,22 @@ export default function ProfileScreen() {
             <Text style={styles.sectionNumber}>02</Text>
           </View>
 
-          <View style={styles.rankingLayout}>
-            <View style={styles.globalRankCard}>
+          <View style={styles.rankingCard}>
+            <View style={styles.rankingIdentity}>
               <Text style={styles.dataLabel}>GLOBAL_RANK</Text>
-
-              <View style={styles.rankValueRow}>
-                <Text style={styles.rankHash}>#</Text>
-
-                <Text style={styles.globalRankValue}>
-                  {user.ranking.globalRank !== null
-                    ? user.ranking.globalRank
-                    : "---"}
-                </Text>
-              </View>
 
               <Text style={styles.rankDescription}>WORLDWIDE_POSITION</Text>
             </View>
 
-            <View
-              style={[
-                styles.zenithCard,
-                user.ranking.zenithRank !== null
-                  ? styles.zenithCardActive
-                  : null,
-              ]}
-            >
-              <View style={styles.zenithTop}>
-                <Text
-                  style={[
-                    styles.dataLabel,
-                    user.ranking.zenithRank !== null ? styles.zenithGold : null,
-                  ]}
-                >
-                  ZENITH_ELITE
-                </Text>
+            <View style={styles.rankingDivider} />
 
-                {user.ranking.zenithRank !== null ? (
-                  <View style={styles.zenithActiveBadge}>
-                    <View style={styles.zenithActiveDot} />
+            <View style={styles.rankingValue}>
+              <Text style={styles.rankHash}>#</Text>
 
-                    <Text style={styles.zenithActiveText}>ACTIVE</Text>
-                  </View>
-                ) : null}
-              </View>
-
-              <View style={styles.rankValueRow}>
-                <Text
-                  style={[
-                    styles.rankHash,
-                    user.ranking.zenithRank !== null ? styles.zenithGold : null,
-                  ]}
-                >
-                  #
-                </Text>
-
-                <Text
-                  style={[
-                    styles.globalRankValue,
-                    user.ranking.zenithRank !== null
-                      ? styles.zenithRankValue
-                      : null,
-                  ]}
-                >
-                  {user.ranking.zenithRank !== null
-                    ? user.ranking.zenithRank
-                    : "---"}
-                </Text>
-              </View>
-
-              <Text style={styles.rankDescription}>
-                {user.ranking.zenithRank !== null
-                  ? "TOP_25_STATUS"
-                  : "STATUS_NOT_ACQUIRED"}
+              <Text style={styles.globalRankValue}>
+                {user.ranking.globalRank !== null
+                  ? user.ranking.globalRank
+                  : "---"}
               </Text>
             </View>
           </View>
@@ -1130,7 +1183,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
 
-  /* ECHELON */
+  /* ASCENDRA STATUS */
 
   subsystemHeader: {
     flexDirection: "row",
@@ -1152,27 +1205,33 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.dark.border,
   },
 
-  echelonShowcase: {
-    position: "relative",
-    overflow: "hidden",
-    minHeight: 265,
-    backgroundColor: Colors.dark.echelonSurface,
-    borderWidth: 1,
-    borderColor: Colors.dark.echelonBorder,
+  statusShowcase: {
+    flexDirection: "row",
+    gap: 10,
     marginBottom: 34,
   },
 
-  echelonGrid: {
+  statusPanel: {
+    flex: 1,
+    position: "relative",
+    overflow: "hidden",
+    minHeight: 250,
+    backgroundColor: Colors.dark.echelonSurface,
+    borderWidth: 1,
+    borderColor: Colors.dark.echelonBorder,
+  },
+
+  zenithStatusPanel: {
+    backgroundColor: Colors.dark.zenithSurface,
+    borderColor: Colors.dark.zenithBorder,
+  },
+
+  statusPanelGrid: {
     ...StyleSheet.absoluteFillObject,
     opacity: 0.4,
   },
 
-  /*
-   * These four colors are intentionally local.
-   * They're decorative details specific to the Echelon artwork,
-   * not global UI colors.
-   */
-  echelonGridVertical: {
+  statusGridVertical: {
     position: "absolute",
     top: 0,
     bottom: 0,
@@ -1181,57 +1240,84 @@ const styles = StyleSheet.create({
     backgroundColor: "#18314A",
   },
 
-  echelonGridHorizontal: {
+  statusGridHorizontal: {
     position: "absolute",
     left: 0,
     right: 0,
-    top: "50%",
+    top: "45%",
     height: StyleSheet.hairlineWidth,
     backgroundColor: "#18314A",
   },
 
-  echelonOrbitLarge: {
+  statusOrbitLarge: {
     position: "absolute",
-    width: 240,
-    height: 240,
-    borderRadius: 120,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: "#163047",
     alignSelf: "center",
-    top: 18,
+    top: 39,
   },
 
-  echelonOrbitSmall: {
+  statusOrbitSmall: {
     position: "absolute",
-    width: 180,
-    height: 180,
-    borderRadius: 90,
+    width: 110,
+    height: 110,
+    borderRadius: 55,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: "#1C3C59",
     alignSelf: "center",
-    top: 48,
+    top: 59,
   },
 
-  echelonTopBar: {
+  zenithGridLine: {
+    backgroundColor: Colors.dark.zenithBorder,
+  },
+
+  zenithOrbit: {
+    borderColor: Colors.dark.zenithBorder,
+  },
+
+  statusPanelTop: {
+    minHeight: 38,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 14,
-    paddingTop: 12,
+    paddingHorizontal: 10,
+    paddingTop: 8,
     zIndex: 2,
   },
 
-  echelonSystemText: {
+  echelonPanelLabel: {
     color: Colors.dark.echelonMuted,
     fontSize: 7,
     fontWeight: "900",
-    letterSpacing: 1.4,
+    letterSpacing: 1.3,
+  },
+
+  zenithPanelLabel: {
+    color: Colors.dark.zenith,
+    fontSize: 7,
+    fontWeight: "900",
+    letterSpacing: 1.3,
+  },
+
+  statusInactiveLabel: {
+    color: Colors.dark.textTechnical,
+  },
+
+  statusLockedLabel: {
+    color: Colors.dark.textDim,
+    fontSize: 6,
+    fontWeight: "900",
+    letterSpacing: 0.8,
   },
 
   echelonActive: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
+    gap: 4,
   },
 
   echelonActiveDot: {
@@ -1243,148 +1329,15 @@ const styles = StyleSheet.create({
 
   echelonActiveText: {
     color: Colors.dark.echelonMuted,
-    fontSize: 7,
+    fontSize: 6,
     fontWeight: "900",
-    letterSpacing: 1.2,
-  },
-
-  echelonEmblemArea: {
-    height: 175,
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 1,
-  },
-
-  echelonGlow: {
-    position: "absolute",
-    width: 135,
-    height: 135,
-    borderRadius: 68,
-    backgroundColor: Colors.dark.echelonGlow,
-    opacity: 0.08,
-  },
-
-  echelonInformation: {
-    minHeight: 62,
-    flexDirection: "row",
-    alignItems: "center",
-    borderTopWidth: 1,
-    borderTopColor: Colors.dark.echelonBorder,
-    backgroundColor: Colors.dark.backgroundDeep,
-    paddingHorizontal: 16,
-    zIndex: 3,
-  },
-
-  echelonInfoLabel: {
-    color: Colors.dark.textTechnical,
-    fontSize: 7,
-    fontWeight: "900",
-    letterSpacing: 1.3,
-  },
-
-  echelonInfoValue: {
-    color: Colors.dark.text,
-    fontSize: 18,
-    fontWeight: "900",
-    marginTop: 2,
-  },
-
-  echelonDivider: {
-    width: 1,
-    height: 27,
-    backgroundColor: Colors.dark.echelonBorder,
-    marginHorizontal: 20,
-  },
-
-  echelonMilestone: {
-    flex: 1,
-  },
-
-  echelonMilestoneValue: {
-    color: Colors.dark.textMuted,
-    fontSize: 12,
-    fontWeight: "900",
-    letterSpacing: 1.2,
-    marginTop: 4,
-  },
-
-  echelonLocked: {
-    minHeight: 100,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: Colors.dark.backgroundElement,
-    borderWidth: 1,
-    borderColor: Colors.dark.border,
-    paddingHorizontal: 18,
-    marginBottom: 34,
-  },
-
-  echelonLockedTitle: {
-    color: Colors.dark.textMuted,
-    fontSize: 13,
-    fontWeight: "900",
-    letterSpacing: 1,
-    marginTop: 5,
-  },
-
-  echelonLockedValue: {
-    color: Colors.dark.borderStrong,
-    fontSize: 36,
-    fontWeight: "900",
-  },
-
-  /* RANKINGS */
-
-  rankingLayout: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 32,
-  },
-
-  globalRankCard: {
-    flex: 1,
-    minHeight: 140,
-    backgroundColor: Colors.dark.backgroundSelected,
-    borderWidth: 1,
-    borderColor: Colors.dark.border,
-    padding: 16,
-    justifyContent: "space-between",
-  },
-
-  zenithCard: {
-    flex: 1,
-    minHeight: 140,
-    backgroundColor: Colors.dark.backgroundSelected,
-    borderWidth: 1,
-    borderColor: Colors.dark.border,
-    padding: 16,
-    justifyContent: "space-between",
-  },
-
-  zenithCardActive: {
-    backgroundColor: Colors.dark.zenithSurface,
-    borderColor: Colors.dark.zenithBorder,
-  },
-
-  zenithTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-
-  zenithGold: {
-    color: Colors.dark.zenith,
+    letterSpacing: 0.8,
   },
 
   zenithActiveBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    borderWidth: 1,
-    borderColor: Colors.dark.zenithBorder,
-    paddingHorizontal: 5,
-    paddingVertical: 2,
   },
 
   zenithActiveDot: {
@@ -1398,31 +1351,123 @@ const styles = StyleSheet.create({
     color: Colors.dark.zenith,
     fontSize: 6,
     fontWeight: "900",
+    letterSpacing: 0.8,
+  },
+
+  statusEmblemArea: {
+    height: 135,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1,
+  },
+
+  echelonGlow: {
+    position: "absolute",
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: Colors.dark.echelonGlow,
+    opacity: 0.08,
+  },
+
+  zenithGlow: {
+    position: "absolute",
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: Colors.dark.zenith,
+    opacity: 0.07,
+  },
+
+  statusLockedSymbol: {
+    color: Colors.dark.borderStrong,
+    fontSize: 42,
+    fontWeight: "900",
+  },
+
+  statusInformation: {
+    flex: 1,
+    minHeight: 75,
+    justifyContent: "center",
+    borderTopWidth: 1,
+    borderTopColor: Colors.dark.border,
+    backgroundColor: Colors.dark.backgroundDeep,
+    paddingHorizontal: 11,
+    paddingVertical: 9,
+    zIndex: 3,
+  },
+
+  statusInfoLabel: {
+    color: Colors.dark.textTechnical,
+    fontSize: 6,
+    fontWeight: "900",
     letterSpacing: 1,
   },
 
-  rankValueRow: {
+  statusInfoValue: {
+    color: Colors.dark.text,
+    fontSize: 18,
+    fontWeight: "900",
+    marginTop: 2,
+  },
+
+  zenithInfoValue: {
+    color: Colors.dark.zenith,
+  },
+
+  statusInfoMeta: {
+    color: Colors.dark.textDim,
+    fontSize: 6,
+    fontWeight: "900",
+    letterSpacing: 0.7,
+    marginTop: 3,
+  },
+
+  /* RANKINGS */
+
+  rankingCard: {
+    minHeight: 82,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.dark.backgroundSelected,
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
+    paddingHorizontal: 16,
+    marginBottom: 32,
+  },
+
+  rankingIdentity: {
+    flex: 1,
+  },
+
+  rankingDivider: {
+    width: 1,
+    height: 36,
+    backgroundColor: Colors.dark.borderSubtle,
+    marginHorizontal: 18,
+  },
+
+  rankingValue: {
+    minWidth: 80,
     flexDirection: "row",
     alignItems: "flex-start",
+    justifyContent: "flex-end",
   },
 
   rankHash: {
     color: Colors.dark.textDim,
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: "700",
-    marginTop: 6,
-    marginRight: 2,
+    marginTop: 5,
+    marginRight: 3,
   },
 
   globalRankValue: {
     color: Colors.dark.text,
-    fontSize: 38,
+    fontSize: 30,
+    lineHeight: 34,
     fontWeight: "900",
     letterSpacing: -1,
-  },
-
-  zenithRankValue: {
-    color: Colors.dark.zenith,
   },
 
   rankDescription: {
@@ -1430,6 +1475,7 @@ const styles = StyleSheet.create({
     fontSize: 7,
     fontWeight: "900",
     letterSpacing: 1,
+    marginTop: 5,
   },
 
   /* ACTIVITY */

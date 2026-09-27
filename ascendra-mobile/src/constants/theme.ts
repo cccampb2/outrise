@@ -17,11 +17,11 @@ export const Colors = {
     backgroundDeep: "#02050A",
 
     // Text
-    text: "#DCE3EA",
-    textSecondary: "#A9B4BF",
-    textMuted: "#74818E",
-    textDim: "#52606D",
-    textTechnical: "#607080",
+    text: "#A6AFB6",
+    textSecondary: "#89949D",
+    textMuted: "#687681",
+    textDim: "#46545F",
+    textTechnical: "#52626E",
 
     // Borders / structural UI
     border: "#162636",

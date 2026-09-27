@@ -182,11 +182,12 @@ const styles = StyleSheet.create({
   },
   navigationBackdrop: {
     position: "absolute",
-    height: "125%",
+
     left: -12,
     right: -12,
-    top: 0,
-    bottom: -10,
+
+    top: -10,
+    bottom: -20,
 
     backgroundColor: Colors.dark.background,
   },

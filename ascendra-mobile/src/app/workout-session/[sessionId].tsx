@@ -311,7 +311,6 @@ export default function WorkoutSessionDetail() {
     </Screen>
   );
 }
-
 const styles = StyleSheet.create({
   stateContainer: {
     flex: 1,
@@ -320,7 +319,7 @@ const styles = StyleSheet.create({
   },
 
   stateEyebrow: {
-    color: Colors.dark.echelon,
+    color: Colors.dark.accent,
     fontSize: 10,
     fontWeight: "800",
     letterSpacing: 1.5,
@@ -358,7 +357,7 @@ const styles = StyleSheet.create({
   },
 
   eyebrow: {
-    color: Colors.dark.echelon,
+    color: Colors.dark.textTechnical,
     fontSize: 10,
     fontWeight: "800",
     letterSpacing: 1.5,
@@ -393,7 +392,7 @@ const styles = StyleSheet.create({
   statusDot: {
     width: 5,
     height: 5,
-    backgroundColor: Colors.dark.echelon,
+    backgroundColor: Colors.dark.accent,
   },
 
   statusText: {
@@ -416,7 +415,7 @@ const styles = StyleSheet.create({
   },
 
   sectionNumber: {
-    color: Colors.dark.echelon,
+    color: Colors.dark.accent,
     fontSize: 9,
     fontWeight: "800",
   },
@@ -432,7 +431,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.dark.backgroundElement,
     borderWidth: 1,
     borderColor: Colors.dark.border,
-    borderRadius: 4,
     padding: 18,
     marginBottom: 32,
   },
@@ -467,7 +465,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.dark.backgroundElement,
     borderWidth: 1,
     borderColor: Colors.dark.border,
-    borderRadius: 4,
     padding: 16,
     marginBottom: 12,
   },
@@ -489,7 +486,7 @@ const styles = StyleSheet.create({
   },
 
   exerciseIndexText: {
-    color: Colors.dark.echelon,
+    color: Colors.dark.accent,
     fontSize: 10,
     fontWeight: "800",
   },
@@ -530,7 +527,7 @@ const styles = StyleSheet.create({
   },
 
   performanceLabel: {
-    color: Colors.dark.textDim,
+    color: Colors.dark.textTechnical,
     fontSize: 9,
     fontWeight: "800",
     letterSpacing: 1.2,

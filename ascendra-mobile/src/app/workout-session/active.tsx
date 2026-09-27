@@ -10,6 +10,7 @@ import {
   updateActiveExercise,
   skipActiveExercise,
   completeActiveWorkout,
+  cancelActiveWorkout,
   type CompleteWorkoutResponse,
   type UpdateExerciseInput,
   type WorkoutSessionExercise,
@@ -136,6 +137,28 @@ export default function ActiveWorkout() {
       queryClient.invalidateQueries({
         queryKey: ["workout-session", "active"],
       });
+    },
+  });
+
+  const cancelWorkoutMutation = useMutation({
+    mutationFn: cancelActiveWorkout,
+
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["workout-session", "active"],
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey: ["workout-history"],
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey: ["workout-of-the-week", "current"],
+        }),
+      ]);
+
+      router.replace("/(tabs)/train");
     },
   });
 
@@ -525,6 +548,32 @@ export default function ActiveWorkout() {
     );
   }
 
+  function handleCancelWorkout() {
+    const isWorkoutOfTheWeek = workout.sourceType === "workout_of_the_week";
+
+    const title = isWorkoutOfTheWeek
+      ? "Cancel Workout of the Week?"
+      : "Cancel Workout?";
+
+    const message = isWorkoutOfTheWeek
+      ? "This session cannot be reopened after cancellation. Any performance you have logged in this session will be lost, and you will forfeit the original Workout of the Week bonus XP."
+      : "This session cannot be reopened after cancellation. Any performance you have logged in this session will be lost.";
+
+    Alert.alert(title, message, [
+      {
+        text: "Keep Workout",
+        style: "cancel",
+      },
+      {
+        text: "Cancel Workout",
+        style: "destructive",
+        onPress: () => {
+          cancelWorkoutMutation.mutate();
+        },
+      },
+    ]);
+  }
+
   const mutationError =
     updateExerciseMutation.error instanceof ApiError
       ? updateExerciseMutation.error.getDisplayMessage()
@@ -758,11 +807,65 @@ export default function ActiveWorkout() {
             : "COMPLETE_WORKOUT // ✓"}
         </Text>
       </Pressable>
+      <Pressable
+        style={({ pressed }) => [
+          styles.cancelWorkoutButton,
+          pressed && styles.cancelWorkoutButtonPressed,
+        ]}
+        disabled={cancelWorkoutMutation.isPending}
+        onPress={handleCancelWorkout}
+      >
+        <Text style={styles.cancelWorkoutButtonText}>
+          {cancelWorkoutMutation.isPending ? "CANCELLING..." : "CANCEL WORKOUT"}
+        </Text>
+      </Pressable>
+
+      {cancelWorkoutMutation.isError && (
+        <Text style={styles.cancelWorkoutError}>
+          // UNABLE_TO_CANCEL_WORKOUT
+        </Text>
+      )}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  cancelWorkoutButton: {
+    minHeight: 48,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    marginTop: 12,
+
+    backgroundColor: Colors.dark.dangerSurface,
+
+    borderWidth: 1,
+    borderColor: Colors.dark.dangerBorder,
+  },
+
+  cancelWorkoutButtonPressed: {
+    backgroundColor: Colors.dark.dangerSurfacePressed,
+  },
+
+  cancelWorkoutButtonText: {
+    color: Colors.dark.danger,
+
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+
+  cancelWorkoutError: {
+    color: Colors.dark.danger,
+
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1.1,
+
+    marginTop: 8,
+    textAlign: "center",
+  },
   stateContainer: {
     flex: 1,
     alignItems: "center",

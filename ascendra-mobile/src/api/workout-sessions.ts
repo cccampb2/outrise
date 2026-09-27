@@ -221,3 +221,49 @@ export async function skipActiveExercise(
 
   return await response.json();
 }
+
+export type StartWorkoutSessionInput = {
+  workoutId: string;
+};
+
+export async function startWorkoutSession(
+  input: StartWorkoutSessionInput,
+): Promise<WorkoutSessionResponse> {
+  const response = await apiRequest("/workout-sessions/start", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+
+  return await response.json();
+}
+
+export async function startWorkoutOfTheWeekSession(): Promise<WorkoutSessionResponse> {
+  const response = await apiRequest("/workout-sessions/wotw", {
+    method: "POST",
+  });
+
+  return await response.json();
+}
+
+export type CancelWorkoutResponse = {
+  message: string;
+  workoutSession: WorkoutSession;
+};
+
+export async function cancelActiveWorkout(): Promise<CancelWorkoutResponse> {
+  const response = await apiRequest("/workout-sessions/active/cancel", {
+    method: "PATCH",
+  });
+
+  return await response.json();
+}
+
+export async function repeatWorkoutSession(
+  sessionId: string,
+): Promise<WorkoutSessionResponse> {
+  const response = await apiRequest(`/workout-sessions/${sessionId}/repeat`, {
+    method: "POST",
+  });
+
+  return await response.json();
+}
