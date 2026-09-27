@@ -18,6 +18,8 @@ import { factionEmblems } from "@/constants/faction-assets";
 import { useQuery } from "@tanstack/react-query";
 import { getWorkoutHistory, type WorkoutSession } from "@/api/workout-sessions";
 import { EchelonEmblem } from "@/components/echelon-emblem";
+import { ZenithEmblem } from "@/components/zenith-emblem";
+import type { EchelonNumber } from "@/constants/echelon-assets";
 
 function formatTime(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60);
@@ -136,6 +138,18 @@ export default function ProfileScreen() {
       </Screen>
     );
   }
+
+  /*
+   * The API types these as number | null.
+   *
+   * EchelonEmblem is stricter because it directly indexes the
+   * echelonNumerals object, whose valid keys are 1 through 10.
+   *
+   * ZenithEmblem accepts a number because it splits ranks such as
+   * 17 into individual numeral assets: 1 and 7.
+   */
+  const echelon = user.progression.echelon as EchelonNumber | null;
+  const zenithRank = user.ranking.zenithRank;
 
   const factionEmblem = faction ? factionEmblems[faction.slug] : null;
 
@@ -438,7 +452,7 @@ export default function ProfileScreen() {
               <View style={styles.statusPanelTop}>
                 <Text style={styles.echelonPanelLabel}>ECHELON</Text>
 
-                {user.progression.echelon !== null ? (
+                {echelon !== null ? (
                   <View style={styles.echelonActive}>
                     <View style={styles.echelonActiveDot} />
 
@@ -450,14 +464,11 @@ export default function ProfileScreen() {
               </View>
 
               <View style={styles.statusEmblemArea}>
-                {user.progression.echelon !== null ? (
+                {echelon !== null ? (
                   <>
                     <View style={styles.echelonGlow} />
 
-                    <EchelonEmblem
-                      echelon={user.progression.echelon}
-                      size={118}
-                    />
+                    <EchelonEmblem echelon={echelon} size={118} />
                   </>
                 ) : (
                   <Text style={styles.statusLockedSymbol}>—</Text>
@@ -468,66 +479,51 @@ export default function ProfileScreen() {
                 <Text style={styles.statusInfoLabel}>CURRENT_ECHELON</Text>
 
                 <Text style={styles.statusInfoValue}>
-                  {user.progression.echelon !== null
-                    ? String(user.progression.echelon).padStart(2, "0")
-                    : "--"}
+                  {echelon !== null ? String(echelon).padStart(2, "0") : "--"}
                 </Text>
 
                 <Text style={styles.statusInfoMeta}>
-                  {user.progression.echelon !== null
-                    ? `LEVEL_${String(user.progression.echelon * 50).padStart(
-                        3,
-                        "0",
-                      )}`
+                  {echelon !== null
+                    ? `LEVEL_${String(echelon * 50).padStart(3, "0")}`
                     : "NOT_YET_UNLOCKED"}
                 </Text>
               </View>
             </View>
 
-            {/* ZENITH - TEMPORARILY USING ECHELON EMBLEM */}
+            {/* ZENITH */}
 
             <View
               style={[
                 styles.statusPanel,
-                user.ranking.zenithRank !== null
-                  ? styles.zenithStatusPanel
-                  : null,
+                zenithRank !== null ? styles.zenithStatusPanel : null,
               ]}
             >
               <View style={styles.statusPanelGrid}>
                 <View
                   style={[
                     styles.statusGridVertical,
-                    user.ranking.zenithRank !== null
-                      ? styles.zenithGridLine
-                      : null,
+                    zenithRank !== null ? styles.zenithGridLine : null,
                   ]}
                 />
 
                 <View
                   style={[
                     styles.statusGridHorizontal,
-                    user.ranking.zenithRank !== null
-                      ? styles.zenithGridLine
-                      : null,
+                    zenithRank !== null ? styles.zenithGridLine : null,
                   ]}
                 />
 
                 <View
                   style={[
                     styles.statusOrbitLarge,
-                    user.ranking.zenithRank !== null
-                      ? styles.zenithOrbit
-                      : null,
+                    zenithRank !== null ? styles.zenithOrbit : null,
                   ]}
                 />
 
                 <View
                   style={[
                     styles.statusOrbitSmall,
-                    user.ranking.zenithRank !== null
-                      ? styles.zenithOrbit
-                      : null,
+                    zenithRank !== null ? styles.zenithOrbit : null,
                   ]}
                 />
               </View>
@@ -536,15 +532,13 @@ export default function ProfileScreen() {
                 <Text
                   style={[
                     styles.zenithPanelLabel,
-                    user.ranking.zenithRank === null
-                      ? styles.statusInactiveLabel
-                      : null,
+                    zenithRank === null ? styles.statusInactiveLabel : null,
                   ]}
                 >
                   ZENITH
                 </Text>
 
-                {user.ranking.zenithRank !== null ? (
+                {zenithRank !== null ? (
                   <View style={styles.zenithActiveBadge}>
                     <View style={styles.zenithActiveDot} />
 
@@ -556,14 +550,11 @@ export default function ProfileScreen() {
               </View>
 
               <View style={styles.statusEmblemArea}>
-                {user.ranking.zenithRank !== null ? (
+                {zenithRank !== null ? (
                   <>
                     <View style={styles.zenithGlow} />
 
-                    <EchelonEmblem
-                      echelon={user.ranking.zenithRank}
-                      size={118}
-                    />
+                    <ZenithEmblem rank={1} size={118} />
                   </>
                 ) : (
                   <Text style={styles.statusLockedSymbol}>—</Text>
@@ -576,18 +567,16 @@ export default function ProfileScreen() {
                 <Text
                   style={[
                     styles.statusInfoValue,
-                    user.ranking.zenithRank !== null
-                      ? styles.zenithInfoValue
-                      : null,
+                    zenithRank !== null ? styles.zenithInfoValue : null,
                   ]}
                 >
-                  {user.ranking.zenithRank !== null
-                    ? String(user.ranking.zenithRank).padStart(2, "0")
+                  {zenithRank !== null
+                    ? String(zenithRank).padStart(2, "0")
                     : "--"}
                 </Text>
 
                 <Text style={styles.statusInfoMeta}>
-                  {user.ranking.zenithRank !== null
+                  {zenithRank !== null
                     ? "GLOBAL_TOP_25"
                     : "STATUS_NOT_ACQUIRED"}
                 </Text>
