@@ -20,8 +20,10 @@ function formatSource(sourceType: string) {
   switch (sourceType) {
     case "workout_of_the_week":
       return "Workout of the Week";
+
     case "repeat":
       return "Repeated Workout";
+
     default:
       return "Workout";
   }
@@ -106,46 +108,163 @@ function formatTarget(exercise: WorkoutSessionExercise) {
   }
 }
 
-function formatActual(exercise: WorkoutSessionExercise) {
+function ActualPerformance({ exercise }: { exercise: WorkoutSessionExercise }) {
   const { actual } = exercise;
 
   switch (exercise.measurementType) {
-    case "reps": {
-      const totalReps =
-        actual.sets?.reduce((total, set) => total + (set.reps ?? 0), 0) ?? 0;
+    case "weight_reps": {
+      if (!actual.sets?.length) {
+        return <Text style={styles.result}>No result</Text>;
+      }
 
-      return `${totalReps} ${totalReps === 1 ? "rep" : "reps"}`;
+      const totalReps = actual.sets.reduce(
+        (total, set) => total + (set.reps ?? 0),
+        0,
+      );
+
+      const totalVolume = actual.sets.reduce(
+        (total, set) => total + (set.reps ?? 0) * (set.weightLbs ?? 0),
+        0,
+      );
+
+      return (
+        <>
+          <View style={styles.setList}>
+            {actual.sets.map((set) => (
+              <View key={set.order} style={styles.setRow}>
+                <Text style={styles.setNumber}>
+                  SET_{String(set.order + 1).padStart(2, "0")}
+                </Text>
+
+                <Text style={styles.setResult}>
+                  {set.weightLbs ?? 0} LB × {set.reps ?? 0} REPS
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.totalSection}>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>TOTAL_REPS</Text>
+
+              <Text style={styles.totalValue}>
+                {totalReps} {totalReps === 1 ? "REP" : "REPS"}
+              </Text>
+            </View>
+
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>TOTAL_VOLUME</Text>
+
+              <Text style={styles.totalValue}>
+                {totalVolume.toLocaleString()} LB
+              </Text>
+            </View>
+          </View>
+        </>
+      );
+    }
+
+    case "reps": {
+      if (!actual.sets?.length) {
+        return <Text style={styles.result}>No result</Text>;
+      }
+
+      const totalReps = actual.sets.reduce(
+        (total, set) => total + (set.reps ?? 0),
+        0,
+      );
+
+      return (
+        <>
+          <View style={styles.setList}>
+            {actual.sets.map((set) => (
+              <View key={set.order} style={styles.setRow}>
+                <Text style={styles.setNumber}>
+                  SET_{String(set.order + 1).padStart(2, "0")}
+                </Text>
+
+                <Text style={styles.setResult}>
+                  {set.reps ?? 0} {(set.reps ?? 0) === 1 ? "REP" : "REPS"}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.totalSection}>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>TOTAL</Text>
+
+              <Text style={styles.totalValue}>
+                {totalReps} {totalReps === 1 ? "REP" : "REPS"}
+              </Text>
+            </View>
+          </View>
+        </>
+      );
     }
 
     case "distance_time": {
-      const parts = [];
+      return (
+        <View style={styles.actualStats}>
+          {actual.distanceMiles !== undefined ? (
+            <View style={styles.actualStatRow}>
+              <Text style={styles.actualStatLabel}>DISTANCE</Text>
 
-      if (actual.distanceMiles !== undefined) {
-        parts.push(`${actual.distanceMiles} mi`);
-      }
+              <Text style={styles.actualStatValue}>
+                {actual.distanceMiles} MI
+              </Text>
+            </View>
+          ) : null}
 
-      if (actual.timeSeconds !== undefined) {
-        parts.push(formatTime(actual.timeSeconds));
-      }
+          {actual.timeSeconds !== undefined ? (
+            <View style={styles.actualStatRow}>
+              <Text style={styles.actualStatLabel}>TIME</Text>
 
-      return parts.join(" // ") || "No result";
+              <Text style={styles.actualStatValue}>
+                {formatTime(actual.timeSeconds)}
+              </Text>
+            </View>
+          ) : null}
+
+          {actual.distanceMiles === undefined &&
+          actual.timeSeconds === undefined ? (
+            <Text style={styles.result}>No result</Text>
+          ) : null}
+        </View>
+      );
     }
 
     case "time":
     case "duration":
-      return actual.timeSeconds !== undefined
-        ? formatTime(actual.timeSeconds)
-        : "No result";
+      return actual.timeSeconds !== undefined ? (
+        <View style={styles.actualStats}>
+          <View style={styles.actualStatRow}>
+            <Text style={styles.actualStatLabel}>TOTAL_TIME</Text>
+
+            <Text style={styles.actualStatValue}>
+              {formatTime(actual.timeSeconds)}
+            </Text>
+          </View>
+        </View>
+      ) : (
+        <Text style={styles.result}>No result</Text>
+      );
 
     case "intervals":
-      return actual.roundsCompleted !== undefined
-        ? `${actual.roundsCompleted} ${
-            actual.roundsCompleted === 1 ? "round" : "rounds"
-          }`
-        : "No result";
+      return actual.roundsCompleted !== undefined ? (
+        <View style={styles.actualStats}>
+          <View style={styles.actualStatRow}>
+            <Text style={styles.actualStatLabel}>ROUNDS_COMPLETED</Text>
+
+            <Text style={styles.actualStatValue}>{actual.roundsCompleted}</Text>
+          </View>
+        </View>
+      ) : (
+        <Text style={styles.result}>No result</Text>
+      );
 
     default:
-      return "No result";
+      return <Text style={styles.result}>No result</Text>;
   }
 }
 
@@ -198,6 +317,7 @@ export default function WorkoutSessionDetail() {
         <View style={styles.statusRow}>
           <View style={styles.statusBadge}>
             <View style={styles.statusDot} />
+
             <Text style={styles.statusText}>
               {workout.status.toUpperCase()}
             </Text>
@@ -231,6 +351,7 @@ export default function WorkoutSessionDetail() {
 
         <View style={styles.statRow}>
           <Text style={styles.label}>EXERCISES</Text>
+
           <Text style={styles.value}>{workout.exercises.length}</Text>
         </View>
 
@@ -238,6 +359,7 @@ export default function WorkoutSessionDetail() {
 
         <View style={styles.statRow}>
           <Text style={styles.label}>SOURCE</Text>
+
           <Text style={styles.value}>{formatSource(workout.sourceType)}</Text>
         </View>
       </View>
@@ -276,6 +398,7 @@ export default function WorkoutSessionDetail() {
             <View style={styles.performanceGrid}>
               <View style={styles.performanceSection}>
                 <Text style={styles.performanceLabel}>TARGET_</Text>
+
                 <Text style={styles.result}>{formatTarget(exercise)}</Text>
               </View>
 
@@ -284,25 +407,7 @@ export default function WorkoutSessionDetail() {
               <View style={styles.performanceSection}>
                 <Text style={styles.performanceLabel}>ACTUAL_</Text>
 
-                {exercise.measurementType === "weight_reps" ? (
-                  exercise.actual.sets?.length ? (
-                    exercise.actual.sets.map((set) => (
-                      <View key={set.order} style={styles.setRow}>
-                        <Text style={styles.setNumber}>
-                          SET_{String(set.order + 1).padStart(2, "0")}
-                        </Text>
-
-                        <Text style={styles.setResult}>
-                          {set.weightLbs ?? 0} LB × {set.reps ?? 0}
-                        </Text>
-                      </View>
-                    ))
-                  ) : (
-                    <Text style={styles.result}>No result</Text>
-                  )
-                ) : (
-                  <Text style={styles.result}>{formatActual(exercise)}</Text>
-                )}
+                <ActualPerformance exercise={exercise} />
               </View>
             </View>
           )}
@@ -311,6 +416,7 @@ export default function WorkoutSessionDetail() {
     </Screen>
   );
 }
+
 const styles = StyleSheet.create({
   stateContainer: {
     flex: 1,
@@ -540,9 +646,14 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
+  setList: {
+    gap: 0,
+  },
+
   setRow: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: Colors.dark.borderSubtle,
@@ -556,6 +667,57 @@ const styles = StyleSheet.create({
   },
 
   setResult: {
+    color: Colors.dark.text,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+
+  totalSection: {
+    marginTop: 12,
+    paddingTop: 10,
+    gap: 8,
+    borderTopWidth: 1,
+    borderTopColor: Colors.dark.borderStrong,
+  },
+
+  totalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  totalLabel: {
+    color: Colors.dark.textTechnical,
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 1,
+  },
+
+  totalValue: {
+    color: Colors.dark.accent,
+    fontSize: 13,
+    fontWeight: "800",
+  },
+
+  actualStats: {
+    gap: 9,
+  },
+
+  actualStatRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    minHeight: 24,
+  },
+
+  actualStatLabel: {
+    color: Colors.dark.textMuted,
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 0.8,
+  },
+
+  actualStatValue: {
     color: Colors.dark.text,
     fontSize: 13,
     fontWeight: "700",

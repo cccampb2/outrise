@@ -20,7 +20,7 @@ const workoutExerciseSchema = Joi.object({
 export const createWorkoutSchema = {
   body: Joi.object({
     name: Joi.string().trim().min(1).max(100).required(),
-    description: Joi.string().trim().max(1000).default(""),
+    description: Joi.string().trim().allow("").max(1000).default(""),
     exercises: Joi.array().items(workoutExerciseSchema).min(1).required(),
     visibility: Joi.string().valid("private", "public").default("private"),
   }),

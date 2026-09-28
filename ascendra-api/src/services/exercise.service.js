@@ -79,7 +79,7 @@ export const getExercises = async ({
   }
 
   if (muscleGroup) {
-    filter.muscleGroup = category;
+    filter.muscleGroup = muscleGroup;
   }
 
   if (equipment) {

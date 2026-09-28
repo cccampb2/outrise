@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { Screen } from "@/components/screen";
 import { ActivityRow } from "@/components/activity-row";
@@ -510,6 +511,138 @@ export default function HomeScreen() {
           </View>
         </View>
 
+        {/* REFERENCE */}
+
+        <View style={styles.sectionHeader}>
+          <View>
+            <Text style={styles.sectionEyebrow}>REFERENCE</Text>
+
+            <Text style={styles.sectionTitle}>Ascendra Guide</Text>
+          </View>
+
+          <Text style={styles.sectionNumber}>04</Text>
+        </View>
+
+        <View style={styles.referenceGrid}>
+          <Pressable
+            onPress={() => router.push("/how-it-works")}
+            style={({ pressed }) => [
+              styles.referenceCard,
+              pressed ? styles.referenceCardPressed : null,
+            ]}
+          >
+            <View style={styles.referenceTop}>
+              <View
+                style={[
+                  styles.referenceIcon,
+                  {
+                    borderColor: accentBorder,
+                  },
+                ]}
+              >
+                <Ionicons name="information-outline" size={18} color={accent} />
+              </View>
+
+              <Text style={styles.referenceCode}>SYS_01</Text>
+            </View>
+
+            <View style={styles.referenceContent}>
+              <Text style={styles.referenceEyebrow}>SYSTEM_GUIDE</Text>
+
+              <Text style={styles.referenceTitle}>How Ascendra Works</Text>
+
+              <Text style={styles.referenceDescription}>
+                XP, levels, Echelon, Zenith, factions, PRs and competition.
+              </Text>
+            </View>
+
+            <View style={styles.referenceFooter}>
+              <Text
+                style={[
+                  styles.referenceAction,
+                  {
+                    color: accent,
+                  },
+                ]}
+              >
+                OPEN_GUIDE
+              </Text>
+
+              <Text
+                style={[
+                  styles.referenceArrow,
+                  {
+                    color: accent,
+                  },
+                ]}
+              >
+                →
+              </Text>
+            </View>
+          </Pressable>
+
+          <Pressable
+            onPress={() => router.push("/community-rules")}
+            style={({ pressed }) => [
+              styles.referenceCard,
+              pressed ? styles.referenceCardPressed : null,
+            ]}
+          >
+            <View style={styles.referenceTop}>
+              <View
+                style={[
+                  styles.referenceIcon,
+                  {
+                    borderColor: accentBorder,
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="shield-checkmark-outline"
+                  size={18}
+                  color={accent}
+                />
+              </View>
+
+              <Text style={styles.referenceCode}>SYS_02</Text>
+            </View>
+
+            <View style={styles.referenceContent}>
+              <Text style={styles.referenceEyebrow}>COMMUNITY_PROTOCOL</Text>
+
+              <Text style={styles.referenceTitle}>Community Standards</Text>
+
+              <Text style={styles.referenceDescription}>
+                Community rules, safety standards, reporting and enforcement.
+              </Text>
+            </View>
+
+            <View style={styles.referenceFooter}>
+              <Text
+                style={[
+                  styles.referenceAction,
+                  {
+                    color: accent,
+                  },
+                ]}
+              >
+                VIEW_STANDARDS
+              </Text>
+
+              <Text
+                style={[
+                  styles.referenceArrow,
+                  {
+                    color: accent,
+                  },
+                ]}
+              >
+                →
+              </Text>
+            </View>
+          </Pressable>
+        </View>
+
         {/* BRAND */}
 
         <View style={styles.brandFooter}>
@@ -973,6 +1106,98 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.dark.border,
     overflow: "hidden",
+  },
+
+  /* REFERENCE */
+
+  referenceGrid: {
+    flexDirection: "row",
+    gap: 9,
+    marginBottom: 8,
+  },
+
+  referenceCard: {
+    flex: 1,
+    minHeight: 196,
+    padding: 14,
+    backgroundColor: Colors.dark.backgroundElement,
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
+  },
+
+  referenceCardPressed: {
+    backgroundColor: Colors.dark.backgroundSelected,
+    transform: [{ scale: 0.99 }],
+  },
+
+  referenceTop: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    marginBottom: 17,
+  },
+
+  referenceIcon: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.dark.backgroundDeep,
+    borderWidth: 1,
+  },
+
+  referenceCode: {
+    color: Colors.dark.textDim,
+    fontSize: 7,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+
+  referenceContent: {
+    flex: 1,
+  },
+
+  referenceEyebrow: {
+    color: Colors.dark.textTechnical,
+    fontSize: 7,
+    fontWeight: "900",
+    letterSpacing: 1.1,
+    marginBottom: 5,
+  },
+
+  referenceTitle: {
+    color: Colors.dark.text,
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "900",
+  },
+
+  referenceDescription: {
+    color: Colors.dark.textMuted,
+    fontSize: 9,
+    lineHeight: 14,
+    marginTop: 7,
+  },
+
+  referenceFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingTop: 12,
+    marginTop: 13,
+    borderTopWidth: 1,
+    borderTopColor: Colors.dark.borderSubtle,
+  },
+
+  referenceAction: {
+    fontSize: 7,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+
+  referenceArrow: {
+    fontSize: 14,
+    fontWeight: "900",
   },
 
   /* BRAND */

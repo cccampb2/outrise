@@ -95,6 +95,7 @@ export const getMyWorkouts = async ({
   const workouts = await Workout.find(filter)
     .sort({ createdAt: -1 })
     .skip(skip)
+    .limit(limit)
     .populate("exercises.exercise", "name slug category measurementType");
 
   const totalWorkouts = await Workout.countDocuments(filter);

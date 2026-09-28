@@ -177,7 +177,10 @@ export default function WorkoutsScreen() {
         </View>
       )}
 
-      <Pressable style={styles.createButton}>
+      <Pressable
+        onPress={() => router.push("/workouts/create")}
+        style={styles.createButton}
+      >
         <Ionicons name="add" size={18} color={Colors.dark.accent} />
 
         <Text style={styles.createButtonText}>CREATE_NEW_WORKOUT</Text>

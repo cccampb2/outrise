@@ -42,6 +42,9 @@ export const getExercisesSchema = {
       "mobility",
     ),
     muscleGroup: Joi.string().trim().min(1),
+
+    equipment: Joi.string().trim().min(1),
+
     search: Joi.string().trim().min(1).max(100),
     status: Joi.string().valid("active", "archived", "all"),
   }),
@@ -51,6 +54,7 @@ export const updateExerciseSchema = {
   params: Joi.object({
     id: Joi.string().hex().length(24).required(),
   }),
+
   body: Joi.object({
     name: Joi.string().trim().min(2).max(100),
     slug: Joi.string()
@@ -68,13 +72,16 @@ export const updateExerciseSchema = {
     equipment: Joi.array().items(Joi.string().trim().min(1)),
     instructions: Joi.array().items(Joi.string().trim().min(1)),
     videoUrl: Joi.string().trim().uri().allow(null),
+
     measurementType: Joi.string().valid(
       "weight_reps",
       "reps",
       "time",
       "distance_time",
       "duration",
+      "intervals",
     ),
+
     baseXP: Joi.number().integer().min(5).max(30),
   }).min(1),
 };

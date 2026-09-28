@@ -3,6 +3,19 @@ import type { MeasurementType, WorkoutTarget } from "./workout-sessions";
 
 export type WorkoutVisibility = "private" | "public";
 
+export type CreateWorkoutExerciseInput = {
+  exercise: string;
+  order: number;
+  target: WorkoutTarget;
+};
+
+export type CreateWorkoutInput = {
+  name: string;
+  description?: string;
+  exercises: CreateWorkoutExerciseInput[];
+  visibility?: WorkoutVisibility;
+};
+
 export type WorkoutExerciseSummary = {
   exercise: {
     _id: string;
@@ -88,6 +101,21 @@ export async function getWorkoutById(
   workoutId: string,
 ): Promise<GetWorkoutByIdResponse> {
   const response = await apiRequest(`/workouts/${workoutId}`);
+
+  return await response.json();
+}
+
+type CreateWorkoutResponse = {
+  message: string;
+  workout: WorkoutDetail;
+};
+export async function createWorkout(
+  input: CreateWorkoutInput,
+): Promise<CreateWorkoutResponse> {
+  const response = await apiRequest("/workouts", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
 
   return await response.json();
 }
