@@ -139,16 +139,10 @@ export default function ProfileScreen() {
     );
   }
 
-  /*
-   * The API types these as number | null.
-   *
-   * EchelonEmblem is stricter because it directly indexes the
-   * echelonNumerals object, whose valid keys are 1 through 10.
-   *
-   * ZenithEmblem accepts a number because it splits ranks such as
-   * 17 into individual numeral assets: 1 and 7.
-   */
+  const isAdmin = user.role === "admin";
+
   const echelon = user.progression.echelon as EchelonNumber | null;
+
   const zenithRank = user.ranking.zenithRank;
 
   const factionEmblem = faction ? factionEmblems[faction.slug] : null;
@@ -554,7 +548,7 @@ export default function ProfileScreen() {
                   <>
                     <View style={styles.zenithGlow} />
 
-                    <ZenithEmblem rank={1} size={118} />
+                    <ZenithEmblem rank={zenithRank} size={118} />
                   </>
                 ) : (
                   <Text style={styles.statusLockedSymbol}>—</Text>
@@ -723,6 +717,96 @@ export default function ProfileScreen() {
             )}
           </View>
 
+          {/* VERIFICATION */}
+
+          <View style={styles.sectionHeader}>
+            <View>
+              <Text style={styles.sectionEyebrow}>PERFORMANCE_PROOF</Text>
+
+              <Text style={styles.sectionTitle}>Verification</Text>
+            </View>
+
+            <Text style={styles.sectionNumber}>04</Text>
+          </View>
+
+          <Pressable
+            onPress={() => router.push("/verifications")}
+            style={({ pressed }) => [
+              styles.verificationButton,
+              pressed ? styles.verificationButtonPressed : null,
+            ]}
+          >
+            <View style={styles.verificationContent}>
+              <View style={styles.verificationCodeArea}>
+                <Text style={styles.verificationCode}>VERIFY</Text>
+
+                <View style={styles.verificationCodeLine} />
+              </View>
+
+              <View style={styles.verificationTextArea}>
+                <Text style={styles.verificationLabel}>
+                  PERFORMANCE_VERIFICATION
+                </Text>
+
+                <Text style={styles.verificationTitle}>
+                  Verification Center
+                </Text>
+
+                <Text style={styles.verificationDescription}>
+                  SUBMIT_PROOF // REVIEW_STATUS // HISTORY
+                </Text>
+              </View>
+            </View>
+
+            <Text style={styles.verificationArrow}>→</Text>
+          </Pressable>
+
+          {/* ADMIN CENTER */}
+
+          {isAdmin ? (
+            <>
+              <View style={styles.sectionHeader}>
+                <View>
+                  <Text style={styles.sectionEyebrow}>
+                    SYSTEM_ADMINISTRATION
+                  </Text>
+
+                  <Text style={styles.sectionTitle}>Admin</Text>
+                </View>
+
+                <Text style={styles.sectionNumber}>05</Text>
+              </View>
+
+              <Pressable
+                onPress={() => router.push("/admin")}
+                style={({ pressed }) => [
+                  styles.adminButton,
+                  pressed ? styles.adminButtonPressed : null,
+                ]}
+              >
+                <View style={styles.adminContent}>
+                  <View style={styles.adminCodeArea}>
+                    <Text style={styles.adminCode}>ADMIN</Text>
+
+                    <View style={styles.adminCodeLine} />
+                  </View>
+
+                  <View style={styles.adminTextArea}>
+                    <Text style={styles.adminLabel}>AUTHORIZED_ACCESS</Text>
+
+                    <Text style={styles.adminTitle}>Admin Center</Text>
+
+                    <Text style={styles.adminDescription}>
+                      VERIFICATIONS // SYSTEM_TOOLS // MANAGEMENT
+                    </Text>
+                  </View>
+                </View>
+
+                <Text style={styles.adminArrow}>→</Text>
+              </Pressable>
+            </>
+          ) : null}
+
           {/* ACCOUNT */}
 
           <View style={styles.sectionHeader}>
@@ -732,7 +816,7 @@ export default function ProfileScreen() {
               <Text style={styles.sectionTitle}>Account</Text>
             </View>
 
-            <Text style={styles.sectionNumber}>04</Text>
+            <Text style={styles.sectionNumber}>{isAdmin ? "06" : "05"}</Text>
           </View>
 
           <View style={styles.accountCard}>
@@ -1216,7 +1300,7 @@ const styles = StyleSheet.create({
   },
 
   statusPanelGrid: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     opacity: 0.4,
   },
 
@@ -1571,6 +1655,158 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
     marginBottom: 24,
+  },
+
+  /* VERIFICATION */
+
+  verificationButton: {
+    minHeight: 82,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: Colors.dark.backgroundElement,
+    borderWidth: 1,
+    borderColor: Colors.dark.borderStrong,
+    paddingHorizontal: 16,
+    marginBottom: 32,
+  },
+
+  verificationButtonPressed: {
+    backgroundColor: Colors.dark.backgroundSelected,
+  },
+
+  verificationContent: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  verificationCodeArea: {
+    width: 44,
+    marginRight: 14,
+  },
+
+  verificationCode: {
+    color: Colors.dark.accent,
+    fontSize: 7,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+
+  verificationCodeLine: {
+    width: 24,
+    height: 1,
+    backgroundColor: Colors.dark.accent,
+    marginTop: 7,
+  },
+
+  verificationTextArea: {
+    flex: 1,
+  },
+
+  verificationLabel: {
+    color: Colors.dark.textTechnical,
+    fontSize: 7,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+  },
+
+  verificationTitle: {
+    color: Colors.dark.text,
+    fontSize: 14,
+    fontWeight: "800",
+    marginTop: 4,
+  },
+
+  verificationDescription: {
+    color: Colors.dark.textDim,
+    fontSize: 6,
+    fontWeight: "900",
+    letterSpacing: 0.7,
+    marginTop: 5,
+  },
+
+  verificationArrow: {
+    color: Colors.dark.accent,
+    fontSize: 16,
+    fontWeight: "900",
+    marginLeft: 12,
+  },
+
+  /* ADMIN */
+
+  adminButton: {
+    minHeight: 82,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: Colors.dark.backgroundElement,
+    borderWidth: 1,
+    borderColor: Colors.dark.borderStrong,
+    paddingHorizontal: 16,
+    marginBottom: 32,
+  },
+
+  adminButtonPressed: {
+    backgroundColor: Colors.dark.backgroundSelected,
+  },
+
+  adminContent: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  adminCodeArea: {
+    width: 44,
+    marginRight: 14,
+  },
+
+  adminCode: {
+    color: Colors.dark.accent,
+    fontSize: 7,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+
+  adminCodeLine: {
+    width: 24,
+    height: 1,
+    backgroundColor: Colors.dark.accent,
+    marginTop: 7,
+  },
+
+  adminTextArea: {
+    flex: 1,
+  },
+
+  adminLabel: {
+    color: Colors.dark.textTechnical,
+    fontSize: 7,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+  },
+
+  adminTitle: {
+    color: Colors.dark.text,
+    fontSize: 14,
+    fontWeight: "800",
+    marginTop: 4,
+  },
+
+  adminDescription: {
+    color: Colors.dark.textDim,
+    fontSize: 6,
+    fontWeight: "900",
+    letterSpacing: 0.7,
+    marginTop: 5,
+  },
+
+  adminArrow: {
+    color: Colors.dark.accent,
+    fontSize: 16,
+    fontWeight: "900",
+    marginLeft: 12,
   },
 
   /* ACCOUNT */

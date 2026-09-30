@@ -79,7 +79,7 @@ export const getExercises = async ({
   }
 
   if (muscleGroup) {
-    filter.muscleGroup = muscleGroup;
+    filter.muscleGroups = muscleGroup;
   }
 
   if (equipment) {
@@ -195,4 +195,25 @@ export const restoreExercise = async (exerciseId) => {
   }
 
   return exercise;
+};
+
+export const getExerciseById = async ({ exerciseId }) => {
+  const exercise = await Exercise.findOne({
+    _id: exerciseId,
+    isActive: true,
+  });
+
+  if (!exercise) {
+    throw new NotFoundError("Exercise not found");
+  }
+
+  return exercise;
+};
+
+export const getExerciseMuscleGroups = async () => {
+  const muscleGroups = await Exercise.distinct("muscleGroups", {
+    isActive: true,
+  });
+
+  return muscleGroups.sort((a, b) => a.localeCompare(b));
 };

@@ -21,12 +21,17 @@ import {
   approveVerificationController,
 } from "../controllers/verification.controller.js";
 
+import { uploadVerificationProof } from "../middleware/uploadVerificationProof.js";
+import { parseVerificationSubmission } from "../middleware/parseVerificationSubmission.js";
+
 const router = express.Router();
 
 router.post(
   "/",
   authenticate,
   requireFaction,
+  uploadVerificationProof,
+  parseVerificationSubmission,
   validate(createVerificationSchema),
   createVerificationController,
 );

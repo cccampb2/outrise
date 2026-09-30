@@ -1,5 +1,5 @@
 import type { TabTriggerSlotProps } from "expo-router/ui";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -8,7 +8,6 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  withTiming,
 } from "react-native-reanimated";
 
 import { Colors } from "@/constants/theme";
@@ -26,11 +25,13 @@ export function TabButton({
 }: TabButtonProps) {
   const focusProgress = useSharedValue(isFocused ? 1 : 0);
 
-  focusProgress.value = withSpring(isFocused ? 1 : 0, {
-    damping: 16,
-    stiffness: 180,
-    mass: 0.7,
-  });
+  useEffect(() => {
+    focusProgress.value = withSpring(isFocused ? 1 : 0, {
+      damping: 16,
+      stiffness: 180,
+      mass: 0.7,
+    });
+  }, [isFocused, focusProgress]);
 
   const moduleAnimatedStyle = useAnimatedStyle(() => {
     return {
@@ -44,9 +45,7 @@ export function TabButton({
 
   const indicatorAnimatedStyle = useAnimatedStyle(() => {
     return {
-      opacity: withTiming(isFocused ? 1 : 0, {
-        duration: 180,
-      }),
+      opacity: focusProgress.value,
 
       transform: [
         {
@@ -61,9 +60,7 @@ export function TabButton({
 
   const accentRailAnimatedStyle = useAnimatedStyle(() => {
     return {
-      opacity: withTiming(isFocused ? 1 : 0, {
-        duration: 180,
-      }),
+      opacity: focusProgress.value,
 
       transform: [
         {

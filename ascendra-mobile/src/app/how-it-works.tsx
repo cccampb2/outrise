@@ -189,14 +189,6 @@ export default function HowItWorksScreen() {
             visible on your profile.
           </BodyText>
         </InfoItem>
-
-        <InfoItem title="SENTINEL">
-          <BodyText>
-            Sentinel is an AI training assistant designed to build personalized
-            weekly plans around your goals. Sentinel never determines your XP —
-            progression is calculated by Ascendra.
-          </BodyText>
-        </InfoItem>
       </View>
 
       {/* PR RULES */}

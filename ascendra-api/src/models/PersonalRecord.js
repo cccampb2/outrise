@@ -87,7 +87,9 @@ personalRecordSchema.pre("validate", function () {
     (!hasWorkoutSession || hasVerification)
   ) {
     return;
-    Error("Workout personal records must reference a workout session only");
+    throw new Error(
+      "Workout personal records must reference a workout session only",
+    );
   }
 
   if (
@@ -95,7 +97,9 @@ personalRecordSchema.pre("validate", function () {
     (!hasVerification || hasWorkoutSession)
   ) {
     return;
-    Error("Verification personal records must reference a verification only");
+    throw new Error(
+      "Verification personal records must reference a verification only",
+    );
   }
 });
 

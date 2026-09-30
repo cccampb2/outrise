@@ -88,10 +88,24 @@ export const getMyWorkouts = async ({
   page = 1,
   limit = 10,
   status = "active",
+  search,
 }) => {
   const skip = (page - 1) * limit;
+
   const isActive = status === "active";
-  const filter = { owner: ownerId, isActive };
+
+  const filter = {
+    owner: ownerId,
+    isActive,
+  };
+
+  if (search) {
+    filter.name = {
+      $regex: search,
+      $options: "i",
+    };
+  }
+
   const workouts = await Workout.find(filter)
     .sort({ createdAt: -1 })
     .skip(skip)
@@ -99,6 +113,7 @@ export const getMyWorkouts = async ({
     .populate("exercises.exercise", "name slug category measurementType");
 
   const totalWorkouts = await Workout.countDocuments(filter);
+
   const totalPages = Math.ceil(totalWorkouts / limit);
 
   return {
@@ -116,7 +131,6 @@ export const getWorkoutById = async ({ workoutId, ownerId }) => {
   const workout = await Workout.findOne({
     _id: workoutId,
     owner: ownerId,
-    isActive: true,
   }).populate(
     "exercises.exercise",
     "name slug description category muscleGroups equipment instructions videoUrl measurementType",

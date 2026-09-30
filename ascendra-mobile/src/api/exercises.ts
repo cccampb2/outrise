@@ -76,3 +76,25 @@ export async function getExercises(
 
   return await response.json();
 }
+
+type GetExerciseByIdResponse = {
+  exercise: Exercise;
+};
+
+export async function getExerciseById(
+  exerciseId: string,
+): Promise<GetExerciseByIdResponse> {
+  const response = await apiRequest(`/exercises/${exerciseId}`);
+
+  return await response.json();
+}
+
+export type GetExerciseMuscleGroupsResponse = {
+  muscleGroups: string[];
+};
+
+export async function getExerciseMuscleGroups(): Promise<GetExerciseMuscleGroupsResponse> {
+  const response = await apiRequest("/exercises/meta/muscle-groups");
+
+  return await response.json();
+}

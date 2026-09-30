@@ -31,6 +31,12 @@ export const createExerciseSchema = {
   }),
 };
 
+export const exerciseIdParamSchema = {
+  params: Joi.object({
+    id: Joi.string().hex().length(24).required(),
+  }),
+};
+
 export const getExercisesSchema = {
   query: Joi.object({
     page: Joi.number().integer().min(1).default(1),

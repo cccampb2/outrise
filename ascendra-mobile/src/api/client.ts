@@ -1,4 +1,5 @@
 const API_URL = "http://192.168.1.144:3000";
+
 import { getToken } from "@/storage/auth-storage";
 
 export type ValidationErrorDetail = {
@@ -27,6 +28,7 @@ export class ApiError extends Error {
     if (this.details && this.details.length > 0) {
       return this.details.map((detail) => detail.message).join("\n");
     }
+
     return this.message;
   }
 }
@@ -34,10 +36,12 @@ export class ApiError extends Error {
 export async function apiRequest(endpoint: string, options: RequestInit = {}) {
   const token = await getToken();
 
+  const isFormData = options.body instanceof FormData;
+
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      ...(!isFormData ? { "Content-Type": "application/json" } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },

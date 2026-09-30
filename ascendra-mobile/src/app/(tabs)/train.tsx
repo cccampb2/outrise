@@ -93,6 +93,34 @@ export default function TrainScreen() {
           </Pressable>
         )}
 
+        {/* EXERCISE LIBRARY */}
+
+        <Pressable
+          onPress={() => router.push("/exercises")}
+          style={({ pressed }) => [
+            styles.exerciseLibraryButton,
+            pressed ? styles.exerciseLibraryButtonPressed : null,
+          ]}
+        >
+          <View style={styles.exerciseLibraryMarker}>
+            <Text style={styles.exerciseLibraryMarkerText}>LIB</Text>
+          </View>
+
+          <View style={styles.exerciseLibraryContent}>
+            <Text style={styles.exerciseLibraryEyebrow}>
+              TRAINING_REFERENCE
+            </Text>
+
+            <Text style={styles.exerciseLibraryTitle}>EXERCISE LIBRARY</Text>
+
+            <Text style={styles.exerciseLibraryDescription}>
+              Browse movements, instructions, equipment, and muscle groups.
+            </Text>
+          </View>
+
+          <Text style={styles.exerciseLibraryArrow}>→</Text>
+        </Pressable>
+
         {/* WORKOUT OF THE WEEK */}
 
         <View style={styles.sectionHeader}>
@@ -801,5 +829,74 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "900",
     letterSpacing: 4.5,
+  },
+  /* EXERCISE LIBRARY */
+
+  exerciseLibraryButton: {
+    minHeight: 76,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 28,
+    backgroundColor: Colors.dark.backgroundElement,
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
+  },
+
+  exerciseLibraryButtonPressed: {
+    backgroundColor: Colors.dark.backgroundSelected,
+    borderColor: Colors.dark.borderStrong,
+  },
+
+  exerciseLibraryMarker: {
+    width: 38,
+    height: 38,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 13,
+    backgroundColor: Colors.dark.backgroundDeep,
+    borderWidth: 1,
+    borderColor: Colors.dark.borderStrong,
+  },
+
+  exerciseLibraryMarkerText: {
+    color: Colors.dark.accent,
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+
+  exerciseLibraryContent: {
+    flex: 1,
+    paddingRight: 12,
+  },
+
+  exerciseLibraryEyebrow: {
+    color: Colors.dark.textTechnical,
+    fontSize: 7,
+    fontWeight: "900",
+    letterSpacing: 1.4,
+    marginBottom: 4,
+  },
+
+  exerciseLibraryTitle: {
+    color: Colors.dark.text,
+    fontSize: 13,
+    fontWeight: "900",
+    letterSpacing: 0.8,
+  },
+
+  exerciseLibraryDescription: {
+    color: Colors.dark.textDim,
+    fontSize: 9,
+    lineHeight: 13,
+    marginTop: 4,
+  },
+
+  exerciseLibraryArrow: {
+    color: Colors.dark.accent,
+    fontSize: 17,
+    fontWeight: "900",
   },
 });

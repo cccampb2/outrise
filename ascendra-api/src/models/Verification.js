@@ -6,7 +6,7 @@ const proofSchema = new Schema(
   {
     type: {
       type: String,
-      enum: ["image", "video"],
+      enum: ["video"],
       required: true,
     },
     url: {

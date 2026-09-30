@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { router } from "expo-router";
 import {
@@ -9,6 +9,7 @@ import {
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { Screen } from "@/components/screen";
+import { WorkoutExerciseTarget } from "@/components/workouts/workout-exercise-target";
 import { Colors } from "@/constants/theme";
 import {
   createWorkout,
@@ -23,139 +24,6 @@ type SelectedExercise = {
   exercise: Exercise;
   target: WorkoutTarget;
 };
-
-type TargetInputProps = {
-  label: string;
-  value: number | undefined;
-  onChangeText: (value: string) => void;
-  decimal?: boolean;
-};
-
-type TimeTargetInputProps = {
-  value: number | undefined;
-  onChange: (totalSeconds: number | undefined) => void;
-};
-
-function TargetInput({
-  label,
-  value,
-  onChangeText,
-  decimal = false,
-}: TargetInputProps) {
-  return (
-    <View style={styles.targetInputContainer}>
-      <Text style={styles.targetInputLabel}>{label}</Text>
-
-      <TextInput
-        value={value !== undefined ? String(value) : ""}
-        onChangeText={onChangeText}
-        keyboardType={decimal ? "decimal-pad" : "number-pad"}
-        placeholder="0"
-        placeholderTextColor={Colors.dark.textDim}
-        style={styles.targetInput}
-      />
-    </View>
-  );
-}
-
-function TimeTargetInput({ value, onChange }: TimeTargetInputProps) {
-  const initialTotalSeconds = value ?? 0;
-
-  const [minutesText, setMinutesText] = useState(
-    String(Math.floor(initialTotalSeconds / 60)),
-  );
-
-  const [secondsText, setSecondsText] = useState(
-    String(initialTotalSeconds % 60),
-  );
-
-  useEffect(() => {
-    const totalSeconds = value ?? 0;
-
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-
-    setMinutesText(String(minutes));
-    setSecondsText(String(seconds));
-  }, [value]);
-
-  function updateTotalSeconds(
-    nextMinutesText: string,
-    nextSecondsText: string,
-  ) {
-    const minutes = nextMinutesText === "" ? 0 : Number(nextMinutesText);
-
-    const seconds = nextSecondsText === "" ? 0 : Number(nextSecondsText);
-
-    const totalSeconds = minutes * 60 + seconds;
-
-    onChange(totalSeconds === 0 ? undefined : totalSeconds);
-  }
-
-  function handleMinutesChange(text: string) {
-    const numbersOnly = text.replace(/[^0-9]/g, "");
-
-    setMinutesText(numbersOnly);
-
-    updateTotalSeconds(numbersOnly, secondsText);
-  }
-
-  function handleSecondsChange(text: string) {
-    const numbersOnly = text.replace(/[^0-9]/g, "");
-
-    if (numbersOnly !== "" && Number(numbersOnly) > 59) {
-      return;
-    }
-
-    setSecondsText(numbersOnly);
-
-    updateTotalSeconds(minutesText, numbersOnly);
-  }
-
-  function handleMinutesBlur() {
-    if (minutesText === "") {
-      setMinutesText("0");
-    }
-  }
-
-  function handleSecondsBlur() {
-    if (secondsText === "") {
-      setSecondsText("0");
-    }
-  }
-
-  return (
-    <>
-      <View style={styles.targetInputContainer}>
-        <Text style={styles.targetInputLabel}>MIN</Text>
-
-        <TextInput
-          value={minutesText}
-          onChangeText={handleMinutesChange}
-          onBlur={handleMinutesBlur}
-          keyboardType="number-pad"
-          selectTextOnFocus
-          maxLength={3}
-          style={styles.targetInput}
-        />
-      </View>
-
-      <View style={styles.targetInputContainer}>
-        <Text style={styles.targetInputLabel}>SEC</Text>
-
-        <TextInput
-          value={secondsText}
-          onChangeText={handleSecondsChange}
-          onBlur={handleSecondsBlur}
-          keyboardType="number-pad"
-          selectTextOnFocus
-          maxLength={2}
-          style={styles.targetInput}
-        />
-      </View>
-    </>
-  );
-}
 
 export default function CreateWorkoutScreen() {
   const queryClient = useQueryClient();
@@ -244,7 +112,7 @@ export default function CreateWorkoutScreen() {
   function handleTargetChange(
     exerciseId: string,
     field: keyof WorkoutTarget,
-    value: string,
+    value: number | undefined,
   ) {
     setFormError(null);
 
@@ -258,30 +126,7 @@ export default function CreateWorkoutScreen() {
           ...selectedExercise,
           target: {
             ...selectedExercise.target,
-            [field]: value === "" ? undefined : Number(value),
-          },
-        };
-      }),
-    );
-  }
-
-  function handleTargetSecondsChange(
-    exerciseId: string,
-    totalSeconds: number | undefined,
-  ) {
-    setFormError(null);
-
-    setSelectedExercises((currentExercises) =>
-      currentExercises.map((selectedExercise) => {
-        if (selectedExercise.exercise._id !== exerciseId) {
-          return selectedExercise;
-        }
-
-        return {
-          ...selectedExercise,
-          target: {
-            ...selectedExercise.target,
-            timeSeconds: totalSeconds,
+            [field]: value,
           },
         };
       }),
@@ -370,10 +215,13 @@ export default function CreateWorkoutScreen() {
       return;
     }
 
+    const trimmedDescription = description.trim();
+
     const input: CreateWorkoutInput = {
       name: trimmedName,
-      description: description.trim(),
       visibility,
+
+      ...(trimmedDescription ? { description: trimmedDescription } : {}),
 
       exercises: selectedExercises.map((selectedExercise, index) => ({
         exercise: selectedExercise.exercise._id,
@@ -502,7 +350,7 @@ export default function CreateWorkoutScreen() {
         </View>
       </View>
 
-      {/* EXERCISE SEARCH */}
+      {/* EXERCISES */}
 
       <View style={styles.exerciseSection}>
         <View style={styles.sectionHeader}>
@@ -621,8 +469,6 @@ export default function CreateWorkoutScreen() {
               {selectedExercises.map((selectedExercise, index) => {
                 const exercise = selectedExercise.exercise;
 
-                const target = selectedExercise.target;
-
                 return (
                   <View key={exercise._id} style={styles.selectedExerciseCard}>
                     <View style={styles.selectedExerciseHeader}>
@@ -656,155 +502,13 @@ export default function CreateWorkoutScreen() {
                       </Pressable>
                     </View>
 
-                    {/* TARGET PRESCRIPTION */}
-
-                    <View style={styles.targetSection}>
-                      <View style={styles.targetPrompt}>
-                        <Text style={styles.targetPromptLabel}>
-                          TARGET_GOAL
-                        </Text>
-
-                        <Text style={styles.targetPromptText}>
-                          What are you aiming for? Set the target for this
-                          exercise.
-                        </Text>
-                      </View>
-
-                      <View style={styles.targetInputs}>
-                        {exercise.measurementType === "weight_reps" ? (
-                          <>
-                            <TargetInput
-                              label="SETS"
-                              value={target.sets}
-                              onChangeText={(value) =>
-                                handleTargetChange(exercise._id, "sets", value)
-                              }
-                            />
-
-                            <TargetInput
-                              label="REPS"
-                              value={target.reps}
-                              onChangeText={(value) =>
-                                handleTargetChange(exercise._id, "reps", value)
-                              }
-                            />
-
-                            <TargetInput
-                              label="WEIGHT_LB"
-                              value={target.weightLbs}
-                              onChangeText={(value) =>
-                                handleTargetChange(
-                                  exercise._id,
-                                  "weightLbs",
-                                  value,
-                                )
-                              }
-                              decimal
-                            />
-                          </>
-                        ) : null}
-
-                        {exercise.measurementType === "reps" ? (
-                          <>
-                            <TargetInput
-                              label="SETS"
-                              value={target.sets}
-                              onChangeText={(value) =>
-                                handleTargetChange(exercise._id, "sets", value)
-                              }
-                            />
-
-                            <TargetInput
-                              label="REPS"
-                              value={target.reps}
-                              onChangeText={(value) =>
-                                handleTargetChange(exercise._id, "reps", value)
-                              }
-                            />
-                          </>
-                        ) : null}
-
-                        {exercise.measurementType === "distance_time" ? (
-                          <>
-                            <TargetInput
-                              label="DISTANCE_MI"
-                              value={target.distanceMiles}
-                              onChangeText={(value) =>
-                                handleTargetChange(
-                                  exercise._id,
-                                  "distanceMiles",
-                                  value,
-                                )
-                              }
-                              decimal
-                            />
-
-                            <TimeTargetInput
-                              value={target.timeSeconds}
-                              onChange={(totalSeconds) =>
-                                handleTargetSecondsChange(
-                                  exercise._id,
-                                  totalSeconds,
-                                )
-                              }
-                            />
-                          </>
-                        ) : null}
-
-                        {exercise.measurementType === "time" ||
-                        exercise.measurementType === "duration" ? (
-                          <TimeTargetInput
-                            value={target.timeSeconds}
-                            onChange={(totalSeconds) =>
-                              handleTargetSecondsChange(
-                                exercise._id,
-                                totalSeconds,
-                              )
-                            }
-                          />
-                        ) : null}
-
-                        {exercise.measurementType === "intervals" ? (
-                          <>
-                            <TargetInput
-                              label="WORK_SEC"
-                              value={target.workSeconds}
-                              onChangeText={(value) =>
-                                handleTargetChange(
-                                  exercise._id,
-                                  "workSeconds",
-                                  value,
-                                )
-                              }
-                            />
-
-                            <TargetInput
-                              label="RECOVERY_SEC"
-                              value={target.recoverySeconds}
-                              onChangeText={(value) =>
-                                handleTargetChange(
-                                  exercise._id,
-                                  "recoverySeconds",
-                                  value,
-                                )
-                              }
-                            />
-
-                            <TargetInput
-                              label="ROUNDS"
-                              value={target.rounds}
-                              onChangeText={(value) =>
-                                handleTargetChange(
-                                  exercise._id,
-                                  "rounds",
-                                  value,
-                                )
-                              }
-                            />
-                          </>
-                        ) : null}
-                      </View>
-                    </View>
+                    <WorkoutExerciseTarget
+                      measurementType={exercise.measurementType}
+                      target={selectedExercise.target}
+                      onTargetChange={(field, value) =>
+                        handleTargetChange(exercise._id, field, value)
+                      }
+                    />
                   </View>
                 );
               })}
@@ -812,7 +516,7 @@ export default function CreateWorkoutScreen() {
           </View>
         ) : null}
 
-        {/* CREATE WORKOUT */}
+        {/* CREATE */}
 
         <View style={styles.saveSection}>
           {createErrorMessage ? (
@@ -1158,61 +862,6 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 0.8,
     marginTop: 3,
-  },
-
-  targetSection: {
-    marginTop: 14,
-    paddingTop: 13,
-    borderTopWidth: 1,
-    borderTopColor: Colors.dark.borderSubtle,
-  },
-
-  targetPrompt: {
-    marginBottom: 12,
-  },
-
-  targetPromptLabel: {
-    color: Colors.dark.accent,
-    fontSize: 7,
-    fontWeight: "900",
-    letterSpacing: 1.1,
-    marginBottom: 4,
-  },
-
-  targetPromptText: {
-    color: Colors.dark.textMuted,
-    fontSize: 10,
-    lineHeight: 15,
-  },
-
-  targetInputs: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-
-  targetInputContainer: {
-    flexGrow: 1,
-    flexBasis: 90,
-  },
-
-  targetInputLabel: {
-    color: Colors.dark.textTechnical,
-    fontSize: 7,
-    fontWeight: "800",
-    letterSpacing: 1,
-    marginBottom: 6,
-  },
-
-  targetInput: {
-    height: 42,
-    paddingHorizontal: 11,
-    color: Colors.dark.text,
-    fontSize: 12,
-    fontWeight: "700",
-    backgroundColor: Colors.dark.backgroundDeep,
-    borderWidth: 1,
-    borderColor: Colors.dark.border,
   },
 
   saveSection: {

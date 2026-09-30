@@ -5,6 +5,8 @@ import {
   updateExercise,
   archiveExercise,
   restoreExercise,
+  getExerciseById,
+  getExerciseMuscleGroups,
 } from "../services/exercise.service.js";
 
 export const createExerciseController = async (req, res, next) => {
@@ -132,4 +134,22 @@ export const restoreExerciseController = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+};
+
+export const getExerciseByIdController = async (req, res) => {
+  const exercise = await getExerciseById({
+    exerciseId: req.params.id,
+  });
+
+  res.status(200).json({
+    exercise,
+  });
+};
+
+export const getExerciseMuscleGroupsController = async (req, res) => {
+  const muscleGroups = await getExerciseMuscleGroups();
+
+  res.status(200).json({
+    muscleGroups,
+  });
 };

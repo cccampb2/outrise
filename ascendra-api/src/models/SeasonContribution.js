@@ -33,6 +33,11 @@ const seasonContributionSchema = new Schema(
 
 seasonContributionSchema.index({ season: 1, faction: 1, xp: -1 });
 
+seasonContributionSchema.index(
+  { season: 1, user: 1 },
+
+  { unique: true },
+);
 const SeasonContribution = model(
   "SeasonContribution",
   seasonContributionSchema,

@@ -1,5 +1,88 @@
 import User from "../models/User.js";
 import { getProgressFromXP } from "../utils/progression.js";
+import Faction from "../models/Faction.js";
+import Season from "../models/Season.js";
+import SeasonContribution from "../models/SeasonContribution.js";
+import NotFoundError from "../errors/NotFoundError.js";
+
+export const getFactionStandings = async () => {
+  const now = new Date();
+
+  const activeSeason = await Season.findOne({
+    status: "active",
+    startsAt: { $lte: now },
+    endsAt: { $gt: now },
+  }).lean();
+
+  if (!activeSeason) {
+    return {
+      season: null,
+      standings: [],
+    };
+  }
+
+  const [factions, contributionTotals] = await Promise.all([
+    Faction.find().select("name slug colors").lean(),
+
+    SeasonContribution.aggregate([
+      {
+        $match: {
+          season: activeSeason._id,
+        },
+      },
+      {
+        $group: {
+          _id: "$faction",
+          seasonXP: {
+            $sum: "$xp",
+          },
+        },
+      },
+    ]),
+  ]);
+
+  const totalsByFaction = new Map(
+    contributionTotals.map((total) => [total._id.toString(), total.seasonXP]),
+  );
+
+  const standings = factions
+    .map((faction) => {
+      return {
+        faction: {
+          _id: faction._id,
+          name: faction.name,
+          slug: faction.slug,
+          colors: faction.colors,
+        },
+        seasonXP: totalsByFaction.get(faction._id.toString()) ?? 0,
+      };
+    })
+    .sort((a, b) => {
+      if (b.seasonXP !== a.seasonXP) {
+        return b.seasonXP - a.seasonXP;
+      }
+
+      return a.faction._id.toString().localeCompare(b.faction._id.toString());
+    })
+    .map((standing, index) => {
+      return {
+        rank: index + 1,
+        ...standing,
+      };
+    });
+
+  return {
+    season: {
+      id: activeSeason._id,
+      seasonNumber: activeSeason.seasonNumber,
+      quarter: activeSeason.quarter,
+      year: activeSeason.year,
+      startsAt: activeSeason.startsAt,
+      endsAt: activeSeason.endsAt,
+    },
+    standings,
+  };
+};
 
 export const getZenithLeaderBoard = async () => {
   const users = await User.find({
@@ -8,7 +91,7 @@ export const getZenithLeaderBoard = async () => {
       $gt: 0,
     },
   })
-    .sort({ lifetimeXP: -1, _id: -1 })
+    .sort({ lifetimeXP: -1, _id: 1 })
     .limit(25)
     .select("username lifetimeXP faction")
     .lean();
@@ -48,6 +131,7 @@ export const getGlobalLeaderboard = async ({ page, limit }) => {
     .skip(skip)
     .limit(limit)
     .select("username lifetimeXP faction")
+    .populate("faction", "name slug")
     .lean();
 
   const totalUsers = await User.countDocuments(query);
@@ -104,4 +188,208 @@ export const getUserGlobalRank = async (userId) => {
   const zenithRank = globalRank <= 25 ? globalRank : null;
 
   return { globalRank, zenithRank };
+};
+
+export const getCurrentUserLeaderboardPosition = async (userId) => {
+  const user = await User.findOne({
+    _id: userId,
+    accountStatus: "active",
+    lifetimeXP: { $gt: 0 },
+  })
+    .select("username lifetimeXP faction")
+    .populate("faction", "name slug")
+    .lean();
+
+  if (!user) {
+    return null;
+  }
+
+  const usersAbove = await User.countDocuments({
+    accountStatus: "active",
+    $or: [
+      { lifetimeXP: { $gt: user.lifetimeXP } },
+      { lifetimeXP: user.lifetimeXP, _id: { $lt: user._id } },
+    ],
+  });
+
+  const rank = usersAbove + 1;
+
+  const progression = getProgressFromXP(user.lifetimeXP ?? 0);
+
+  return {
+    userId: user._id,
+    username: user.username,
+    lifetimeXP: user.lifetimeXP ?? 0,
+    level: progression.level,
+    echelon: progression.echelon,
+    faction: user.faction,
+    rank,
+    zenithRank: rank <= 25 ? rank : null,
+  };
+};
+
+export const getFactionLeaderboard = async ({
+  factionSlug,
+  userId,
+  page,
+  limit,
+}) => {
+  const faction = await Faction.findOne({
+    slug: factionSlug,
+  })
+    .select("name slug description motto tagline values colors")
+    .lean();
+
+  if (!faction) {
+    throw new NotFoundError("Faction not found");
+  }
+
+  const factionStandings = await getFactionStandings();
+
+  if (!factionStandings.season) {
+    return {
+      season: null,
+      faction: {
+        _id: faction._id,
+        name: faction.name,
+        slug: faction.slug,
+        description: faction.description,
+        motto: faction.motto,
+        tagline: faction.tagline,
+        values: faction.values,
+        colors: faction.colors,
+      },
+      factionStanding: null,
+      currentUser: null,
+      leaderboard: [],
+      pagination: {
+        page,
+        limit,
+        totalUsers: 0,
+        totalPages: 0,
+      },
+    };
+  }
+
+  const activeSeasonId = factionStandings.season.id;
+
+  const factionStanding =
+    factionStandings.standings.find(
+      (standing) => standing.faction._id.toString() === faction._id.toString(),
+    ) ?? null;
+
+  const skip = (page - 1) * limit;
+
+  const contributionQuery = {
+    season: activeSeasonId,
+    faction: faction._id,
+    xp: { $gt: 0 },
+  };
+
+  const [contributions, totalUsers, currentUserContribution] =
+    await Promise.all([
+      SeasonContribution.find(contributionQuery)
+        .sort({
+          xp: -1,
+          user: 1,
+        })
+        .skip(skip)
+        .limit(limit)
+        .populate("user", "username accountStatus")
+        .lean(),
+
+      SeasonContribution.countDocuments(contributionQuery),
+
+      SeasonContribution.findOne({
+        season: activeSeasonId,
+        faction: faction._id,
+        user: userId,
+        xp: { $gt: 0 },
+      })
+        .populate("user", "username accountStatus")
+        .lean(),
+    ]);
+
+  const leaderboard = contributions
+    .filter(
+      (contribution) =>
+        contribution.user && contribution.user.accountStatus === "active",
+    )
+    .map((contribution, index) => {
+      return {
+        userId: contribution.user._id,
+        username: contribution.user.username,
+        seasonXP: contribution.xp,
+        rank: skip + index + 1,
+      };
+    });
+
+  let currentUser = null;
+
+  if (
+    currentUserContribution &&
+    currentUserContribution.user &&
+    currentUserContribution.user.accountStatus === "active"
+  ) {
+    const usersAbove = await SeasonContribution.countDocuments({
+      season: activeSeasonId,
+      faction: faction._id,
+      xp: { $gt: 0 },
+      $or: [
+        {
+          xp: {
+            $gt: currentUserContribution.xp,
+          },
+        },
+        {
+          xp: currentUserContribution.xp,
+          user: {
+            $lt: currentUserContribution.user._id,
+          },
+        },
+      ],
+    });
+
+    currentUser = {
+      userId: currentUserContribution.user._id,
+      username: currentUserContribution.user.username,
+      seasonXP: currentUserContribution.xp,
+      rank: usersAbove + 1,
+    };
+  }
+
+  const totalPages = Math.ceil(totalUsers / limit);
+
+  return {
+    season: factionStandings.season,
+
+    faction: {
+      _id: faction._id,
+      name: faction.name,
+      slug: faction.slug,
+      description: faction.description,
+      motto: faction.motto,
+      tagline: faction.tagline,
+      values: faction.values,
+      colors: faction.colors,
+    },
+
+    factionStanding: factionStanding
+      ? {
+          rank: factionStanding.rank,
+          seasonXP: factionStanding.seasonXP,
+        }
+      : null,
+
+    currentUser,
+
+    leaderboard,
+
+    pagination: {
+      page,
+      limit,
+      totalUsers,
+      totalPages,
+    },
+  };
 };

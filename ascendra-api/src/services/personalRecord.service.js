@@ -209,7 +209,6 @@ export const processPRCandidate = async ({
     recordType: candidate.recordType,
     value: candidate.value,
     distanceMiles: candidate.distanceMiles,
-    workoutSession: workoutSessionId,
     achievedAt,
     recordCategory: candidate.recordCategory,
     sourceType,

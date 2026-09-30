@@ -12,7 +12,10 @@ import {
 } from "./personalRecord.service.js";
 
 import { processProgressionAchievements } from "./progression.service.js";
-
+import {
+  uploadVerificationVideo,
+  deleteVerificationVideo,
+} from "./media.service.js";
 import mongoose from "mongoose";
 import {
   checkPersonalRecordCountAchievements,
@@ -99,7 +102,7 @@ export const createVerification = async ({
   userId,
   exerciseId,
   performance,
-  proof,
+  proofFile,
 }) => {
   const exercise = await Exercise.findById(exerciseId);
 
@@ -115,26 +118,40 @@ export const createVerification = async ({
 
   validateVerificationPerformance(exercise.measurementType, performance);
 
-  const verification = await Verification.create({
-    user: userId,
-    exercise: exercise._id,
-    measurementType: exercise.measurementType,
-    performance,
-    proof,
-  });
+  let uploadedProof = null;
 
-  return verification;
+  try {
+    uploadedProof = await uploadVerificationVideo(proofFile.buffer);
+
+    const verification = await Verification.create({
+      user: userId,
+      exercise: exercise._id,
+      measurementType: exercise.measurementType,
+      performance,
+      proof: uploadedProof,
+    });
+
+    return verification;
+  } catch (error) {
+    if (uploadedProof?.publicId) {
+      try {
+        await deleteVerificationVideo(uploadedProof.publicId);
+      } catch {}
+    }
+
+    throw error;
+  }
 };
 
 export const getUserVerificationById = async ({ userId, verificationId }) => {
-  const verification = await Verification.findById(verificationId);
+  const verification = await Verification.findById(verificationId).populate(
+    "exercise",
+    "name",
+  );
 
   if (!verification) {
     throw new NotFoundError("Verification not found");
   }
-
-  console.log("USER: ", userId.toString());
-  console.log("USER Requesting: ", verification.user.toString());
 
   if (verification.user.toString() !== userId.toString()) {
     throw new ForbiddenError(
@@ -157,6 +174,7 @@ export const getUserVerifications = async ({ userId, status, page, limit }) => {
   const skip = (page - 1) * limit;
 
   const verifications = await Verification.find(query)
+    .populate("exercise", "name")
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);

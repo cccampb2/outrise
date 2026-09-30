@@ -91,8 +91,32 @@ export type GetMyWorkoutsResponse = {
   pagination: WorkoutPagination;
 };
 
-export async function getMyWorkouts(): Promise<GetMyWorkoutsResponse> {
-  const response = await apiRequest("/workouts");
+export async function getMyWorkouts(
+  params: GetMyWorkoutsParams = {},
+): Promise<GetMyWorkoutsResponse> {
+  const searchParams = new URLSearchParams();
+
+  if (params.page !== undefined) {
+    searchParams.set("page", String(params.page));
+  }
+
+  if (params.limit !== undefined) {
+    searchParams.set("limit", String(params.limit));
+  }
+
+  if (params.status !== undefined) {
+    searchParams.set("status", params.status);
+  }
+
+  if (params.search !== undefined) {
+    searchParams.set("search", params.search);
+  }
+
+  const queryString = searchParams.toString();
+
+  const response = await apiRequest(
+    `/workouts${queryString ? `?${queryString}` : ""}`,
+  );
 
   return await response.json();
 }
@@ -109,6 +133,14 @@ type CreateWorkoutResponse = {
   message: string;
   workout: WorkoutDetail;
 };
+
+export type GetMyWorkoutsParams = {
+  page?: number;
+  limit?: number;
+  status?: "active" | "archived";
+  search?: string;
+};
+
 export async function createWorkout(
   input: CreateWorkoutInput,
 ): Promise<CreateWorkoutResponse> {
@@ -118,4 +150,34 @@ export async function createWorkout(
   });
 
   return await response.json();
+}
+
+export type UpdateWorkoutInput = Partial<CreateWorkoutInput>;
+
+export async function updateWorkout(
+  workoutId: string,
+  input: UpdateWorkoutInput,
+): Promise<void> {
+  await apiRequest(`/workouts/${workoutId}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function archiveWorkout(workoutId: string): Promise<void> {
+  await apiRequest(`/workouts/${workoutId}/archive`, {
+    method: "PATCH",
+  });
+}
+
+export async function restoreWorkout(workoutId: string): Promise<void> {
+  await apiRequest(`/workouts/${workoutId}/restore`, {
+    method: "PATCH",
+  });
+}
+
+export async function duplicateWorkout(workoutId: string): Promise<void> {
+  await apiRequest(`/workouts/${workoutId}/duplicate`, {
+    method: "POST",
+  });
 }

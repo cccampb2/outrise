@@ -10,7 +10,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Screen } from "@/components/screen";
 import { Colors } from "@/constants/theme";
-import { getWorkoutById, type WorkoutExerciseDetail } from "@/api/workouts";
+import {
+  getWorkoutById,
+  archiveWorkout,
+  restoreWorkout,
+  duplicateWorkout,
+  type WorkoutExerciseDetail,
+} from "@/api/workouts";
 import { startWorkoutSession } from "@/api/workout-sessions";
 
 function formatTime(totalSeconds: number) {
@@ -126,6 +132,41 @@ export default function WorkoutDetailScreen() {
       router.replace("/workout-session/active");
     },
   });
+  const duplicateWorkoutMutation = useMutation({
+    mutationFn: () => duplicateWorkout(workoutId),
+
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["workouts"],
+      });
+
+      router.back();
+    },
+  });
+
+  const restoreWorkoutMutation = useMutation({
+    mutationFn: () => restoreWorkout(workoutId),
+
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["workouts"],
+      });
+
+      router.back();
+    },
+  });
+
+  const archiveWorkoutMutation = useMutation({
+    mutationFn: () => archiveWorkout(workoutId),
+
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["workouts"],
+      });
+
+      router.back();
+    },
+  });
 
   if (workoutQuery.isPending) {
     return (
@@ -188,6 +229,35 @@ export default function WorkoutDetailScreen() {
         </View>
       </View>
 
+      {workout.isActive ? (
+        <Pressable
+          onPress={() =>
+            router.push({
+              pathname: "/workouts/[workoutId]/edit",
+              params: {
+                workoutId,
+              },
+            })
+          }
+          style={({ pressed }) => [
+            styles.editButton,
+            pressed && styles.editButtonPressed,
+          ]}
+        >
+          <View>
+            <Text style={styles.editEyebrow}>WORKOUT_CONFIGURATION</Text>
+
+            <Text style={styles.editText}>EDIT_WORKOUT</Text>
+          </View>
+
+          <Text style={styles.editArrow}>→</Text>
+        </Pressable>
+      ) : (
+        <View style={styles.archivedBanner}>
+          <Text style={styles.archivedBannerCode}>WORKOUT_STATUS</Text>
+          <Text style={styles.archivedBannerText}>ARCHIVED</Text>
+        </View>
+      )}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionNumber}>01</Text>
         <Text style={styles.sectionTitle}>WORKOUT_PRESCRIPTION</Text>
@@ -232,40 +302,113 @@ export default function WorkoutDetailScreen() {
           );
         })}
       </View>
+      {workout.isActive ? (
+        <Pressable
+          disabled={duplicateWorkoutMutation.isPending}
+          onPress={() => duplicateWorkoutMutation.mutate()}
+          style={({ pressed }) => [
+            styles.duplicateButton,
+            pressed &&
+              !duplicateWorkoutMutation.isPending &&
+              styles.duplicateButtonPressed,
+            duplicateWorkoutMutation.isPending &&
+              styles.duplicateButtonDisabled,
+          ]}
+        >
+          <View>
+            <Text style={styles.duplicateEyebrow}>WORKOUT_CONFIGURATION</Text>
 
-      {startWorkoutMutation.isError ? (
-        <View style={styles.startError}>
-          <Text style={styles.startErrorCode}>UNABLE_TO_START_WORKOUT</Text>
+            <Text style={styles.duplicateText}>
+              {duplicateWorkoutMutation.isPending
+                ? "DUPLICATING..."
+                : "DUPLICATE_WORKOUT"}
+            </Text>
+          </View>
 
-          <Text style={styles.startErrorText}>
-            {startWorkoutMutation.error instanceof Error
-              ? startWorkoutMutation.error.message
-              : "Unable to start workout."}
-          </Text>
-        </View>
+          <Text style={styles.duplicateIcon}>＋</Text>
+        </Pressable>
       ) : null}
+      {workout.isActive ? (
+        <>
+          {startWorkoutMutation.isError ? (
+            <View style={styles.startError}>
+              <Text style={styles.startErrorCode}>UNABLE_TO_START_WORKOUT</Text>
 
-      <Pressable
-        disabled={startWorkoutMutation.isPending}
-        onPress={() => startWorkoutMutation.mutate()}
-        style={({ pressed }) => [
-          styles.startButton,
-          pressed &&
-            !startWorkoutMutation.isPending &&
-            styles.startButtonPressed,
-          startWorkoutMutation.isPending && styles.startButtonDisabled,
-        ]}
-      >
-        <View>
-          <Text style={styles.startEyebrow}>BEGIN_SESSION</Text>
+              <Text style={styles.startErrorText}>
+                {startWorkoutMutation.error instanceof Error
+                  ? startWorkoutMutation.error.message
+                  : "Unable to start workout."}
+              </Text>
+            </View>
+          ) : null}
 
-          <Text style={styles.startText}>
-            {startWorkoutMutation.isPending ? "STARTING..." : "START WORKOUT"}
-          </Text>
-        </View>
+          <Pressable
+            disabled={startWorkoutMutation.isPending}
+            onPress={() => startWorkoutMutation.mutate()}
+            style={({ pressed }) => [
+              styles.startButton,
+              pressed &&
+                !startWorkoutMutation.isPending &&
+                styles.startButtonPressed,
+              startWorkoutMutation.isPending && styles.startButtonDisabled,
+            ]}
+          >
+            <View>
+              <Text style={styles.startEyebrow}>BEGIN_SESSION</Text>
 
-        <Text style={styles.startArrow}>→</Text>
-      </Pressable>
+              <Text style={styles.startText}>
+                {startWorkoutMutation.isPending
+                  ? "STARTING..."
+                  : "START WORKOUT"}
+              </Text>
+            </View>
+
+            <Text style={styles.startArrow}>→</Text>
+          </Pressable>
+
+          <Pressable
+            disabled={archiveWorkoutMutation.isPending}
+            onPress={() => archiveWorkoutMutation.mutate()}
+            style={({ pressed }) => [
+              styles.archiveButton,
+              pressed &&
+                !archiveWorkoutMutation.isPending &&
+                styles.archiveButtonPressed,
+              archiveWorkoutMutation.isPending && styles.archiveButtonDisabled,
+            ]}
+          >
+            <Text style={styles.archiveButtonText}>
+              {archiveWorkoutMutation.isPending
+                ? "ARCHIVING..."
+                : "ARCHIVE_WORKOUT"}
+            </Text>
+          </Pressable>
+        </>
+      ) : (
+        <Pressable
+          disabled={restoreWorkoutMutation.isPending}
+          onPress={() => restoreWorkoutMutation.mutate()}
+          style={({ pressed }) => [
+            styles.restoreButton,
+            pressed &&
+              !restoreWorkoutMutation.isPending &&
+              styles.restoreButtonPressed,
+            restoreWorkoutMutation.isPending && styles.restoreButtonDisabled,
+          ]}
+        >
+          <View>
+            <Text style={styles.restoreEyebrow}>WORKOUT_MANAGEMENT</Text>
+
+            <Text style={styles.restoreText}>
+              {restoreWorkoutMutation.isPending
+                ? "RESTORING..."
+                : "RESTORE_WORKOUT"}
+            </Text>
+          </View>
+
+          <Text style={styles.restoreArrow}>→</Text>
+        </Pressable>
+      )}
     </Screen>
   );
 }
@@ -524,6 +667,178 @@ const styles = StyleSheet.create({
   },
 
   startArrow: {
+    color: Colors.dark.accent,
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  editButton: {
+    minHeight: 58,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    marginBottom: 28,
+    backgroundColor: Colors.dark.backgroundElement,
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
+  },
+
+  editButtonPressed: {
+    backgroundColor: Colors.dark.backgroundSelected,
+    borderColor: Colors.dark.borderStrong,
+  },
+
+  editEyebrow: {
+    color: Colors.dark.textTechnical,
+    fontSize: 7,
+    fontWeight: "900",
+    letterSpacing: 1.3,
+    marginBottom: 4,
+  },
+
+  editText: {
+    color: Colors.dark.textSecondary,
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+
+  editArrow: {
+    color: Colors.dark.accent,
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  archiveButton: {
+    height: 46,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 24,
+    backgroundColor: Colors.dark.backgroundDeep,
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
+  },
+
+  archiveButtonPressed: {
+    backgroundColor: Colors.dark.backgroundSelected,
+    borderColor: Colors.dark.borderStrong,
+  },
+
+  archiveButtonDisabled: {
+    opacity: 0.5,
+  },
+
+  archiveButtonText: {
+    color: Colors.dark.textMuted,
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+  },
+  archivedBanner: {
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    marginBottom: 28,
+    backgroundColor: Colors.dark.backgroundDeep,
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
+  },
+
+  archivedBannerCode: {
+    color: Colors.dark.textDim,
+    fontSize: 7,
+    fontWeight: "900",
+    letterSpacing: 1.3,
+    marginBottom: 5,
+  },
+
+  archivedBannerText: {
+    color: Colors.dark.textMuted,
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+  },
+
+  restoreButton: {
+    minHeight: 64,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 22,
+    marginBottom: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: Colors.dark.backgroundSelected,
+    borderWidth: 1,
+    borderColor: Colors.dark.borderStrong,
+  },
+
+  restoreButtonPressed: {
+    backgroundColor: Colors.dark.backgroundDeep,
+    borderColor: Colors.dark.accent,
+  },
+
+  restoreButtonDisabled: {
+    opacity: 0.5,
+  },
+
+  restoreEyebrow: {
+    color: Colors.dark.textTechnical,
+    fontSize: 7,
+    fontWeight: "900",
+    letterSpacing: 1.5,
+    marginBottom: 4,
+  },
+
+  restoreText: {
+    color: Colors.dark.accent,
+    fontSize: 14,
+    fontWeight: "900",
+    letterSpacing: 0.8,
+  },
+
+  restoreArrow: {
+    color: Colors.dark.accent,
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  duplicateButton: {
+    minHeight: 58,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 22,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    backgroundColor: Colors.dark.backgroundElement,
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
+  },
+
+  duplicateButtonPressed: {
+    backgroundColor: Colors.dark.backgroundSelected,
+    borderColor: Colors.dark.borderStrong,
+  },
+
+  duplicateButtonDisabled: {
+    opacity: 0.5,
+  },
+
+  duplicateEyebrow: {
+    color: Colors.dark.textTechnical,
+    fontSize: 7,
+    fontWeight: "900",
+    letterSpacing: 1.3,
+    marginBottom: 4,
+  },
+
+  duplicateText: {
+    color: Colors.dark.textSecondary,
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+
+  duplicateIcon: {
     color: Colors.dark.accent,
     fontSize: 18,
     fontWeight: "800",

@@ -8,6 +8,7 @@ import {
   getExercisesSchema,
   updateExerciseSchema,
   exerciseStatusSchema,
+  exerciseIdParamSchema,
 } from "../middleware/validators/exercise.validators.js";
 import {
   createExerciseController,
@@ -16,6 +17,8 @@ import {
   updateExerciseController,
   restoreExerciseController,
   archiveExerciseController,
+  getExerciseByIdController,
+  getExerciseMuscleGroupsController,
 } from "../controllers/exercise.controller.js";
 
 const router = express.Router();
@@ -37,7 +40,29 @@ router.get(
   getExercisesController,
 );
 
-router.get("/:slug", authenticate, requireFaction, gerExerciseBySlugController);
+router.get(
+  "/meta/muscle-groups",
+
+  authenticate,
+
+  requireFaction,
+
+  getExerciseMuscleGroupsController,
+);
+router.get(
+  "/slug/:slug",
+  authenticate,
+  requireFaction,
+  gerExerciseBySlugController,
+);
+
+router.get(
+  "/:id",
+  authenticate,
+  requireFaction,
+  validate(exerciseIdParamSchema),
+  getExerciseByIdController,
+);
 
 router.patch(
   "/:id",

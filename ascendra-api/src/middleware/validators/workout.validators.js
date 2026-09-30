@@ -31,6 +31,7 @@ export const getMyWorkoutsSchema = {
     page: Joi.number().integer().min(1).default(1),
     limit: Joi.number().integer().min(1).max(50).default(10),
     status: Joi.string().valid("active", "archived").default("active"),
+    search: Joi.string().trim().allow("").max(100),
   }),
 };
 
@@ -44,7 +45,7 @@ export const updateWorkoutSchema = {
   params: Joi.object({ id: Joi.string().hex().length(24).required() }),
   body: Joi.object({
     name: Joi.string().trim().min(1).max(100),
-    description: Joi.string().trim().max(1000),
+    description: Joi.string().trim().allow("").max(1000),
     exercises: Joi.array().items(workoutExerciseSchema).min(1),
     visibility: Joi.string().valid("private", "public"),
   }).min(1),

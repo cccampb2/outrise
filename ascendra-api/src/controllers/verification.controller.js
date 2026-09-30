@@ -7,14 +7,18 @@ import {
   rejectVerification,
   approveVerification,
 } from "../services/verification.service.js";
+import BadRequestError from "../errors/BadRequestError.js";
 
 export const createVerificationController = async (req, res, next) => {
   try {
+    if (!req.file) {
+      throw new BadRequestError("Verification proof video is required");
+    }
     const verification = await createVerification({
       userId: req.user.userId,
       exerciseId: req.body.exercise,
       performance: req.body.performance,
-      proof: req.body.proof,
+      proofFile: req.file,
     });
 
     return res.status(201).json({ verification });

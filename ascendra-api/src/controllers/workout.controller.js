@@ -35,16 +35,21 @@ export const getMyWorkoutsController = async (req, res, next) => {
   try {
     const ownerId = req.user.userId;
 
-    const { page, limit, status } = req.query;
+    const { page, limit, status, search } = req.query;
 
-    const result = await getMyWorkouts({ ownerId, page, limit, status });
+    const result = await getMyWorkouts({
+      ownerId,
+      page,
+      limit,
+      status,
+      search,
+    });
 
     return res.status(200).json(result);
   } catch (error) {
     next(error);
   }
 };
-
 export const getWorkoutByIdController = async (req, res, next) => {
   try {
     const workoutId = req.params.id;
