@@ -73,6 +73,13 @@ export default function FactionRankingsScreen() {
     factionLeaderboardQuery.data?.pages.flatMap((page) => page.leaderboard) ??
     [];
 
+  function openUserProfile(userId: string) {
+    router.push({
+      pathname: "/users/[userId]",
+      params: { userId },
+    });
+  }
+
   function handleLoadMore() {
     if (
       factionLeaderboardQuery.hasNextPage &&
@@ -125,7 +132,11 @@ export default function FactionRankingsScreen() {
         data={members}
         keyExtractor={(item) => item.userId}
         renderItem={({ item }) => (
-          <FactionMemberRow user={item} factionColor={faction.colors.primary} />
+          <FactionMemberRow
+            user={item}
+            factionColor={faction.colors.primary}
+            onPress={() => openUserProfile(item.userId)}
+          />
         )}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
@@ -277,13 +288,15 @@ export default function FactionRankingsScreen() {
               </View>
 
               {currentUser ? (
-                <View
-                  style={[
+                <Pressable
+                  onPress={() => openUserProfile(currentUser.userId)}
+                  style={({ pressed }) => [
                     styles.currentUserCard,
                     {
                       borderColor: faction.colors.border,
                       backgroundColor: faction.colors.darkSurface,
                     },
+                    pressed ? styles.userRowPressed : null,
                   ]}
                 >
                   <View style={styles.currentUserRank}>
@@ -312,7 +325,7 @@ export default function FactionRankingsScreen() {
                       {formatXP(currentUser.seasonXP)} SEASON XP
                     </Text>
                   </View>
-                </View>
+                </Pressable>
               ) : (
                 <View
                   style={[
@@ -384,12 +397,20 @@ export default function FactionRankingsScreen() {
 function FactionMemberRow({
   user,
   factionColor,
+  onPress,
 }: {
   user: FactionLeaderboardUser;
   factionColor: string;
+  onPress: () => void;
 }) {
   return (
-    <View style={styles.memberRow}>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.memberRow,
+        pressed ? styles.userRowPressed : null,
+      ]}
+    >
       <View style={styles.memberRankColumn}>
         <Text
           style={[
@@ -418,7 +439,7 @@ function FactionMemberRow({
 
         <Text style={styles.memberXPLabel}>SEASON XP</Text>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -747,6 +768,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSubtle,
     paddingVertical: 9,
+  },
+
+  userRowPressed: {
+    opacity: 0.72,
   },
 
   memberRankColumn: {

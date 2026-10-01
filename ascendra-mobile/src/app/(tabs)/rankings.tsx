@@ -86,6 +86,15 @@ export default function RankingsScreen() {
     }
   }
 
+  function openUserProfile(userId: string) {
+    router.push({
+      pathname: "/users/[userId]",
+      params: {
+        userId,
+      },
+    });
+  }
+
   if (selectedTab === "global") {
     if (globalLeaderboardQuery.isPending) {
       return (
@@ -130,7 +139,11 @@ export default function RankingsScreen() {
           data={leaderboard}
           keyExtractor={(item) => item.userId}
           renderItem={({ item }) => (
-            <LeaderboardRow user={item} factions={factions} />
+            <LeaderboardRow
+              user={item}
+              factions={factions}
+              onPress={() => openUserProfile(item.userId)}
+            />
           )}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
@@ -155,7 +168,11 @@ export default function RankingsScreen() {
                 </View>
 
                 {currentUser ? (
-                  <CurrentUserCard user={currentUser} factions={factions} />
+                  <CurrentUserCard
+                    user={currentUser}
+                    factions={factions}
+                    onPress={() => openUserProfile(currentUser.userId)}
+                  />
                 ) : (
                   <UnrankedUserCard />
                 )}
@@ -372,14 +389,22 @@ function RankingsHeader({
 function CurrentUserCard({
   user,
   factions,
+  onPress,
 }: {
   user: GlobalLeaderboardUser;
   factions: Faction[];
+  onPress: () => void;
 }) {
   const factionColor = getFactionColor(user, factions);
 
   return (
-    <View style={styles.currentUserCard}>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.currentUserCard,
+        pressed ? styles.userRowPressed : null,
+      ]}
+    >
       <View style={styles.currentRankBlock}>
         <Text style={styles.currentRankLabel}>
           {user.zenithRank !== null ? "ZENITH" : "GLOBAL"}
@@ -439,7 +464,7 @@ function CurrentUserCard({
           <Text style={styles.currentXP}>{formatXP(user.lifetimeXP)} XP</Text>
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -472,15 +497,22 @@ function UnrankedUserCard() {
 function LeaderboardRow({
   user,
   factions,
+  onPress,
 }: {
   user: GlobalLeaderboardUser;
   factions: Faction[];
+  onPress: () => void;
 }) {
   const factionColor = getFactionColor(user, factions);
 
   return (
-    <View
-      style={[styles.row, user.zenithRank !== null ? styles.zenithRow : null]}
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.row,
+        user.zenithRank !== null ? styles.zenithRow : null,
+        pressed ? styles.userRowPressed : null,
+      ]}
     >
       <View style={styles.rankColumn}>
         <Text
@@ -543,7 +575,7 @@ function LeaderboardRow({
 
         <Text style={styles.xpLabel}>XP</Text>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -797,6 +829,10 @@ const styles = StyleSheet.create({
     borderColor: colors.borderStrong,
     backgroundColor: colors.backgroundElement,
     padding: 14,
+  },
+
+  userRowPressed: {
+    opacity: 0.72,
   },
 
   currentRankBlock: {

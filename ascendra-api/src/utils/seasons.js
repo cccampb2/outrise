@@ -1,7 +1,21 @@
-export const getQuarterFromDate = (date) => {
-  const month = date.getUTCMonth();
+import { DateTime } from "luxon";
 
-  return Math.floor(month / 3) + 1;
+const SEASON_TIME_ZONE = "America/New_York";
+
+export const getQuarterFromDate = (date) => {
+  const dateTime = DateTime.fromJSDate(date, {
+    zone: SEASON_TIME_ZONE,
+  });
+
+  return Math.floor((dateTime.month - 1) / 3) + 1;
+};
+
+export const getYearFromDate = (date) => {
+  const dateTime = DateTime.fromJSDate(date, {
+    zone: SEASON_TIME_ZONE,
+  });
+
+  return dateTime.year;
 };
 
 export const getQuarterStartDate = (year, quarter) => {
@@ -9,8 +23,21 @@ export const getQuarterStartDate = (year, quarter) => {
     throw new Error("Quarter must be between 1 and 4");
   }
 
-  const startMonth = (quarter - 1) * 3;
-  return new Date(Date.UTC(year, startMonth, 1, 0, 0, 0, 0));
+  const startMonth = (quarter - 1) * 3 + 1;
+
+  return DateTime.fromObject(
+    {
+      year,
+      month: startMonth,
+      day: 1,
+    },
+    {
+      zone: SEASON_TIME_ZONE,
+    },
+  )
+    .startOf("day")
+    .toUTC()
+    .toJSDate();
 };
 
 export const getQuarterEndDate = (year, quarter) => {
