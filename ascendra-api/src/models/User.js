@@ -47,6 +47,41 @@ const userSchema = new Schema(
       default: 0,
       min: 0,
     },
+    firstName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    lastName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    nameVisibility: {
+      type: String,
+      enum: ["public", "friends", "private"],
+      default: "private",
+    },
+
+    bio: {
+      type: String,
+      trim: true,
+      default: "",
+      maxlength: 250,
+    },
+
+    profileImage: {
+      url: {
+        type: String,
+        default: null,
+      },
+      publicId: {
+        type: String,
+        default: null,
+      },
+    },
   },
 
   { timestamps: true },

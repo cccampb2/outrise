@@ -158,6 +158,8 @@ export default function ProfileScreen() {
 
   const progressTipPercent = Math.min(Math.max(progressPercent, 0), 99);
 
+  const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ");
+
   return (
     <Screen scroll hideTabBarOnScroll bottomInSet={TAB_BAR_HEIGHT}>
       <View style={styles.page}>
@@ -209,7 +211,7 @@ export default function ProfileScreen() {
           </View>
 
           <View style={styles.heroIdentity}>
-            {factionEmblem ? (
+            {user.profileImage.url || factionEmblem ? (
               <View style={styles.emblemArea}>
                 <View
                   style={[
@@ -227,11 +229,19 @@ export default function ProfileScreen() {
                       },
                     ]}
                   >
-                    <Image
-                      source={factionEmblem}
-                      style={styles.emblem}
-                      resizeMode="contain"
-                    />
+                    {user.profileImage.url ? (
+                      <Image
+                        source={{ uri: user.profileImage.url }}
+                        style={styles.profileImage}
+                        resizeMode="cover"
+                      />
+                    ) : factionEmblem ? (
+                      <Image
+                        source={factionEmblem}
+                        style={styles.emblem}
+                        resizeMode="contain"
+                      />
+                    ) : null}
                   </View>
                 </View>
 
@@ -252,6 +262,12 @@ export default function ProfileScreen() {
               <Text style={styles.username} numberOfLines={1}>
                 {user.username.toUpperCase()}
               </Text>
+
+              {fullName ? (
+                <Text style={styles.realName} numberOfLines={1}>
+                  {fullName}
+                </Text>
+              ) : null}
 
               {faction ? (
                 <View style={styles.factionIdentity}>
@@ -282,6 +298,8 @@ export default function ProfileScreen() {
               </Text>
             </View>
           </View>
+
+          {user.bio ? <Text style={styles.bio}>{user.bio}</Text> : null}
 
           {faction ? (
             <Text style={styles.factionTagline}>{`"${faction.tagline}"`}</Text>
@@ -820,6 +838,24 @@ export default function ProfileScreen() {
           </View>
 
           <View style={styles.accountCard}>
+            <Pressable
+              onPress={() => router.push("/profile/edit")}
+              style={({ pressed }) => [
+                styles.accountActionRow,
+                pressed ? styles.accountActionRowPressed : null,
+              ]}
+            >
+              <View style={styles.accountText}>
+                <Text style={styles.dataLabel}>PROFILE</Text>
+
+                <Text style={styles.accountActionValue}>Edit Profile</Text>
+              </View>
+
+              <Text style={styles.accountActionArrow}>→</Text>
+            </Pressable>
+
+            <View style={styles.accountDivider} />
+
             <View style={styles.accountRow}>
               <View style={styles.accountText}>
                 <Text style={styles.dataLabel}>USERNAME</Text>
@@ -987,11 +1023,18 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.dark.backgroundDeep,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
 
   emblem: {
     width: 68,
     height: 68,
+  },
+
+  profileImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 44,
   },
 
   emblemStatus: {
@@ -1024,6 +1067,13 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
+  realName: {
+    color: Colors.dark.textSecondary,
+    fontSize: 12,
+    fontWeight: "600",
+    marginTop: 3,
+  },
+
   factionIdentity: {
     flexDirection: "row",
     alignItems: "center",
@@ -1048,6 +1098,13 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 1.2,
     marginTop: 8,
+  },
+
+  bio: {
+    color: Colors.dark.textSecondary,
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 18,
   },
 
   factionTagline: {
@@ -1827,6 +1884,18 @@ const styles = StyleSheet.create({
     gap: 16,
   },
 
+  accountActionRow: {
+    minHeight: 64,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 16,
+  },
+
+  accountActionRowPressed: {
+    opacity: 0.55,
+  },
+
   accountText: {
     flex: 1,
   },
@@ -1836,6 +1905,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     marginTop: 4,
+  },
+
+  accountActionValue: {
+    color: Colors.dark.text,
+    fontSize: 13,
+    fontWeight: "700",
+    marginTop: 4,
+  },
+
+  accountActionArrow: {
+    color: Colors.dark.accent,
+    fontSize: 16,
+    fontWeight: "900",
   },
 
   accountMeta: {
