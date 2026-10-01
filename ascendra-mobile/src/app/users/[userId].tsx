@@ -205,6 +205,8 @@ export default function PublicUserProfileScreen() {
 
   const zenithRank = user.ranking.zenithRank;
 
+  const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ");
+
   return (
     <Screen scroll>
       <View style={styles.page}>
@@ -265,7 +267,13 @@ export default function PublicUserProfileScreen() {
                 },
               ]}
             >
-              {user.faction ? (
+              {user.profileImage?.url ? (
+                <Image
+                  source={{ uri: user.profileImage?.url }}
+                  style={styles.profileImage}
+                  resizeMode="cover"
+                />
+              ) : user.faction ? (
                 <Image
                   source={factionEmblems[user.faction.slug]}
                   style={styles.factionEmblem}
@@ -283,6 +291,12 @@ export default function PublicUserProfileScreen() {
                 {user.username}
               </Text>
 
+              {fullName ? (
+                <Text style={styles.realName} numberOfLines={1}>
+                  {fullName}
+                </Text>
+              ) : null}
+
               <Text
                 style={[
                   styles.factionName,
@@ -297,6 +311,18 @@ export default function PublicUserProfileScreen() {
               </Text>
             </View>
           </View>
+
+          {user.bio ? (
+            <>
+              <View style={styles.identityDivider} />
+
+              <View style={styles.bioSection}>
+                <Text style={styles.bioLabel}>PROFILE_BIO</Text>
+
+                <Text style={styles.bio}>{user.bio}</Text>
+              </View>
+            </>
+          ) : null}
 
           <View style={styles.identityDivider} />
 
@@ -594,17 +620,25 @@ const styles = StyleSheet.create({
   },
 
   emblemContainer: {
-    width: 64,
-    height: 64,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
     backgroundColor: Colors.dark.backgroundDeep,
   },
 
+  profileImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 36,
+  },
+
   factionEmblem: {
-    width: 52,
-    height: 52,
+    width: 56,
+    height: 56,
   },
 
   unassignedMark: {
@@ -633,6 +667,13 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
+  realName: {
+    color: Colors.dark.textSecondary,
+    fontSize: 11,
+    fontWeight: "600",
+    marginTop: 2,
+  },
+
   factionName: {
     fontSize: 8,
     fontWeight: "900",
@@ -644,6 +685,25 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: Colors.dark.borderSubtle,
     marginVertical: 17,
+  },
+
+  bioSection: {
+    paddingRight: 4,
+  },
+
+  bioLabel: {
+    color: Colors.dark.textTechnical,
+    fontSize: 7,
+    fontWeight: "900",
+    letterSpacing: 1.4,
+    marginBottom: 6,
+  },
+
+  bio: {
+    color: Colors.dark.textSecondary,
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "500",
   },
 
   identityProgression: {

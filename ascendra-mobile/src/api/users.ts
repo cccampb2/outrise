@@ -1,5 +1,6 @@
 import { apiRequest } from "./client";
 import type { FactionColors, FactionSlug } from "./factions";
+import { File } from "expo-file-system";
 
 export type UserProgression = {
   level: number;
@@ -138,6 +139,37 @@ export async function updateProfile(
   const response = await apiRequest("/users/me", {
     method: "PATCH",
     body: JSON.stringify(data),
+  });
+
+  return await response.json();
+}
+
+export type ProfileImageAsset = {
+  uri: string;
+  fileName?: string | null;
+  mimeType?: string | null;
+};
+
+export async function updateProfileImage(
+  image: ProfileImageAsset,
+): Promise<CurrentUser> {
+  const formData = new FormData();
+
+  const file = new File(image.uri);
+
+  formData.append("profileImage", file);
+
+  const response = await apiRequest("/users/me/profile-image", {
+    method: "PATCH",
+    body: formData,
+  });
+
+  return await response.json();
+}
+
+export async function removeProfileImage(): Promise<CurrentUser> {
+  const response = await apiRequest("/users/me/profile-image", {
+    method: "DELETE",
   });
 
   return await response.json();

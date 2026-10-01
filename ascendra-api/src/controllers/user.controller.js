@@ -3,7 +3,7 @@ import User from "../models/User.js";
 import NotFoundError from "../errors/NotFoundError.js";
 import { getProgressFromXP } from "../utils/progression.js";
 import { getUserGlobalRank } from "../services/leaderboard.service.js";
-
+import { uploadProfileImageBuffer } from "../services/media.service.js";
 export const getCurrentUser = async (req, res, next) => {
   try {
     const userId = req.user.userId;
@@ -207,6 +207,149 @@ export const updateCurrentUser = async (req, res, next) => {
 
     const progression = getProgressFromXP(user.lifetimeXP ?? 0);
 
+    const ranking = await getUserGlobalRank(user.id);
+
+    res.status(200).json({
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      accountStatus: user.accountStatus,
+      faction: user.faction,
+      lifetimeXP: user.lifetimeXP,
+      totalWorkouts: user.totalWorkouts,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      nameVisibility: user.nameVisibility,
+      bio: user.bio,
+      profileImage: user.profileImage,
+      createdAt: user.createdAt,
+      progression,
+      ranking,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateProfileImage = async (req, res, next) => {
+  let uploadedImage = null;
+
+  try {
+    const userId = req.user.userId;
+
+    if (!req.file) {
+      return res.status(400).json({
+        message: "Profile image is required",
+      });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      throw new NotFoundError("User not found");
+    }
+
+    uploadedImage = await uploadProfileImageBuffer(req.file.buffer);
+
+    const previousPublicId = user.profileImage?.publicId ?? null;
+
+    user.profileImage = {
+      url: uploadedImage.secure_url,
+      publicId: uploadedImage.public_id,
+    };
+
+    await user.save();
+
+    if (previousPublicId) {
+      try {
+        await cloudinary.uploader.destroy(previousPublicId, {
+          resource_type: "image",
+        });
+      } catch (cloudinaryError) {
+        console.error(
+          "Failed to delete previous profile image:",
+          cloudinaryError,
+        );
+      }
+    }
+
+    const progression = getProgressFromXP(user.lifetimeXP ?? 0);
+    const ranking = await getUserGlobalRank(user.id);
+
+    res.status(200).json({
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      accountStatus: user.accountStatus,
+      faction: user.faction,
+      lifetimeXP: user.lifetimeXP,
+      totalWorkouts: user.totalWorkouts,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      nameVisibility: user.nameVisibility,
+      bio: user.bio,
+      profileImage: user.profileImage,
+      createdAt: user.createdAt,
+      progression,
+      ranking,
+    });
+  } catch (error) {
+    /*
+     * If Cloudinary succeeded but saving the User failed,
+     * don't leave the newly uploaded image orphaned.
+     */
+    if (uploadedImage?.public_id) {
+      try {
+        await cloudinary.uploader.destroy(uploadedImage.public_id, {
+          resource_type: "image",
+        });
+      } catch (cleanupError) {
+        console.error(
+          "Failed to clean up uploaded profile image:",
+          cleanupError,
+        );
+      }
+    }
+
+    next(error);
+  }
+};
+
+export const removeProfileImage = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      throw new NotFoundError("User not found");
+    }
+
+    const previousPublicId = user.profileImage?.publicId ?? null;
+
+    user.profileImage = {
+      url: null,
+      publicId: null,
+    };
+
+    await user.save();
+
+    if (previousPublicId) {
+      try {
+        await cloudinary.uploader.destroy(previousPublicId, {
+          resource_type: "image",
+        });
+      } catch (cloudinaryError) {
+        console.error(
+          "Failed to delete profile image from Cloudinary:",
+          cloudinaryError,
+        );
+      }
+    }
+
+    const progression = getProgressFromXP(user.lifetimeXP ?? 0);
     const ranking = await getUserGlobalRank(user.id);
 
     res.status(200).json({

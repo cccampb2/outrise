@@ -7,11 +7,17 @@ import {
   Text,
   TextInput,
   View,
+  Image,
 } from "react-native";
 import { router } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
+import * as ImagePicker from "expo-image-picker";
 
-import { updateProfile } from "@/api/users";
+import {
+  updateProfile,
+  removeProfileImage,
+  updateProfileImage,
+} from "@/api/users";
 import { Screen } from "@/components/screen";
 import { Colors } from "@/constants/theme";
 import { setCurrentUser } from "@/store/auth-slice";
@@ -52,9 +58,80 @@ export default function EditProfileScreen() {
   const [nameVisibility, setNameVisibility] = useState<NameVisibility>(
     user?.nameVisibility ?? "private",
   );
-
+  const [isUpdatingImage, setIsUpdatingImage] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function chooseProfileImage() {
+    if (isUpdatingImage) {
+      return;
+    }
+
+    try {
+      setError(null);
+      setIsUpdatingImage(true);
+
+      const permission =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permission.granted) {
+        setError("PHOTO_LIBRARY_PERMISSION_REQUIRED");
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (result.canceled) {
+        return;
+      }
+
+      const image = result.assets[0];
+
+      if (!image) {
+        return;
+      }
+
+      const updatedUser = await updateProfileImage({
+        uri: image.uri,
+        fileName: image.fileName,
+        mimeType: image.mimeType,
+      });
+
+      dispatch(setCurrentUser(updatedUser));
+    } catch (imageError) {
+      console.error("Failed to update profile image:", imageError);
+
+      setError("UNABLE_TO_UPDATE_PROFILE_IMAGE");
+    } finally {
+      setIsUpdatingImage(false);
+    }
+  }
+
+  async function deleteProfileImage() {
+    if (isUpdatingImage) {
+      return;
+    }
+
+    try {
+      setIsUpdatingImage(true);
+      setError(null);
+
+      const updatedUser = await removeProfileImage();
+
+      dispatch(setCurrentUser(updatedUser));
+    } catch (imageError) {
+      console.error("Failed to remove profile image:", imageError);
+
+      setError("UNABLE_TO_REMOVE_PROFILE_IMAGE");
+    } finally {
+      setIsUpdatingImage(false);
+    }
+  }
 
   if (!user) {
     return (
@@ -300,23 +377,79 @@ export default function EditProfileScreen() {
         </View>
 
         <View style={styles.imagePanel}>
-          <View style={styles.imageInformation}>
-            <Text style={styles.imageLabel}>PROFILE_IMAGE</Text>
+          <View style={styles.profileImageArea}>
+            <View style={styles.profileImageFrame}>
+              {user.profileImage.url ? (
+                <Image
+                  source={{ uri: user.profileImage.url }}
+                  style={styles.profileImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={styles.profileImageEmpty}>
+                  <Text style={styles.profileImageEmptyText}>IMG</Text>
+                </View>
+              )}
+            </View>
 
-            <Text style={styles.imageDescription}>
-              CUSTOM IMAGE UPLOAD WILL BE AVAILABLE HERE.
-            </Text>
+            <View style={styles.imageInformation}>
+              <Text style={styles.imageLabel}>PROFILE_IMAGE</Text>
 
-            <Text style={styles.imageFallback}>
-              NO IMAGE // FACTION EMBLEM USED AS FALLBACK
-            </Text>
+              <Text style={styles.imageDescription}>
+                {user.profileImage.url
+                  ? "CUSTOM PROFILE IMAGE ACTIVE"
+                  : "FACTION EMBLEM USED ON PROFILE"}
+              </Text>
+
+              <Text style={styles.imageFallback}>
+                SQUARE IMAGE // MAX_UPLOAD_5MB
+              </Text>
+            </View>
           </View>
 
-          <View style={styles.imageStatus}>
-            <Text style={styles.imageStatusText}>
-              {user.profileImage.url ? "[ACTIVE]" : "[DEFAULT]"}
-            </Text>
-          </View>
+          <Pressable
+            onPress={chooseProfileImage}
+            disabled={isUpdatingImage}
+            style={({ pressed }) => [
+              styles.imageAction,
+              pressed && !isUpdatingImage ? styles.imageActionPressed : null,
+            ]}
+          >
+            {isUpdatingImage ? (
+              <ActivityIndicator
+                style={{
+                  marginHorizontal: "auto",
+                }}
+                size="small"
+                color={Colors.dark.accent}
+              />
+            ) : (
+              <>
+                <Text style={styles.imageActionText}>
+                  {user.profileImage.url
+                    ? "CHANGE_PROFILE_IMAGE"
+                    : "SELECT_PROFILE_IMAGE"}
+                </Text>
+
+                <Text style={styles.imageActionArrow}>→</Text>
+              </>
+            )}
+          </Pressable>
+
+          {user.profileImage.url ? (
+            <Pressable
+              onPress={deleteProfileImage}
+              disabled={isUpdatingImage}
+              style={({ pressed }) => [
+                styles.removeImageButton,
+                pressed && !isUpdatingImage
+                  ? styles.removeImageButtonPressed
+                  : null,
+              ]}
+            >
+              <Text style={styles.removeImageText}>REMOVE_PROFILE_IMAGE</Text>
+            </Pressable>
+          ) : null}
         </View>
 
         {/* ERROR */}
@@ -645,43 +778,6 @@ const styles = StyleSheet.create({
 
   /* IMAGE */
 
-  imagePanel: {
-    minHeight: 90,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.dark.backgroundElement,
-    borderWidth: 1,
-    borderColor: Colors.dark.border,
-    padding: 16,
-    marginBottom: 30,
-  },
-
-  imageInformation: {
-    flex: 1,
-  },
-
-  imageLabel: {
-    color: Colors.dark.textTechnical,
-    fontSize: 8,
-    fontWeight: "900",
-    letterSpacing: 1.4,
-  },
-
-  imageDescription: {
-    color: Colors.dark.textSecondary,
-    fontSize: 10,
-    fontWeight: "700",
-    marginTop: 7,
-  },
-
-  imageFallback: {
-    color: Colors.dark.textDim,
-    fontSize: 7,
-    fontWeight: "800",
-    letterSpacing: 0.7,
-    marginTop: 5,
-  },
-
   imageStatus: {
     borderWidth: 1,
     borderColor: Colors.dark.border,
@@ -760,5 +856,127 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
     marginTop: 12,
+  },
+  /* IMAGE */
+
+  imagePanel: {
+    backgroundColor: Colors.dark.backgroundElement,
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
+    padding: 16,
+    marginBottom: 30,
+  },
+  profileImageArea: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+
+  profileImageFrame: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 1,
+    borderColor: Colors.dark.borderStrong,
+    backgroundColor: Colors.dark.backgroundDeep,
+    padding: 3,
+    marginRight: 14,
+  },
+
+  profileImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 32,
+  },
+
+  profileImageEmpty: {
+    flex: 1,
+    borderRadius: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: Colors.dark.borderSubtle,
+  },
+
+  profileImageEmptyText: {
+    color: Colors.dark.textDim,
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+  },
+
+  imageInformation: {
+    flex: 1,
+  },
+
+  imageLabel: {
+    color: Colors.dark.textTechnical,
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1.4,
+  },
+
+  imageDescription: {
+    color: Colors.dark.textSecondary,
+    fontSize: 10,
+    fontWeight: "700",
+    marginTop: 7,
+  },
+
+  imageFallback: {
+    color: Colors.dark.textDim,
+    fontSize: 7,
+    fontWeight: "800",
+    letterSpacing: 0.7,
+    marginTop: 5,
+  },
+
+  imageAction: {
+    minHeight: 44,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: Colors.dark.backgroundDeep,
+    borderWidth: 1,
+    borderColor: Colors.dark.borderStrong,
+    paddingHorizontal: 13,
+  },
+
+  imageActionPressed: {
+    backgroundColor: Colors.dark.backgroundSelected,
+  },
+
+  imageActionText: {
+    color: Colors.dark.text,
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+  },
+
+  imageActionArrow: {
+    color: Colors.dark.accent,
+    fontSize: 14,
+    fontWeight: "900",
+  },
+
+  removeImageButton: {
+    minHeight: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.dark.dangerSurface,
+    borderWidth: 1,
+    borderColor: Colors.dark.dangerBorder,
+    marginTop: 10,
+  },
+
+  removeImageButtonPressed: {
+    backgroundColor: Colors.dark.dangerSurfacePressed,
+  },
+
+  removeImageText: {
+    color: Colors.dark.danger,
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1.2,
   },
 });

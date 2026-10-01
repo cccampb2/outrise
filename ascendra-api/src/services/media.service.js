@@ -32,3 +32,37 @@ export const deleteVerificationVideo = async (publicId) => {
     resource_type: "video",
   });
 };
+
+export function uploadProfileImageBuffer(buffer) {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: "ascendra/profile-images",
+        resource_type: "image",
+
+        transformation: [
+          {
+            width: 800,
+            height: 800,
+            crop: "fill",
+            gravity: "auto",
+          },
+          {
+            quality: "auto",
+            fetch_format: "auto",
+          },
+        ],
+      },
+      (error, result) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        resolve(result);
+      },
+    );
+
+    uploadStream.end(buffer);
+  });
+}

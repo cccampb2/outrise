@@ -7,7 +7,11 @@ import {
   getPublicUser,
   searchUsers,
   updateCurrentUser,
+  updateProfileImage,
+  removeProfileImage,
 } from "../controllers/user.controller.js";
+
+import { uploadProfileImage } from "../middleware/upload-profile-image.js";
 
 const router = express.Router();
 
@@ -19,6 +23,15 @@ router.patch(
   validate(updateProfileSchema),
   updateCurrentUser,
 );
+
+router.patch(
+  "/me/profile-image",
+  authenticate,
+  uploadProfileImage,
+  updateProfileImage,
+);
+
+router.delete("/me/profile-image", authenticate, removeProfileImage);
 
 router.get("/search", authenticate, searchUsers);
 
