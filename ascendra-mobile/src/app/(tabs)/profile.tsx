@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Image,
   Platform,
+  Alert,
 } from "react-native";
 import { Screen } from "@/components/screen";
 import { deleteToken } from "@/storage/auth-storage";
@@ -121,10 +122,24 @@ export default function ProfileScreen() {
     (f) => f._id === user?.faction,
   );
 
-  async function signOut() {
+  async function performSignOut() {
     await deleteToken();
     dispatch(clearCurrentUser());
     router.replace("/(auth)/login");
+  }
+
+  function signOut() {
+    Alert.alert("Sign Out", "Are you sure you want to sign out of Ascendra?", [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Sign Out",
+        style: "destructive",
+        onPress: performSignOut,
+      },
+    ]);
   }
 
   if (!user) {
