@@ -25,6 +25,21 @@ export type LeaderboardPagination = {
   totalPages: number;
 };
 
+export type FriendsLeaderboardUser = Omit<GlobalLeaderboardUser, "zenithRank">;
+
+export type GetFriendsLeaderboardResponse = {
+  leaderboard: FriendsLeaderboardUser[];
+  currentUser: FriendsLeaderboardUser | null;
+  pagination: LeaderboardPagination;
+};
+
+export async function getFriendsLeaderboard(
+  { page = 1, limit = 25 }: { page?: number; limit?: number } = {},
+): Promise<GetFriendsLeaderboardResponse> {
+  const response = await apiRequest(`/leaderboards/friends?page=${page}&limit=${limit}`);
+  return response.json();
+}
+
 export type GetGlobalLeaderboardResponse = {
   leaderboard: GlobalLeaderboardUser[];
   pagination: LeaderboardPagination;

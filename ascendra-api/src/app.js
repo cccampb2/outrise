@@ -12,6 +12,10 @@ import leaderboardRoutes from "./routes/leaderboard.routes.js";
 import seasonRoutes from "./routes/season.routes.js";
 import workoutOfTheWeekRoutes from "./routes/workoutOfTheWeek.routes.js";
 import verificationRoutes from "./routes/verification.routes.js";
+import friendRoutes from "./routes/friend.routes.js";
+import activityRoutes from "./routes/activity.routes.js";
+import notificationRoutes from "./routes/notification.routes.js";
+import adminAchievementRoutes from "./routes/adminAchievement.routes.js";
 const app = express();
 
 app.use(cors());
@@ -28,6 +32,10 @@ app.use("/leaderboards", leaderboardRoutes);
 app.use("/seasons", seasonRoutes);
 app.use("/workouts-of-the-week", workoutOfTheWeekRoutes);
 app.use("/verifications", verificationRoutes);
+app.use("/friends", friendRoutes);
+app.use("/activity", activityRoutes);
+app.use("/notifications", notificationRoutes);
+app.use("/admin/achievements", adminAchievementRoutes);
 app.use(errorHandler);
 
 export default app;

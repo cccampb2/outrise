@@ -4,6 +4,7 @@ const { Schema, model } = mongoose;
 
 const seasonSchema = new Schema(
   {
+    activityRevision: { type: Number, default: 0, min: 0 },
     startsAt: {
       type: Date,
       required: true,

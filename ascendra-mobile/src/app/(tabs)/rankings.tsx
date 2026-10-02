@@ -19,6 +19,7 @@ import {
 } from "@/api/leaderboards";
 import { getFactions, type Faction } from "@/api/factions";
 import { Screen } from "@/components/screen";
+import { FriendsRankings } from "@/components/friends-rankings";
 import { ZenithEmblem } from "@/components/zenith-emblem";
 import { factionEmblems } from "@/constants/faction-assets";
 import { Colors } from "@/constants/theme";
@@ -93,6 +94,10 @@ export default function RankingsScreen() {
         userId,
       },
     });
+  }
+
+  if (selectedTab === "friends") {
+    return <FriendsRankings header={<RankingsHeader selectedTab={selectedTab} onSelectTab={setSelectedTab} />} />;
   }
 
   if (selectedTab === "global") {
@@ -338,18 +343,21 @@ function RankingsHeader({
   const isGlobal = selectedTab === "global";
 
   const isFactions = selectedTab === "factions";
+  const isFriends = selectedTab === "friends";
 
   return (
     <>
       <View style={styles.header}>
-        <Text style={styles.eyebrow}>ASCENDRA // RANKINGS</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <Text style={styles.eyebrow}>ASCENDRA // RANKINGS</Text>
+        </View>
 
         <Text style={styles.title}>
-          {isFactions ? "FACTION STANDINGS" : "GLOBAL STANDINGS"}
+          {isFriends ? "FRIENDS STANDINGS" : isFactions ? "FACTION STANDINGS" : "GLOBAL STANDINGS"}
         </Text>
 
         <Text style={styles.description}>
-          {isFactions
+          {isFriends ? "Compare lifetime XP with your accepted friends. You are included in these standings." : isFactions
             ? "Season XP determines faction position. Every contribution pushes your faction higher."
             : "Lifetime XP determines your global position. The top 25 hold Zenith status."}
         </Text>
@@ -378,9 +386,9 @@ function RankingsHeader({
           </Text>
         </Pressable>
 
-        <View style={styles.tab}>
-          <Text style={styles.inactiveTabText}>FRIENDS</Text>
-        </View>
+        <Pressable onPress={() => onSelectTab("friends")} style={[styles.tab, isFriends ? styles.activeTab : null]}>
+          <Text style={isFriends ? styles.activeTabText : styles.inactiveTabText}>FRIENDS</Text>
+        </Pressable>
       </View>
     </>
   );

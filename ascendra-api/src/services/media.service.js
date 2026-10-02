@@ -33,6 +33,20 @@ export const deleteVerificationVideo = async (publicId) => {
   });
 };
 
+export const deleteProfileImage = async (publicId) => {
+  const result = await cloudinary.uploader.destroy(publicId, {
+    resource_type: "image",
+    invalidate: true,
+  });
+
+  // An already absent image also satisfies cleanup.
+  if (result?.result !== "ok" && result?.result !== "not found") {
+    throw new Error(
+      `Failed to delete profile image ${publicId}: ${result?.result ?? "missing result"}`,
+    );
+  }
+};
+
 export function uploadProfileImageBuffer(buffer) {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(

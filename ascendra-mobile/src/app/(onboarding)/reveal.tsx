@@ -34,9 +34,10 @@ export default function RevealScreen() {
 
   const dispatch = useDispatch<AppDispatch>();
 
-  const recommendedFaction = useSelector(
-    (state: RootState) => state.onboarding.recommendedFaction,
+  const { recommendedFaction, selectedFaction } = useSelector(
+    (state: RootState) => state.onboarding,
   );
+  const faction = selectedFaction ?? recommendedFaction;
 
   const textAnimatedStyle = useAnimatedStyle(() => ({
     opacity: textOpacity.value,
@@ -130,7 +131,7 @@ export default function RevealScreen() {
     );
   }, [emblemOpacity, emblemScale, shakeX, textOpacity, textTranslateY]);
 
-  if (!recommendedFaction) {
+  if (!faction) {
     return (
       <Screen>
         <View style={styles.errorContainer}>
@@ -143,11 +144,12 @@ export default function RevealScreen() {
   }
 
   async function handleAcceptFaction() {
+    if (!faction || isConfirming) return;
     setIsConfirming(true);
     setError("");
 
     try {
-      await confirmFaction(recommendedFaction.slug);
+      await confirmFaction(faction.slug);
 
       const user = await getCurrentUser();
 
@@ -165,11 +167,11 @@ export default function RevealScreen() {
     }
   }
 
-  const emblem = factionEmblems[recommendedFaction.slug];
+  const emblem = factionEmblems[faction.slug];
 
-  const accent = recommendedFaction.colors.primary;
+  const accent = faction.colors.primary;
 
-  const accentBorder = recommendedFaction.colors.border;
+  const accentBorder = faction.colors.border;
 
   return (
     <Screen>
@@ -200,7 +202,7 @@ export default function RevealScreen() {
               },
             ]}
           >
-            MATCH_FOUND
+            {faction.slug === recommendedFaction?.slug ? "MATCH_FOUND" : "FACTION_SELECTED"}
           </Text>
         </View>
 
@@ -212,7 +214,7 @@ export default function RevealScreen() {
               style={[
                 styles.emblemGlow,
                 {
-                  backgroundColor: recommendedFaction.colors.glow,
+                  backgroundColor: faction.colors.glow,
                 },
               ]}
             />
@@ -261,7 +263,7 @@ export default function RevealScreen() {
                   },
                 ]}
               >
-                YOUR_FACTION
+                {faction.slug === recommendedFaction?.slug ? "RECOMMENDED_FACTION" : "SELECTED_FACTION"}
               </Text>
 
               <View
@@ -275,10 +277,10 @@ export default function RevealScreen() {
             </View>
 
             <Text style={styles.title}>
-              {recommendedFaction.name.toUpperCase()}
+              {faction.name.toUpperCase()}
             </Text>
 
-            <Text style={styles.tagline}>{recommendedFaction.tagline}</Text>
+            <Text style={styles.tagline}>{faction.tagline}</Text>
 
             <View
               style={[
@@ -309,11 +311,12 @@ export default function RevealScreen() {
               <Text style={styles.descriptionLabel}>FACTION_PROFILE</Text>
 
               <Text style={styles.description}>
-                {recommendedFaction.description}
+                {faction.description}
               </Text>
             </View>
 
             <View style={styles.actions}>
+              <Text style={styles.confirmationNote}>Your faction becomes permanent once confirmed.</Text>
               <Pressable
                 disabled={isConfirming}
                 onPress={handleAcceptFaction}
@@ -322,7 +325,7 @@ export default function RevealScreen() {
                   {
                     borderColor: accent,
                     backgroundColor: pressed
-                      ? recommendedFaction.colors.darkSurface
+                      ? faction.colors.darkSurface
                       : Colors.dark.backgroundSelected,
                     opacity: isConfirming ? 0.55 : 1,
                   },
@@ -345,7 +348,7 @@ export default function RevealScreen() {
                     },
                   ]}
                 >
-                  {isConfirming ? "CONFIRMING..." : "ACCEPT_FACTION"}
+                  {isConfirming ? "CONFIRMING..." : "CONFIRM_FACTION"}
                 </Text>
 
                 <Text
@@ -361,6 +364,8 @@ export default function RevealScreen() {
               </Pressable>
 
               <Pressable
+                disabled={isConfirming}
+                onPress={() => router.push("./factions")}
                 style={({ pressed }) => [
                   styles.otherFactionsButton,
                   {
@@ -562,6 +567,13 @@ const styles = StyleSheet.create({
   },
 
   /* ACTIONS */
+
+  confirmationNote: {
+    color: Colors.dark.textMuted,
+    fontSize: 11,
+    textAlign: "center",
+    lineHeight: 17,
+  },
 
   actions: {
     width: "100%",

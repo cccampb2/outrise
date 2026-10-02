@@ -250,7 +250,7 @@ export default function ActiveWorkout() {
     const completedWorkout = completionResult.workoutSession;
 
     return (
-      <Screen scroll>
+      <Screen scroll bottomInSet={16}>
         <View style={styles.completionContainer}>
           <View style={styles.completionStatus}>
             <View style={styles.completionStatusLine} />

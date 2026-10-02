@@ -1,3 +1,4 @@
+import { ProfileRecords } from "@/components/profile-records";
 import {
   Text,
   View,
@@ -211,6 +212,7 @@ export default function ProfileScreen() {
               <Text style={styles.systemStatusText}>ASCENDRA_ID // ACTIVE</Text>
             </View>
 
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <View style={styles.badgeCode}>
               <Text
                 style={[
@@ -222,6 +224,7 @@ export default function ProfileScreen() {
               >
                 {`LEVEL_${String(user.progression.level).padStart(3, "0")}`}
               </Text>
+            </View>
             </View>
           </View>
 
@@ -642,6 +645,8 @@ export default function ProfileScreen() {
               </Text>
             </View>
           </View>
+
+        <ProfileRecords userId={user.id} />
 
           {/* RECENT ACTIVITY */}
 

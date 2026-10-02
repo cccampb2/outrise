@@ -97,7 +97,9 @@ export default function CommunityScreen() {
         ListHeaderComponent={
           <>
             <View style={styles.header}>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
               <Text style={styles.headerEyebrow}>ASCENDRA // COMMUNITY</Text>
+            </View>
 
               <Text style={styles.headerTitle}>USER NETWORK</Text>
 
@@ -107,6 +109,9 @@ export default function CommunityScreen() {
             </View>
 
             <View style={styles.searchSection}>
+              <Pressable accessibilityRole="button" onPress={() => router.push("../friends")} style={{ minHeight: 44, justifyContent: "center", marginBottom: 16, borderWidth: 1, borderColor: colors.borderStrong, paddingHorizontal: 14 }}>
+                <Text style={{ color: colors.accent, fontSize: 11, fontWeight: "900", letterSpacing: 1 }}>FRIENDS // REQUESTS →</Text>
+              </Pressable>
               <Text style={styles.searchLabel}>USER_SEARCH</Text>
 
               <View style={styles.searchInputContainer}>

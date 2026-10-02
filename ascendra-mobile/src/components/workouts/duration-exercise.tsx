@@ -52,12 +52,10 @@ export function DurationExercise({
     setIsEditing(false);
   }, [exercise.actual.timeSeconds]);
 
-  const minutesNumber = Number(minutes);
-  const secondsNumber = Number(seconds);
+  const minutesNumber = Number(minutes.trim() || "0");
+  const secondsNumber = Number(seconds.trim() || "0");
 
   const canSave =
-    minutes.trim() !== "" &&
-    seconds.trim() !== "" &&
     Number.isInteger(minutesNumber) &&
     Number.isInteger(secondsNumber) &&
     minutesNumber >= 0 &&
@@ -74,6 +72,8 @@ export function DurationExercise({
 
     try {
       await onSave(totalSeconds);
+      setMinutes(String(minutesNumber));
+      setSeconds(String(secondsNumber));
       setIsEditing(false);
     } catch {
       // Parent displays mutation error.

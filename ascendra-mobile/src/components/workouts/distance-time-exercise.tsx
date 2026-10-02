@@ -63,13 +63,11 @@ export function DistanceTimeExercise({
   }, [exercise.actual.distanceMiles, exercise.actual.timeSeconds]);
 
   const distanceNumber = Number(distance);
-  const minutesNumber = Number(minutes);
-  const secondsNumber = Number(seconds);
+  const minutesNumber = Number(minutes.trim() || "0");
+  const secondsNumber = Number(seconds.trim() || "0");
 
   const canSave =
     distance.trim() !== "" &&
-    minutes.trim() !== "" &&
-    seconds.trim() !== "" &&
     Number.isFinite(distanceNumber) &&
     Number.isInteger(minutesNumber) &&
     Number.isInteger(secondsNumber) &&
@@ -88,6 +86,8 @@ export function DistanceTimeExercise({
 
     try {
       await onSave(distanceNumber, totalSeconds);
+      setMinutes(String(minutesNumber));
+      setSeconds(String(secondsNumber));
       setIsEditing(false);
     } catch {
       // Parent displays mutation error.

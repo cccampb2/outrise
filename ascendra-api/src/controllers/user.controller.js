@@ -3,7 +3,11 @@ import User from "../models/User.js";
 import NotFoundError from "../errors/NotFoundError.js";
 import { getProgressFromXP } from "../utils/progression.js";
 import { getUserGlobalRank } from "../services/leaderboard.service.js";
-import { uploadProfileImageBuffer } from "../services/media.service.js";
+import { getFriendshipRelationship } from "../services/friend.service.js";
+import {
+  deleteProfileImage,
+  uploadProfileImageBuffer,
+} from "../services/media.service.js";
 export const getCurrentUser = async (req, res, next) => {
   try {
     const userId = req.user.userId;
@@ -150,7 +154,15 @@ export const getPublicUser = async (req, res, next) => {
 
     const isOwnProfile = req.user.userId === user._id.toString();
 
-    const canViewName = isOwnProfile || user.nameVisibility === "public";
+    const relationship = await getFriendshipRelationship({
+      userId: req.user.userId,
+      otherUserId: user._id,
+    });
+
+    const canViewName =
+      isOwnProfile ||
+      user.nameVisibility === "public" ||
+      (user.nameVisibility === "friends" && relationship.status === "friends");
 
     res.status(200).json({
       user: {
@@ -169,6 +181,7 @@ export const getPublicUser = async (req, res, next) => {
         createdAt: user.createdAt,
         progression,
         ranking,
+        relationship,
       },
     });
   } catch (error) {
@@ -234,6 +247,7 @@ export const updateCurrentUser = async (req, res, next) => {
 
 export const updateProfileImage = async (req, res, next) => {
   let uploadedImage = null;
+  let imageSaved = false;
 
   try {
     const userId = req.user.userId;
@@ -260,15 +274,15 @@ export const updateProfileImage = async (req, res, next) => {
     };
 
     await user.save();
+    imageSaved = true;
 
     if (previousPublicId) {
       try {
-        await cloudinary.uploader.destroy(previousPublicId, {
-          resource_type: "image",
-        });
+        await deleteProfileImage(previousPublicId);
       } catch (cloudinaryError) {
         console.error(
           "Failed to delete previous profile image:",
+          previousPublicId,
           cloudinaryError,
         );
       }
@@ -300,14 +314,13 @@ export const updateProfileImage = async (req, res, next) => {
      * If Cloudinary succeeded but saving the User failed,
      * don't leave the newly uploaded image orphaned.
      */
-    if (uploadedImage?.public_id) {
+    if (uploadedImage?.public_id && !imageSaved) {
       try {
-        await cloudinary.uploader.destroy(uploadedImage.public_id, {
-          resource_type: "image",
-        });
+        await deleteProfileImage(uploadedImage.public_id);
       } catch (cleanupError) {
         console.error(
           "Failed to clean up uploaded profile image:",
+          uploadedImage.public_id,
           cleanupError,
         );
       }
@@ -338,12 +351,11 @@ export const removeProfileImage = async (req, res, next) => {
 
     if (previousPublicId) {
       try {
-        await cloudinary.uploader.destroy(previousPublicId, {
-          resource_type: "image",
-        });
+        await deleteProfileImage(previousPublicId);
       } catch (cloudinaryError) {
         console.error(
           "Failed to delete profile image from Cloudinary:",
+          previousPublicId,
           cloudinaryError,
         );
       }

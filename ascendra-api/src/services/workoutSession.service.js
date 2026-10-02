@@ -23,6 +23,7 @@ import {
 } from "./achievement.service.js";
 
 import { processProgressionAchievements } from "./progression.service.js";
+import { createActivityEvent } from "./activity.service.js";
 
 export const startWorkoutSession = async ({ userId, workoutId }) => {
   await ensureNoActiveSession({ userId });
@@ -344,8 +345,8 @@ export const hasValidActualPerformance = (sessionExercise) => {
 
 export const completeActiveWorkoutSession = async ({ userId }) => {
   const mongoSession = await mongoose.startSession();
-  mongoSession.startTransaction();
   try {
+    return await mongoSession.withTransaction(async () => {
     const workoutSession = await WorkoutSession.findOne({
       user: userId,
       status: "active",
@@ -424,12 +425,22 @@ export const completeActiveWorkoutSession = async ({ userId }) => {
           hasValidActualPerformance(sessionExercise),
       );
 
-      if (
-        workoutSession.sourceType === "workout_of_the_week" &&
-        completedBeforeDeadline &&
-        completedAllExercises
-      ) {
-        workoutOfTheWeekXP = occurrence.bonusXP;
+      if (completedBeforeDeadline && completedAllExercises) {
+        if (workoutSession.sourceType === "workout_of_the_week") {
+          workoutOfTheWeekXP = occurrence.bonusXP;
+        }
+        const actor = await User.findById(userId).select("username").session(mongoSession);
+        if (!actor) throw new NotFoundError("User not found");
+        await createActivityEvent({
+          type: "wotw_completed",
+          actor: userId,
+          audience: "friends",
+          sourceType: "workout_of_the_week_occurrence",
+          sourceId: occurrence._id,
+          details: { actorUsername: actor.username, workoutName: occurrence.name },
+          occurredAt: completedAt,
+          idempotencyKey: `user:${userId}:wotw:${occurrence._id}:completed`,
+        }, { mongoSession });
       }
     }
 
@@ -584,7 +595,17 @@ export const completeActiveWorkoutSession = async ({ userId }) => {
       (workoutXPResult?.wasCapped ?? false) ||
       (personalRecordXPResult?.wasCapped ?? false);
 
-    await mongoSession.commitTransaction();
+    if (!workoutSession.workoutOfTheWeekOccurrence) {
+      const actor = await User.findById(userId).select("username").session(mongoSession);
+      if (!actor) throw new NotFoundError("User not found");
+      await createActivityEvent({
+        type: "workout_completed", actor: userId, audience: "friends",
+        sourceType: "workout_session", sourceId: workoutSession._id,
+        details: { actorUsername: actor.username, workoutName: workoutSession.workoutName },
+        occurredAt: completedAt, idempotencyKey: `workout:${workoutSession._id}:completed`,
+      }, { mongoSession });
+    }
+
 
     return {
       workoutSession,
@@ -607,9 +628,7 @@ export const completeActiveWorkoutSession = async ({ userId }) => {
         wasCapped: wasDailyXPCapped,
       },
     };
-  } catch (error) {
-    await mongoSession.abortTransaction();
-    throw error;
+    });
   } finally {
     await mongoSession.endSession();
   }

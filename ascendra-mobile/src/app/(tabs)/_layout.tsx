@@ -8,6 +8,8 @@ import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { Colors, TAB_BAR_HEIGHT } from "@/constants/theme";
 import { TabBarProvider, useTabBar } from "@/context/tab-bar-context";
 import { TabButton } from "@/components/tab-button";
+import { NotificationBell } from "@/components/notification-bell";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 function CustomTabBar() {
   const { translateY } = useTabBar();
@@ -103,10 +105,14 @@ function CustomTabBar() {
 }
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
   return (
     <TabBarProvider>
       <Tabs>
         <TabSlot />
+        <View pointerEvents="box-none" style={[styles.notificationBar, { paddingTop: insets.top + 16, paddingRight: insets.right + 24 }]}>
+          <NotificationBell />
+        </View>
 
         <CustomTabBar />
 
@@ -123,6 +129,11 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
+  notificationBar: {
+    position: "absolute", top: 0, left: 0, right: 0,
+    paddingBottom: 12, alignItems: "flex-end",
+    backgroundColor: Colors.dark.background,
+  },
   tabBarWrapper: {
     position: "absolute",
 

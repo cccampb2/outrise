@@ -1,5 +1,32 @@
 import PersonalRecord from "../models/PersonalRecord.js";
 import mongoose from "mongoose";
+import User from "../models/User.js";
+import Exercise from "../models/Exercise.js";
+import { createActivityEvent } from "./activity.service.js";
+
+async function recordPRActivity(personalRecord, mongoSession) {
+  const user = await User.findById(personalRecord.user).select("username").session(mongoSession).lean();
+  const exercise = await Exercise.findById(personalRecord.exercise).select("name").session(mongoSession).lean();
+  if (!user || !exercise) throw new Error("Unable to resolve personal record activity details");
+  await createActivityEvent({
+    type: "personal_record_set",
+    actor: personalRecord.user,
+    audience: "friends",
+    sourceType: "personal_record",
+    sourceId: personalRecord._id,
+    details: {
+      actorUsername: user.username,
+      exerciseName: exercise.name,
+      recordType: personalRecord.recordType,
+      recordCategory: personalRecord.recordCategory,
+      value: personalRecord.value,
+      unit: personalRecord.recordType === "max_weight" ? "lb" : personalRecord.recordType === "max_reps" ? "reps" : "seconds",
+      distanceMiles: personalRecord.distanceMiles,
+    },
+    idempotencyKey: `personal_record_set:${personalRecord._id}`,
+    occurredAt: personalRecord.achievedAt,
+  }, { mongoSession });
+}
 
 // Rep counts that Ascendra recognizes as official strength PR categories.
 export const STRENGTH_PR_REPS = new Set([1, 3, 5, 8, 10, 12]);
@@ -190,6 +217,7 @@ export const processPRCandidate = async ({
     });
 
     await newPR.save({ session: mongoSession });
+    await recordPRActivity(newPR, mongoSession);
     return newPR;
   }
 
@@ -216,6 +244,7 @@ export const processPRCandidate = async ({
     verification: sourceType === "verification" ? verificationId : null,
   });
   await newPR.save({ session: mongoSession });
+  await recordPRActivity(newPR, mongoSession);
 
   return newPR;
 };

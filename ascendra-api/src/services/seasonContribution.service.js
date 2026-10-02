@@ -1,6 +1,8 @@
 import Season from "../models/Season.js";
 import SeasonContribution from "../models/SeasonContribution.js";
 import User from "../models/User.js";
+import mongoose from "mongoose";
+import { getFactionActivityStandings, recordFactionSeasonChanges } from "./factionActivity.service.js";
 
 export const addSeasonContribution = async ({
   userId,
@@ -9,6 +11,11 @@ export const addSeasonContribution = async ({
 }) => {
   if (!Number.isInteger(amount) || amount <= 0) {
     return null;
+  }
+  if (!mongoSession) {
+    const session = await mongoose.startSession();
+    try { return await session.withTransaction(() => addSeasonContribution({ userId, amount, mongoSession: session })); }
+    finally { await session.endSession(); }
   }
 
   const now = new Date();
@@ -34,6 +41,14 @@ export const addSeasonContribution = async ({
   if (!user || user.accountStatus !== "active" || !user.faction) {
     return null;
   }
+  // Serialize faction score changes so concurrent awards cannot invent rank transitions.
+  const season = await Season.findOneAndUpdate(
+    { _id: activeSeason._id, status: "active" },
+    { $inc: { activityRevision: 1 } },
+    { returnDocument: "after", session: mongoSession },
+  );
+  if (!season) return null;
+  const before = await getFactionActivityStandings(season._id, mongoSession);
   const contribution = await SeasonContribution.findOneAndUpdate(
     {
       season: activeSeason._id,
@@ -55,5 +70,6 @@ export const addSeasonContribution = async ({
     },
   );
 
+  await recordFactionSeasonChanges({ season, before, mongoSession });
   return contribution;
 };

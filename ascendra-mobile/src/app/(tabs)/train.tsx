@@ -52,10 +52,12 @@ export default function TrainScreen() {
         {/* HEADER */}
 
         <View style={styles.header}>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <View style={styles.systemStatus}>
             <View style={styles.statusDot} />
 
             <Text style={styles.systemStatusText}>ASCENDRA // TRAINING</Text>
+          </View>
           </View>
 
           <Text style={styles.sectionEyebrow}>TRAINING_CENTER</Text>

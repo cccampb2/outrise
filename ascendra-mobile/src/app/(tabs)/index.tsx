@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { Screen } from "@/components/screen";
-import { ActivityRow } from "@/components/activity-row";
+import { HomeActivity } from "@/components/home-activity";
 import { Colors, TAB_BAR_HEIGHT } from "@/constants/theme";
 import { getFactions } from "@/api/factions";
 import {
@@ -123,6 +123,7 @@ export default function HomeScreen() {
               <Text style={styles.systemStatusText}>ASCENDRA // ACTIVE</Text>
             </View>
 
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
             <Text
               style={[
                 styles.levelCode,
@@ -133,6 +134,7 @@ export default function HomeScreen() {
             >
               {`LEVEL_${String(user?.progression.level ?? 0).padStart(3, "0")}`}
             </Text>
+            </View>
           </View>
 
           <Text style={styles.greeting}>Good afternoon,</Text>
@@ -463,53 +465,7 @@ export default function HomeScreen() {
           <Text style={styles.sectionNumber}>03</Text>
         </View>
 
-        <View style={styles.activitySection}>
-          <View style={styles.activityHeader}>
-            <View style={styles.activityStatus}>
-              <View
-                style={[
-                  styles.activityStatusDot,
-                  {
-                    backgroundColor: accent,
-                  },
-                ]}
-              />
-
-              <Text style={styles.activityStatusText}>LATEST_UPDATES</Text>
-            </View>
-
-            <Pressable
-              style={({ pressed }) => [
-                styles.viewAllButton,
-                pressed ? styles.viewAllPressed : null,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.viewAll,
-                  {
-                    color: accent,
-                  },
-                ]}
-              >
-                VIEW_ALL →
-              </Text>
-            </Pressable>
-          </View>
-
-          <View style={styles.activityList}>
-            {recentActivity.map((activity, index) => (
-              <ActivityRow
-                key={activity.id}
-                name={activity.name}
-                date={activity.date}
-                xp={activity.xp}
-                accentColor={accent}
-                isLast={index === recentActivity.length - 1}
-              />
-            ))}
-          </View>
-        </View>
+        <HomeActivity userId={user?.id} accentColor={accent} />
 
         {/* REFERENCE */}
 
@@ -1224,24 +1180,3 @@ const styles = StyleSheet.create({
     letterSpacing: 4.5,
   },
 });
-
-const recentActivity = [
-  {
-    id: "1",
-    name: "NovaRift sent you a friend request",
-    date: "Today",
-    xp: 0,
-  },
-  {
-    id: "2",
-    name: "Your faction moved up in the standings",
-    date: "Today",
-    xp: 0,
-  },
-  {
-    id: "3",
-    name: "New Workout of the Week is now active",
-    date: "Yesterday",
-    xp: 0,
-  },
-];

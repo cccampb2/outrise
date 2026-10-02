@@ -1,3 +1,4 @@
+import { recordSeasonWin } from "./factionActivity.service.js";
 import Season from "../models/Season.js";
 import SeasonContribution from "../models/SeasonContribution.js";
 import mongoose from "mongoose";
@@ -89,8 +90,8 @@ export const reconcileSeasons = async () => {
   const mongoSession = await mongoose.startSession();
 
   try {
-    mongoSession.startTransaction();
-
+    return await mongoSession.withTransaction(async () => {
+  
     const now = new Date();
 
     let {
@@ -113,6 +114,8 @@ export const reconcileSeasons = async () => {
       await activeSeason.save({
         session: mongoSession,
       });
+
+      await recordSeasonWin(activeSeason, mongoSession);
 
       upcomingSeason.status = "active";
 
@@ -169,18 +172,12 @@ export const reconcileSeasons = async () => {
       });
     }
 
-    await mongoSession.commitTransaction();
 
     return {
       activeSeason,
       upcomingSeason,
     };
-  } catch (error) {
-    if (mongoSession.inTransaction()) {
-      await mongoSession.abortTransaction();
-    }
-
-    throw error;
+    });
   } finally {
     await mongoSession.endSession();
   }

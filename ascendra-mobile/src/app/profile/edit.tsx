@@ -834,14 +834,14 @@ const styles = StyleSheet.create({
   },
 
   saveText: {
-    color: Colors.dark.text,
+    color: Colors.dark.backgroundDeep,
     fontSize: 10,
     fontWeight: "900",
     letterSpacing: 1.8,
   },
 
   saveArrow: {
-    color: Colors.dark.text,
+    color: Colors.dark.backgroundDeep,
     fontSize: 15,
     fontWeight: "900",
   },

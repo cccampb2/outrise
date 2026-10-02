@@ -1,4 +1,6 @@
 import express from "express";
+import { profileRecordsSchema, profileAchievementsSchema } from "../middleware/validators/profileRecords.validators.js";
+import { getProfileAchievementsController, getProfilePerformancesController } from "../controllers/profileRecords.controller.js";
 import { authenticate } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
 import { updateProfileSchema } from "../middleware/validators/user.validators.js";
@@ -36,5 +38,7 @@ router.delete("/me/profile-image", authenticate, removeProfileImage);
 router.get("/search", authenticate, searchUsers);
 
 router.get("/:userId", authenticate, getPublicUser);
+router.get("/:userId/achievements", authenticate, validate(profileAchievementsSchema), getProfileAchievementsController);
+router.get("/:userId/performances", authenticate, validate(profileRecordsSchema), getProfilePerformancesController);
 
 export default router;

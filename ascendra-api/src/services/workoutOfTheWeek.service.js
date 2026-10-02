@@ -1,3 +1,4 @@
+import { createActivityEvent } from "./activity.service.js";
 import WorkoutOfTheWeek from "../models/WorkoutOfTheWeek.js";
 import WorkoutOfTheWeekOccurrence from "../models/WorkoutOfTheWeekOccurrence.js";
 import NotFoundError from "../errors/NotFoundError.js";
@@ -478,6 +479,16 @@ export const reconcileWorkoutOfTheWeekOccurrences = async () => {
   if (occurrenceToActivate) {
     occurrenceToActivate.status = "active";
     await occurrenceToActivate.save();
+  }
+  // Reconcile the event too, so a failed write after activation is retried next run.
+  const activeOccurrence = occurrenceToActivate ?? await WorkoutOfTheWeekOccurrence.findOne({ status: "active", startsAt: { $lte: now }, endsAt: { $gt: now } });
+  if (activeOccurrence) {
+    await createActivityEvent({
+      type: "wotw_launched", audience: "global",
+      sourceType: "workout_of_the_week_occurrence", sourceId: activeOccurrence._id,
+      details: { workoutName: activeOccurrence.name }, occurredAt: activeOccurrence.startsAt,
+      idempotencyKey: `wotw:${activeOccurrence._id}:launched`,
+    });
   }
   return occurrenceToActivate;
 };

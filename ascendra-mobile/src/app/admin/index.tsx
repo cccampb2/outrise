@@ -156,6 +156,13 @@ export default function AdminScreen() {
 
         <View style={styles.options}>
           <AdminOption
+            code="ACHIEVEMENT"
+            title="ACHIEVEMENTS"
+            description="Create and manage achievement rules, rewards, and availability."
+            status="ACTIVE"
+            onPress={() => router.push("/admin/achievements")}
+          />
+          <AdminOption
             code="VERIFY"
             title="VERIFICATIONS"
             description="Review submitted performance proof and approve or reject verification requests."

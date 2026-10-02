@@ -1,3 +1,4 @@
+import { ProfileRecords } from "@/components/profile-records";
 import {
   Platform,
   Pressable,
@@ -11,6 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { getPublicUser, type PublicUser } from "@/api/users";
 import { Screen } from "@/components/screen";
+import { FriendshipControls } from "@/components/friendship-controls";
 import { Colors } from "@/constants/theme";
 import { factionEmblems } from "@/constants/faction-assets";
 
@@ -280,7 +282,7 @@ export default function PublicUserProfileScreen() {
                   resizeMode="contain"
                 />
               ) : (
-                <Text style={styles.unassignedMark}>//</Text>
+              <Text style={styles.unassignedMark}>{"//"}</Text>
               )}
             </View>
 
@@ -345,6 +347,8 @@ export default function PublicUserProfileScreen() {
 
         {/* COMPETITIVE RECORD */}
 
+        <FriendshipControls user={user} />
+
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionCode}>01</Text>
 
@@ -390,6 +394,19 @@ export default function PublicUserProfileScreen() {
 
         {/* ZENITH */}
 
+        {user.progression.echelon !== null ? (
+          <View style={[styles.zenithPanel, styles.echelonPanel]}>
+            <View>
+              <Text style={styles.zenithLabel}>ECHELON_STATUS</Text>
+              <Text style={[styles.zenithTitle, styles.echelonColor]}>ECHELON {user.progression.echelon}</Text>
+            </View>
+            <View style={styles.zenithRankBox}>
+              <Text style={[styles.zenithRankPrefix, styles.echelonColor]}>E</Text>
+              <Text style={[styles.zenithRankNumber, styles.echelonColor]}>{user.progression.echelon}</Text>
+            </View>
+          </View>
+        ) : null}
+
         {zenithRank !== null ? (
           <View style={styles.zenithPanel}>
             <View>
@@ -419,6 +436,8 @@ export default function PublicUserProfileScreen() {
         </View>
 
         <ProgressPanel user={user} />
+
+        <ProfileRecords userId={user.id} />
 
         {/* MEMBERSHIP */}
 
@@ -807,6 +826,13 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
 
+  echelonPanel: {
+    borderColor: Colors.dark.echelonBorder,
+    backgroundColor: Colors.dark.echelonSurface,
+  },
+  echelonColor: {
+    color: Colors.dark.echelon,
+  },
   zenithPanel: {
     minHeight: 76,
     flexDirection: "row",

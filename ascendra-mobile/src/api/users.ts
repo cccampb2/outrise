@@ -1,6 +1,7 @@
 import { apiRequest } from "./client";
 import type { FactionColors, FactionSlug } from "./factions";
 import { File } from "expo-file-system";
+import type { FriendshipRelationship } from "./friends";
 
 export type UserProgression = {
   level: number;
@@ -46,6 +47,7 @@ export type PublicUserFaction = {
 };
 
 export type PublicUser = {
+  relationship: FriendshipRelationship;
   id: string;
   username: string;
   faction: PublicUserFaction | null;

@@ -4,6 +4,68 @@ import Faction from "../models/Faction.js";
 import Season from "../models/Season.js";
 import SeasonContribution from "../models/SeasonContribution.js";
 import NotFoundError from "../errors/NotFoundError.js";
+import Friendship from "../models/Friendship.js";
+
+export const getFriendsLeaderboard = async ({ userId, page = 1, limit = 25 }) => {
+  const friendships = await Friendship.find({
+    status: "accepted",
+    $or: [{ requester: userId }, { recipient: userId }],
+  }).select("requester recipient").lean();
+
+  const participantIds = [userId, ...friendships.map((friendship) =>
+    friendship.requester.toString() === userId.toString()
+      ? friendship.recipient
+      : friendship.requester,
+  )];
+  const filter = { _id: { $in: participantIds }, accountStatus: "active" };
+  const skip = (page - 1) * limit;
+
+  const [users, totalUsers, viewer] = await Promise.all([
+    User.find(filter)
+      .sort({ lifetimeXP: -1, _id: 1 })
+      .skip(skip)
+      .limit(limit)
+      .select("username lifetimeXP faction")
+      .populate("faction", "name slug")
+      .lean(),
+    User.countDocuments(filter),
+    User.findOne({ _id: userId, accountStatus: "active" })
+      .select("username lifetimeXP faction")
+      .populate("faction", "name slug")
+      .lean(),
+  ]);
+
+  function toRow(user, rank) {
+    const progression = getProgressFromXP(user.lifetimeXP ?? 0);
+    return {
+      userId: user._id,
+      username: user.username,
+      lifetimeXP: user.lifetimeXP ?? 0,
+      level: progression.level,
+      echelon: progression.echelon,
+      faction: user.faction,
+      rank,
+    };
+  }
+
+  let currentUser = null;
+  if (viewer) {
+    const usersAbove = await User.countDocuments({
+      ...filter,
+      $or: [
+        { lifetimeXP: { $gt: viewer.lifetimeXP ?? 0 } },
+        { lifetimeXP: viewer.lifetimeXP ?? 0, _id: { $lt: viewer._id } },
+      ],
+    });
+    currentUser = toRow(viewer, usersAbove + 1);
+  }
+
+  return {
+    leaderboard: users.map((user, index) => toRow(user, skip + index + 1)),
+    currentUser,
+    pagination: { page, limit, totalUsers, totalPages: Math.ceil(totalUsers / limit) },
+  };
+};
 
 export const getFactionStandings = async () => {
   const now = new Date();

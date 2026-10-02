@@ -1,4 +1,5 @@
 import Verification from "../models/Verification.js";
+import { recordVerificationActivity } from "./verificationActivity.service.js";
 import Exercise from "../models/Exercise.js";
 import NotFoundError from "../errors/NotFoundError.js";
 import BadRequestError from "../errors/BadRequestError.js";
@@ -236,35 +237,29 @@ export const rejectVerification = async ({
   adminId,
   rejectionReason,
 }) => {
-  const verification = await Verification.findById(verificationId);
-
-  if (!verification) {
-    throw new NotFoundError("Verification not found");
-  }
-
-  if (verification.status !== "pending") {
-    throw new ConflictError("Only pending verifications can be rejected");
-  }
-
-  verification.status = "rejected";
-
-  verification.reviewedBy = adminId;
-
-  verification.reviewedAt = new Date();
-
-  verification.rejectionReason = rejectionReason;
-
-  await verification.save();
-
-  return verification;
+  const mongoSession = await mongoose.startSession();
+  try {
+    return await mongoSession.withTransaction(async () => {
+      const verification = await Verification.findById(verificationId).session(mongoSession);
+      if (!verification) throw new NotFoundError("Verification not found");
+      if (verification.status !== "pending") throw new ConflictError("Only pending verifications can be rejected");
+      verification.status = "rejected";
+      verification.reviewedBy = adminId;
+      verification.reviewedAt = new Date();
+      verification.rejectionReason = rejectionReason;
+      await verification.save({ session: mongoSession });
+      await recordVerificationActivity(verification, mongoSession);
+      return verification;
+    });
+  } finally { await mongoSession.endSession(); }
 };
 // TODO: Make the pending-to-approved transition atomic for concurrent admin reviews.
 export const approveVerification = async ({ verificationId, adminId }) => {
   const mongoSession = await mongoose.startSession();
 
-  mongoSession.startTransaction();
 
   try {
+    return await mongoSession.withTransaction(async () => {
     const verification =
       await Verification.findById(verificationId).session(mongoSession);
 
@@ -284,6 +279,8 @@ export const approveVerification = async ({ verificationId, adminId }) => {
     verification.rejectionReason = null;
 
     await verification.save({ session: mongoSession });
+
+    await recordVerificationActivity(verification, mongoSession);
 
     const candidate = getVerificationPRCandidate(verification);
 
@@ -345,7 +342,6 @@ export const approveVerification = async ({ verificationId, adminId }) => {
       unlockedAt: unlock.userAchievement.unlockedAt,
     }));
 
-    await mongoSession.commitTransaction();
 
     return {
       verification,
@@ -353,10 +349,7 @@ export const approveVerification = async ({ verificationId, adminId }) => {
       unlockedAchievements: achievementUnlocks,
       echelonRewards: progressionResult.echelonRewards,
     };
-  } catch (error) {
-    await mongoSession.abortTransaction();
-
-    throw error;
+    });
   } finally {
     await mongoSession.endSession();
   }

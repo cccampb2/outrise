@@ -4,7 +4,21 @@ import {
   getCurrentUserLeaderboardPosition,
   getFactionStandings,
   getFactionLeaderboard,
+  getFriendsLeaderboard,
 } from "../services/leaderboard.service.js";
+
+export const getFriendsLeaderboardController = async (req, res, next) => {
+  try {
+    const result = await getFriendsLeaderboard({
+      userId: req.user.userId,
+      page: req.query.page,
+      limit: req.query.limit,
+    });
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const getZenithLeaderBoardController = async (req, res, next) => {
   try {
