@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { AppText as Text } from "@/components/app-text";
+import { Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
@@ -6,13 +7,14 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { Screen } from "@/components/screen";
 import { HomeActivity } from "@/components/home-activity";
-import { Colors, TAB_BAR_HEIGHT } from "@/constants/theme";
+import { Colors, TAB_BAR_HEIGHT, Fonts } from "@/constants/theme";
 import { getFactions } from "@/api/factions";
 import {
   getCurrentWorkoutOfTheWeek,
   type WorkoutOfTheWeekDifficulty,
 } from "@/api/workout-of-the-week";
 import type { RootState } from "@/store/store";
+import { useHomeGreeting } from "@/hooks/use-home-greeting";
 
 function formatDifficulty(difficulty: WorkoutOfTheWeekDifficulty) {
   switch (difficulty) {
@@ -66,6 +68,7 @@ function formatRemainingTime(totalSeconds: number) {
 
 export default function HomeScreen() {
   const user = useSelector((state: RootState) => state.auth.user);
+  const greeting = useHomeGreeting();
 
   const factionsQuery = useQuery({
     queryKey: ["factions"],
@@ -123,21 +126,23 @@ export default function HomeScreen() {
               <Text style={styles.systemStatusText}>ASCENDRA // ACTIVE</Text>
             </View>
 
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-            <Text
-              style={[
-                styles.levelCode,
-                {
-                  color: accent,
-                },
-              ]}
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 12 }}
             >
-              {`LEVEL_${String(user?.progression.level ?? 0).padStart(3, "0")}`}
-            </Text>
+              <Text
+                style={[
+                  styles.levelCode,
+                  {
+                    color: accent,
+                  },
+                ]}
+              >
+                {`LEVEL_${String(user?.progression.level ?? 0).padStart(3, "0")}`}
+              </Text>
             </View>
           </View>
 
-          <Text style={styles.greeting}>Good afternoon,</Text>
+          <Text style={styles.greeting}>{greeting}</Text>
 
           <Text style={styles.username}>{user?.username}</Text>
 
@@ -664,6 +669,7 @@ const styles = StyleSheet.create({
   },
 
   username: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 32,
     lineHeight: 38,
@@ -705,6 +711,7 @@ const styles = StyleSheet.create({
   },
 
   sectionTitle: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 20,
     fontWeight: "800",
@@ -712,6 +719,7 @@ const styles = StyleSheet.create({
   },
 
   sectionNumber: {
+    fontFamily: Fonts.display,
     color: Colors.dark.border,
     fontSize: 20,
     fontWeight: "900",
@@ -780,6 +788,7 @@ const styles = StyleSheet.create({
   },
 
   progressValue: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 20,
     fontWeight: "900",
@@ -915,6 +924,7 @@ const styles = StyleSheet.create({
   },
 
   wotwName: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 22,
     fontWeight: "900",
@@ -960,6 +970,7 @@ const styles = StyleSheet.create({
   },
 
   bonusValue: {
+    fontFamily: Fonts.display,
     fontSize: 14,
     fontWeight: "900",
     marginTop: 4,

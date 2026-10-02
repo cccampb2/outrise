@@ -1,12 +1,6 @@
+import { AppText as Text } from "@/components/app-text";
 import type { ReactNode } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
@@ -15,7 +9,7 @@ import {
   getFriendsLeaderboard,
   type FriendsLeaderboardUser,
 } from "@/api/leaderboards";
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 import { Screen } from "@/components/screen";
 
 export function FriendsRankings({ header }: { header: ReactNode }) {
@@ -162,7 +156,8 @@ const styles = StyleSheet.create({
   },
   current: { borderColor: Colors.dark.accent },
   pressed: { opacity: 0.5 },
-  rank: { color: Colors.dark.text, fontSize: 20, fontWeight: "900" },
+  rank: {
+    fontFamily: Fonts.display, color: Colors.dark.text, fontSize: 20, fontWeight: "900" },
   identity: { flex: 1, gap: 5 },
   username: { color: Colors.dark.text, fontSize: 14, fontWeight: "900" },
   meta: { color: Colors.dark.textMuted, fontSize: 9 },

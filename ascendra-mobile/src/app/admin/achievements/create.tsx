@@ -1,4 +1,5 @@
-import { Text } from "react-native";
+import { AppText as Text } from "@/components/app-text";
+
 import { useSelector } from "react-redux";
 import { Screen } from "@/components/screen";
 import { AdminAchievementForm } from "@/components/admin-achievement-form";

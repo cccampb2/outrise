@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View, Alert } from "react-native";
+import { AppText as Text } from "@/components/app-text";
+import { Pressable, StyleSheet, View, Alert } from "react-native";
 import { router } from "expo-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@/api/client";
@@ -23,7 +24,7 @@ import { DistanceTimeExercise } from "@/components/workouts/distance-time-exerci
 import { DurationExercise } from "@/components/workouts/duration-exercise";
 import { IntervalExercise } from "@/components/workouts/intervals-exercise";
 import { Screen } from "@/components/screen";
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 import { getCurrentUser } from "@/api/users";
 import { setCurrentUser } from "@/store/auth-slice";
 
@@ -937,6 +938,7 @@ const styles = StyleSheet.create({
   },
 
   sessionTimerValue: {
+    fontFamily: Fonts.display,
     color: Colors.dark.textSecondary,
     fontSize: 14,
     fontWeight: "800",
@@ -945,6 +947,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 29,
     fontWeight: "800",
@@ -1015,6 +1018,7 @@ const styles = StyleSheet.create({
   },
 
   exerciseName: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 21,
     fontWeight: "800",
@@ -1161,6 +1165,7 @@ const styles = StyleSheet.create({
   },
 
   completionTitle: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 30,
     fontWeight: "800",
@@ -1194,6 +1199,7 @@ const styles = StyleSheet.create({
   },
 
   xpValue: {
+    fontFamily: Fonts.display,
     color: Colors.dark.accent,
     fontSize: 46,
     fontWeight: "800",
@@ -1350,6 +1356,7 @@ const styles = StyleSheet.create({
   },
 
   dailyXPValue: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 21,
     fontWeight: "800",
@@ -1365,6 +1372,7 @@ const styles = StyleSheet.create({
   },
 
   remainingValue: {
+    fontFamily: Fonts.display,
     color: Colors.dark.accent,
     fontSize: 17,
     fontWeight: "800",
@@ -1407,6 +1415,7 @@ const styles = StyleSheet.create({
   },
 
   completedTimeValue: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 26,
     fontWeight: "800",

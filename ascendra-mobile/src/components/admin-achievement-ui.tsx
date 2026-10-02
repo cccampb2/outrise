@@ -1,9 +1,11 @@
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { Colors } from "@/constants/theme";
+import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Colors, Fonts } from "@/constants/theme";
 
 export const adminAchievementStyles = StyleSheet.create({
   page: { paddingTop: 8, paddingBottom: 32, gap: 16 },
-  title: { color: Colors.dark.text, fontSize: 24, fontWeight: "900" },
+  title: {
+    fontFamily: Fonts.display, color: Colors.dark.text, fontSize: 24, fontWeight: "900" },
   text: { color: Colors.dark.textSecondary, fontSize: 12, lineHeight: 18 },
   label: {
     color: Colors.dark.textTechnical,

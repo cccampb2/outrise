@@ -1,10 +1,11 @@
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { AppText as Text } from "@/components/app-text";
+import { ActivityIndicator, Image, Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { useDispatch, useSelector } from "react-redux";
 import { getFactions, type Faction } from "@/api/factions";
 import { Screen } from "@/components/screen";
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 import { factionEmblems } from "@/constants/faction-assets";
 import { setSelectedFaction } from "@/store/onboarding-slice";
 import type { AppDispatch, RootState } from "@/store/store";
@@ -51,13 +52,15 @@ const styles = StyleSheet.create({
   back: { minHeight: 44, justifyContent: "center", alignSelf: "flex-start" },
   backText: { color: Colors.dark.textSecondary, fontSize: 10, fontWeight: "900", letterSpacing: 1 },
   eyebrow: { color: Colors.dark.accent, fontSize: 9, fontWeight: "900", letterSpacing: 1.2, marginTop: 12 },
-  title: { color: Colors.dark.text, fontSize: 24, fontWeight: "900", marginVertical: 12 },
+  title: {
+    fontFamily: Fonts.display, color: Colors.dark.text, fontSize: 24, fontWeight: "900", marginVertical: 12 },
   description: { color: Colors.dark.textSecondary, fontSize: 13, lineHeight: 20 },
   card: { borderWidth: 1, backgroundColor: Colors.dark.backgroundElement, padding: 16, marginTop: 20, gap: 12 },
   identity: { flexDirection: "row", alignItems: "center", gap: 12 },
   identityText: { flex: 1, gap: 5 },
   emblem: { width: 64, height: 64 },
-  name: { fontSize: 22, fontWeight: "900", letterSpacing: 1.2 },
+  name: {
+    fontFamily: Fonts.display, fontSize: 22, fontWeight: "900", letterSpacing: 1.2 },
   tagline: { color: Colors.dark.text, fontSize: 12, lineHeight: 18 },
   badge: { color: Colors.dark.textTechnical, fontSize: 8, fontWeight: "900", letterSpacing: 0.8 },
   motto: { color: Colors.dark.text, fontSize: 12, fontStyle: "italic", lineHeight: 18 },

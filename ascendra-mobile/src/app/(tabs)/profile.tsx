@@ -1,20 +1,13 @@
+import { AppText as Text } from "@/components/app-text";
 import { ProfileRecords } from "@/components/profile-records";
-import {
-  Text,
-  View,
-  Pressable,
-  StyleSheet,
-  Image,
-  Platform,
-  Alert,
-} from "react-native";
+import { View, Pressable, StyleSheet, Image, Alert } from "react-native";
 import { Screen } from "@/components/screen";
 import { deleteToken } from "@/storage/auth-storage";
 import { router } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/store/store";
 import { clearCurrentUser } from "@/store/auth-slice";
-import { Colors, TAB_BAR_HEIGHT } from "@/constants/theme";
+import { Colors, TAB_BAR_HEIGHT, Fonts } from "@/constants/theme";
 import { getFactions } from "@/api/factions";
 import { factionEmblems } from "@/constants/faction-assets";
 import { useQuery } from "@tanstack/react-query";
@@ -950,7 +943,7 @@ const styles = StyleSheet.create({
     color: Colors.dark.accent,
     fontSize: 12,
     letterSpacing: 1.5,
-    fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+
   },
 
   /* HERO */
@@ -1080,6 +1073,7 @@ const styles = StyleSheet.create({
   },
 
   username: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 28,
     fontWeight: "900",
@@ -1160,6 +1154,7 @@ const styles = StyleSheet.create({
   },
 
   heroStatValue: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 18,
     fontWeight: "900",
@@ -1197,6 +1192,7 @@ const styles = StyleSheet.create({
   },
 
   sectionTitle: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 20,
     fontWeight: "800",
@@ -1204,6 +1200,7 @@ const styles = StyleSheet.create({
   },
 
   sectionNumber: {
+    fontFamily: Fonts.display,
     color: Colors.dark.border,
     fontSize: 20,
     fontWeight: "900",
@@ -1256,6 +1253,7 @@ const styles = StyleSheet.create({
   },
 
   levelValue: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 46,
     lineHeight: 52,
@@ -1269,6 +1267,7 @@ const styles = StyleSheet.create({
   },
 
   nextLevelValue: {
+    fontFamily: Fonts.display,
     color: Colors.dark.textMuted,
     fontSize: 28,
     fontWeight: "900",
@@ -1530,6 +1529,7 @@ const styles = StyleSheet.create({
   },
 
   statusLockedSymbol: {
+    fontFamily: Fonts.display,
     color: Colors.dark.borderStrong,
     fontSize: 42,
     fontWeight: "900",
@@ -1555,6 +1555,7 @@ const styles = StyleSheet.create({
   },
 
   statusInfoValue: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 18,
     fontWeight: "900",
@@ -1613,6 +1614,7 @@ const styles = StyleSheet.create({
   },
 
   globalRankValue: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 30,
     lineHeight: 34,
@@ -1705,7 +1707,7 @@ const styles = StyleSheet.create({
   workoutSummary: {
     color: Colors.dark.textMuted,
     fontSize: 10,
-    fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+
     marginTop: 6,
   },
 
@@ -1730,7 +1732,7 @@ const styles = StyleSheet.create({
   emptyText: {
     color: Colors.dark.textDim,
     fontSize: 11,
-    fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+
     marginBottom: 24,
   },
 

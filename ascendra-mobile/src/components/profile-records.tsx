@@ -1,10 +1,5 @@
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { AppText as Text } from "@/components/app-text";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { useCallback } from "react";
 import { ProfileAchievements } from "@/components/profile-achievements";
 import { useFocusEffect } from "expo-router";

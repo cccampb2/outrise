@@ -1,16 +1,11 @@
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { AppText as Text } from "@/components/app-text";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { useVideoPlayer, VideoView } from "expo-video";
 
 import { Screen } from "@/components/screen";
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 
 import {
   getVerification,
@@ -599,6 +594,7 @@ const styles = StyleSheet.create({
   },
 
   exerciseName: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 30,
     lineHeight: 35,
@@ -715,6 +711,7 @@ const styles = StyleSheet.create({
   },
 
   performanceValue: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 30,
     lineHeight: 36,

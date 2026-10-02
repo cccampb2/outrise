@@ -1,12 +1,13 @@
+import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import AntDesign from "@expo/vector-icons/AntDesign";
 
 import { register } from "@/api/auth";
 import { ApiError } from "@/api/client";
 import { Screen } from "@/components/screen";
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 
 export default function RegisterScreen() {
   const [username, setUsername] = useState("");
@@ -310,6 +311,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 32,
     fontWeight: "900",

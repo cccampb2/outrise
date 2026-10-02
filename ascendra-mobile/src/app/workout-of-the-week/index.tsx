@@ -1,10 +1,11 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { AppText as Text } from "@/components/app-text";
+import { Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Screen } from "@/components/screen";
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 import {
   repeatWorkoutSession,
   startWorkoutOfTheWeekSession,
@@ -642,6 +643,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 30,
     lineHeight: 36,
@@ -727,6 +729,7 @@ const styles = StyleSheet.create({
   },
 
   workoutName: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 24,
     lineHeight: 30,
@@ -762,6 +765,7 @@ const styles = StyleSheet.create({
   },
 
   countdownValue: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 16,
     fontWeight: "900",
@@ -977,6 +981,7 @@ const styles = StyleSheet.create({
   },
 
   startCountdownValue: {
+    fontFamily: Fonts.display,
     color: Colors.dark.accent,
     fontSize: 52,
     lineHeight: 62,

@@ -1,13 +1,6 @@
+import { AppText as Text } from "@/components/app-text";
 import { useState } from "react";
-import {
-  Alert,
-  ActivityIndicator,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Alert, ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import {
@@ -475,7 +468,7 @@ const styles = StyleSheet.create({
   },
   message: {
     color: Colors.dark.textSecondary,
-    fontFamily: Platform.OS === "ios" ? "System" : "sans-serif",
+
     fontSize: 13,
     fontWeight: "400",
     lineHeight: 19,

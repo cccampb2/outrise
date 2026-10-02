@@ -1,21 +1,13 @@
+import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
 import { useState, useEffect } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
-import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, View } from "react-native";
 
 import { searchUsers, type UserSearchResult } from "@/api/users";
 import { Screen } from "@/components/screen";
 import { factionEmblems } from "@/constants/faction-assets";
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 
 const colors = Colors.dark;
 
@@ -329,6 +321,7 @@ const styles = StyleSheet.create({
   },
 
   headerTitle: {
+    fontFamily: Fonts.display,
     color: colors.text,
     fontSize: 27,
     fontWeight: "900",
@@ -393,6 +386,7 @@ const styles = StyleSheet.create({
   },
 
   clearButtonText: {
+    fontFamily: Fonts.display,
     color: colors.textMuted,
     fontSize: 22,
     fontWeight: "400",
@@ -591,6 +585,7 @@ const styles = StyleSheet.create({
   },
 
   rowArrow: {
+    fontFamily: Fonts.display,
     color: colors.textDim,
     fontSize: 20,
     marginLeft: 10,

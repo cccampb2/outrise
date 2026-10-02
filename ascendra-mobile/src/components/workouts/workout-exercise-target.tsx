@@ -1,5 +1,6 @@
+import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { Colors } from "@/constants/theme";
 import type { MeasurementType, WorkoutTarget } from "@/api/workout-sessions";

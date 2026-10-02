@@ -1,9 +1,10 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { AppText as Text } from "@/components/app-text";
+import { Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 
 import { Screen } from "@/components/screen";
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 import { getActiveWorkoutSession } from "@/api/workout-sessions";
 import {
   getCurrentWorkoutOfTheWeek,
@@ -398,6 +399,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 32,
     lineHeight: 38,
@@ -485,6 +487,7 @@ const styles = StyleSheet.create({
   },
 
   sectionTitle: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 20,
     fontWeight: "800",
@@ -492,6 +495,7 @@ const styles = StyleSheet.create({
   },
 
   sectionNumber: {
+    fontFamily: Fonts.display,
     color: Colors.dark.border,
     fontSize: 20,
     fontWeight: "900",
@@ -552,6 +556,7 @@ const styles = StyleSheet.create({
   },
 
   wotwName: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 23,
     lineHeight: 29,
@@ -592,6 +597,7 @@ const styles = StyleSheet.create({
   },
 
   wotwStatValue: {
+    fontFamily: Fonts.display,
     color: Colors.dark.textSecondary,
     fontSize: 14,
     fontWeight: "900",
@@ -701,6 +707,7 @@ const styles = StyleSheet.create({
   },
 
   activeWorkoutName: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 23,
     lineHeight: 29,

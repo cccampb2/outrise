@@ -1,16 +1,11 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ActivityIndicator,
-  Pressable,
-} from "react-native";
+import { AppText as Text } from "@/components/app-text";
+import { StyleSheet, View, ActivityIndicator, Pressable } from "react-native";
 import { useEffect, useState } from "react";
 import { router } from "expo-router";
 import { useDispatch } from "react-redux";
 
 import { Screen } from "@/components/screen";
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 import {
   getFactionAssessment,
   submitFactionAssessment,
@@ -414,6 +409,7 @@ const styles = StyleSheet.create({
   },
 
   questionText: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 25,
     lineHeight: 33,

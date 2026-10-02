@@ -1,15 +1,10 @@
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { AppText as Text } from "@/components/app-text";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Screen } from "@/components/screen";
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 import {
   getWorkoutById,
   archiveWorkout,
@@ -476,6 +471,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 30,
     lineHeight: 36,

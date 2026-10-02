@@ -1,19 +1,13 @@
+import { AppText as Text } from "@/components/app-text";
 import { ProfileRecords } from "@/components/profile-records";
-import {
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  Image,
-} from "react-native";
+import { Pressable, StyleSheet, View, Image } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 
 import { getPublicUser, type PublicUser } from "@/api/users";
 import { Screen } from "@/components/screen";
 import { FriendshipControls } from "@/components/friendship-controls";
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 import { factionEmblems } from "@/constants/faction-assets";
 
 function formatNumber(value: number) {
@@ -521,7 +515,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "900",
     letterSpacing: 1.5,
-    fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+
   },
 
   errorCode: {
@@ -600,6 +594,7 @@ const styles = StyleSheet.create({
   },
 
   headerTitle: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 25,
     fontWeight: "900",
@@ -679,6 +674,7 @@ const styles = StyleSheet.create({
   },
 
   username: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 24,
     fontWeight: "900",
@@ -739,6 +735,7 @@ const styles = StyleSheet.create({
   },
 
   echelonValue: {
+    fontFamily: Fonts.display,
     color: Colors.dark.textSecondary,
     fontSize: 15,
     fontWeight: "900",
@@ -751,6 +748,7 @@ const styles = StyleSheet.create({
   },
 
   levelValue: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 22,
     fontWeight: "900",
@@ -820,6 +818,7 @@ const styles = StyleSheet.create({
   },
 
   statValue: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 19,
     fontWeight: "900",
@@ -873,6 +872,7 @@ const styles = StyleSheet.create({
   },
 
   zenithRankNumber: {
+    fontFamily: Fonts.display,
     color: Colors.dark.zenith,
     fontSize: 29,
     fontWeight: "900",

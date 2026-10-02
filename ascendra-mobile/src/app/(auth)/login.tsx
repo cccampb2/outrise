@@ -1,10 +1,11 @@
+import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
 import { useState } from "react";
-import { StyleSheet, Text, TextInput, View, Pressable } from "react-native";
+import { StyleSheet, View, Pressable } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useDispatch } from "react-redux";
 
 import { Screen } from "@/components/screen";
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 import { login } from "@/api/auth";
 import { saveToken } from "@/storage/auth-storage";
 import { getCurrentUser } from "@/api/users";
@@ -275,6 +276,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 32,
     fontWeight: "900",

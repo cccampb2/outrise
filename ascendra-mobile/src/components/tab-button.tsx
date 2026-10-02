@@ -1,7 +1,8 @@
+import { AppText as Text } from "@/components/app-text";
 import type { TabTriggerSlotProps } from "expo-router/ui";
 import { useEffect, type ReactNode } from "react";
 
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import Animated, {
   interpolate,

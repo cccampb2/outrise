@@ -1,10 +1,11 @@
+import { AppText as Text } from "@/components/app-text";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { useSelector } from "react-redux";
 import { Screen } from "@/components/screen";
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 import { useNotifications, useNotificationCount } from "@/hooks/use-notifications";
 import type { Notification } from "@/api/notifications";
 import { ApiError } from "@/api/client";
@@ -65,7 +66,8 @@ const styles = StyleSheet.create({
   backText: { color: Colors.dark.textSecondary, fontSize: 10, fontWeight: "800" },
   eyebrow: { color: Colors.dark.textTechnical, fontSize: 9, fontWeight: "800", letterSpacing: 1.3 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 8 },
-  title: { color: Colors.dark.text, fontSize: 28, fontWeight: "900" },
+  title: {
+    fontFamily: Fonts.display, color: Colors.dark.text, fontSize: 28, fontWeight: "900" },
   subtitle: { color: Colors.dark.textSecondary, fontSize: 12, marginTop: 8 },
   error: { color: Colors.dark.accent, fontSize: 12, marginBottom: 12 },
   tools: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginVertical: 18, gap: 8 },

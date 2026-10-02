@@ -1,20 +1,12 @@
-import {
-  ActivityIndicator,
-  Alert,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
+import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from "react-native";
 import { useMemo, useState } from "react";
 import { router } from "expo-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
 
 import { Screen } from "@/components/screen";
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 import { getExercises, type Exercise } from "@/api/exercises";
 import {
   createVerification,
@@ -658,6 +650,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 28,
     fontWeight: "900",
@@ -681,6 +674,7 @@ const styles = StyleSheet.create({
   },
 
   sectionNumber: {
+    fontFamily: Fonts.display,
     color: Colors.dark.borderStrong,
     fontSize: 22,
     fontWeight: "900",
@@ -708,7 +702,7 @@ const styles = StyleSheet.create({
     color: Colors.dark.text,
     paddingHorizontal: 14,
     fontSize: 12,
-    fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+
     marginBottom: 8,
   },
 

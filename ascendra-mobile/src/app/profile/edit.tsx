@@ -1,14 +1,6 @@
+import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-  Image,
-} from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, View, Image } from "react-native";
 import { router } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import * as ImagePicker from "expo-image-picker";
@@ -19,7 +11,7 @@ import {
   updateProfileImage,
 } from "@/api/users";
 import { Screen } from "@/components/screen";
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 import { setCurrentUser } from "@/store/auth-slice";
 import type { AppDispatch, RootState } from "@/store/store";
 
@@ -530,7 +522,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "800",
     letterSpacing: 1,
-    fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+
   },
 
   /* HEADER */
@@ -562,6 +554,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 30,
     fontWeight: "900",
@@ -643,7 +636,7 @@ const styles = StyleSheet.create({
     color: Colors.dark.textDim,
     fontSize: 8,
     fontWeight: "700",
-    fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+
   },
 
   input: {
@@ -739,7 +732,7 @@ const styles = StyleSheet.create({
     color: Colors.dark.textDim,
     fontSize: 8,
     lineHeight: 13,
-    fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+
     marginTop: 10,
     marginBottom: 30,
   },
@@ -854,7 +847,7 @@ const styles = StyleSheet.create({
     color: Colors.dark.textDim,
     fontSize: 8,
     textAlign: "center",
-    fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+
     marginTop: 12,
   },
   /* IMAGE */

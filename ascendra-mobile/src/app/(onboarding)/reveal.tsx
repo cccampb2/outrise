@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View, Image, Pressable } from "react-native";
+import { AppText as Text } from "@/components/app-text";
+import { StyleSheet, View, Image, Pressable } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -14,7 +15,7 @@ import { router } from "expo-router";
 
 import { factionEmblems } from "@/constants/faction-assets";
 import { Screen } from "@/components/screen";
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 import type { RootState, AppDispatch } from "@/store/store";
 import { confirmFaction } from "@/api/factions";
 import { setCurrentUser } from "@/store/auth-slice";
@@ -502,6 +503,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 38,
     lineHeight: 44,

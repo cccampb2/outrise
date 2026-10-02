@@ -1,8 +1,9 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { AppText as Text } from "@/components/app-text";
+import { Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 
 import { Screen } from "@/components/screen";
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 
 const communityRules = [
   {
@@ -273,6 +274,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 28,
     lineHeight: 34,
@@ -343,12 +345,14 @@ const styles = StyleSheet.create({
   },
 
   sectionTitle: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 20,
     fontWeight: "800",
   },
 
   sectionNumber: {
+    fontFamily: Fonts.display,
     color: Colors.dark.borderStrong,
     fontSize: 20,
     fontWeight: "900",

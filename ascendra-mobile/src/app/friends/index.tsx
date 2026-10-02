@@ -1,5 +1,6 @@
+import { AppText as Text } from "@/components/app-text";
 import { useState } from "react";
-import { ActivityIndicator, Alert, FlatList, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Image, Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
@@ -7,7 +8,7 @@ import type { RootState } from "@/store/store";
 import { ApiError } from "@/api/client";
 import { acceptFriendRequest, cancelFriendRequest, declineFriendRequest, getFriendList, removeFriend, type FriendListItem, type FriendRequestItem, type FriendListSection } from "@/api/friends";
 import { Screen } from "@/components/screen";
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 import { factionEmblems } from "@/constants/faction-assets";
 
 type Item = FriendListItem | FriendRequestItem;
@@ -108,7 +109,8 @@ const styles = StyleSheet.create({
   back: { alignSelf: "flex-start", paddingVertical: 12 },
   backText: { color: Colors.dark.textSecondary, fontSize: 10, fontWeight: "900", letterSpacing: 1 },
   eyebrow: { color: Colors.dark.accent, fontSize: 9, fontWeight: "900", letterSpacing: 1.4, marginTop: 12 },
-  title: { color: Colors.dark.text, fontSize: 28, fontWeight: "900", marginVertical: 8 },
+  title: {
+    fontFamily: Fonts.display, color: Colors.dark.text, fontSize: 28, fontWeight: "900", marginVertical: 8 },
   tabs: { flexDirection: "row", gap: 6, marginVertical: 16 },
   tab: { flex: 1, minHeight: 44, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: Colors.dark.border },
   selectedTab: { borderColor: Colors.dark.accent, backgroundColor: Colors.dark.backgroundSelected },

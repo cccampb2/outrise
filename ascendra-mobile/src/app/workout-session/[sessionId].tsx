@@ -1,8 +1,9 @@
+import { AppText as Text } from "@/components/app-text";
 import { useLocalSearchParams, router } from "expo-router";
-import { Text, View, StyleSheet, Pressable } from "react-native";
+import { View, StyleSheet, Pressable } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 import {
   getWorkoutSession,
   type WorkoutSessionExercise,
@@ -471,6 +472,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 30,
     fontWeight: "800",

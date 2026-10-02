@@ -1,15 +1,10 @@
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { AppText as Text } from "@/components/app-text";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import { useInfiniteQuery } from "@tanstack/react-query";
 
 import { Screen } from "@/components/screen";
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 
 import {
   getAdminVerifications,
@@ -330,6 +325,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 27,
     lineHeight: 33,
@@ -364,6 +360,7 @@ const styles = StyleSheet.create({
   },
 
   queueCount: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 27,
     fontWeight: "900",
@@ -488,6 +485,7 @@ const styles = StyleSheet.create({
   },
 
   performance: {
+    fontFamily: Fonts.display,
     color: Colors.dark.textSecondary,
     fontSize: 23,
     fontWeight: "900",

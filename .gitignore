@@ -1,3 +1,5 @@
 node_modules/
 
 .env
+
+/BETA_TESTER_SURVEY.md

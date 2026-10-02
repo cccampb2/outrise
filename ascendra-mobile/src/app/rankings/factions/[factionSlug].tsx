@@ -1,14 +1,7 @@
+import { AppText as Text } from "@/components/app-text";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
-import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, View } from "react-native";
 
 import {
   getFactionLeaderboard,
@@ -16,7 +9,7 @@ import {
 } from "@/api/leaderboards";
 import type { FactionSlug } from "@/api/factions";
 import { Screen } from "@/components/screen";
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 
 const colors = Colors.dark;
 
@@ -629,6 +622,7 @@ const styles = StyleSheet.create({
   },
 
   statValue: {
+    fontFamily: Fonts.display,
     fontSize: 23,
     fontWeight: "900",
     marginTop: 5,
@@ -692,6 +686,7 @@ const styles = StyleSheet.create({
   },
 
   currentUserRankValue: {
+    fontFamily: Fonts.display,
     fontSize: 24,
     fontWeight: "900",
     marginTop: 3,
@@ -780,6 +775,7 @@ const styles = StyleSheet.create({
   },
 
   memberRank: {
+    fontFamily: Fonts.display,
     fontSize: 16,
     fontWeight: "900",
   },

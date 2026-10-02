@@ -1,11 +1,12 @@
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
+import { Pressable, StyleSheet, View } from "react-native";
 import { useState, useEffect } from "react";
 
 import type {
   ActualSetInput,
   WorkoutSessionExercise,
 } from "@/api/workout-sessions";
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 
 type WeightRepsExerciseProps = {
   exercise: WorkoutSessionExercise;
@@ -396,6 +397,7 @@ const styles = StyleSheet.create({
   },
 
   input: {
+    fontFamily: Fonts.display,
     flex: 1,
     minWidth: 0,
     height: "100%",
@@ -444,6 +446,7 @@ const styles = StyleSheet.create({
   },
 
   deleteButtonText: {
+    fontFamily: Fonts.display,
     color: Colors.dark.danger,
     fontSize: 20,
     fontWeight: "700",

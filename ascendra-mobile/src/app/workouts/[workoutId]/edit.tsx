@@ -1,12 +1,6 @@
+import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
 import { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import {
   useInfiniteQuery,
@@ -18,7 +12,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { Screen } from "@/components/screen";
 import { WorkoutExerciseTarget } from "@/components/workouts/workout-exercise-target";
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 import {
   getWorkoutById,
   updateWorkout,
@@ -703,6 +697,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 30,
     lineHeight: 36,

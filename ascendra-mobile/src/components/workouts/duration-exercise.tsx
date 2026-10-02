@@ -1,8 +1,9 @@
+import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import type { WorkoutSessionExercise } from "@/api/workout-sessions";
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 
 type DurationExerciseProps = {
   exercise: WorkoutSessionExercise;
@@ -179,6 +180,7 @@ const styles = StyleSheet.create({
   },
 
   input: {
+    fontFamily: Fonts.display,
     width: 90,
     height: 54,
     backgroundColor: Colors.dark.backgroundDeep,
@@ -200,6 +202,7 @@ const styles = StyleSheet.create({
   },
 
   colon: {
+    fontFamily: Fonts.display,
     color: Colors.dark.accent,
     fontSize: 24,
     fontWeight: "700",
@@ -265,6 +268,7 @@ const styles = StyleSheet.create({
   },
 
   completedValue: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 21,
     fontWeight: "800",

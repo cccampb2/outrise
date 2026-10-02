@@ -1,14 +1,7 @@
+import { AppText as Text } from "@/components/app-text";
 import { useState } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, View } from "react-native";
 
 import { router } from "expo-router";
 import {
@@ -22,7 +15,7 @@ import { Screen } from "@/components/screen";
 import { FriendsRankings } from "@/components/friends-rankings";
 import { ZenithEmblem } from "@/components/zenith-emblem";
 import { factionEmblems } from "@/constants/faction-assets";
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 
 const colors = Colors.dark;
 
@@ -747,6 +740,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
+    fontFamily: Fonts.display,
     color: colors.text,
     fontSize: 28,
     fontWeight: "900",
@@ -861,6 +855,7 @@ const styles = StyleSheet.create({
   },
 
   currentRank: {
+    fontFamily: Fonts.display,
     color: colors.text,
     fontSize: 25,
     fontWeight: "900",
@@ -895,6 +890,7 @@ const styles = StyleSheet.create({
   },
 
   globalRankMarkerText: {
+    fontFamily: Fonts.display,
     color: colors.textSecondary,
     fontSize: 18,
     fontWeight: "900",
@@ -946,6 +942,7 @@ const styles = StyleSheet.create({
   },
 
   unrankedRank: {
+    fontFamily: Fonts.display,
     color: colors.textDim,
     fontSize: 25,
     fontWeight: "900",
@@ -969,6 +966,7 @@ const styles = StyleSheet.create({
   },
 
   unrankedMarkerText: {
+    fontFamily: Fonts.display,
     color: colors.textDim,
     fontSize: 16,
     fontWeight: "900",
@@ -980,6 +978,7 @@ const styles = StyleSheet.create({
   },
 
   unrankedTitle: {
+    fontFamily: Fonts.display,
     color: colors.textSecondary,
     fontSize: 14,
     fontWeight: "900",
@@ -1037,6 +1036,7 @@ const styles = StyleSheet.create({
   },
 
   rankNumber: {
+    fontFamily: Fonts.display,
     color: colors.textSecondary,
     fontSize: 16,
     fontWeight: "900",
@@ -1256,6 +1256,7 @@ const styles = StyleSheet.create({
   },
 
   factionRank: {
+    fontFamily: Fonts.display,
     fontSize: 18,
     fontWeight: "900",
   },

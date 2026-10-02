@@ -1,6 +1,7 @@
-import { StyleSheet, Text, View } from "react-native";
+import { AppText as Text } from "@/components/app-text";
+import { StyleSheet, View } from "react-native";
 
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 
 type ActivityRowProps = {
   name: string;
@@ -142,6 +143,7 @@ const styles = StyleSheet.create({
   },
 
   xp: {
+    fontFamily: Fonts.display,
     fontSize: 14,
 
     fontWeight: "800",

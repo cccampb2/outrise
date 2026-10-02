@@ -1,12 +1,5 @@
-import {
-  Alert,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -18,7 +11,7 @@ import {
   type VerificationUser,
 } from "@/api/verifications";
 import { Screen } from "@/components/screen";
-import { Colors } from "@/constants/theme";
+import { Colors, Fonts } from "@/constants/theme";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useState } from "react";
 
@@ -738,7 +731,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "900",
     letterSpacing: 1.5,
-    fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+
   },
 
   errorCode: {
@@ -811,6 +804,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 25,
     fontWeight: "900",
@@ -1003,6 +997,7 @@ const styles = StyleSheet.create({
   },
 
   performanceValue: {
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
     fontSize: 27,
     fontWeight: "900",

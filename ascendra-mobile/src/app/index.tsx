@@ -1,5 +1,6 @@
+import { AppText as Text } from "@/components/app-text";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, View, Text } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { Redirect } from "expo-router";
 import { useDispatch } from "react-redux";
 import { getToken, deleteToken } from "@/storage/auth-storage";
