@@ -32,7 +32,7 @@ export function ZenithEmblem({ rank, size = 300 }: ZenithEmblemProps) {
         style={[
           styles.numeralContainer,
           {
-            left: rank !== 1 ? "43.5%" : "42.5%",
+            left: rank !== 1 && rank !== 4 ? "43.5%" : "42.5%",
           },
           hasTwoDigits ? styles.twoDigitContainer : null,
         ]}

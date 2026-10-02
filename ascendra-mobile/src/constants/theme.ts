@@ -29,8 +29,8 @@ export const Colors = {
     borderStrong: "#1B334A",
 
     // Ascendra system accent
-    accent: "#E11D48", // Rich Rose / Crimson
-    accentPressed: "#BE123C",
+    accent: "#8c1a35", // Muted crimson
+    accentPressed: "#74162C",
 
     // Echelon progression identity
     echelon: "#54B9FF",

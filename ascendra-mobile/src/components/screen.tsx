@@ -106,7 +106,9 @@ export function Screen({
       {children}
     </Animated.ScrollView>
   ) : (
-    <View style={[styles.content, tabBar && { paddingTop: 72 }]}>{children}</View>
+    <View style={[styles.content, tabBar && { paddingTop: 72 }]}>
+      {children}
+    </View>
   );
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>

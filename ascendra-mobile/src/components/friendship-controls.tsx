@@ -23,19 +23,27 @@ export function FriendshipControls({ user }: { user: PublicUser }) {
       if (action === "send") return sendFriendRequest(user.id);
       if (action === "remove") return removeFriend(user.id);
       const requestId = user.relationship.requestId;
-      if (!requestId) throw new Error("Request unavailable. Refresh the profile and try again.");
+      if (!requestId)
+        throw new Error(
+          "Request unavailable. Refresh the profile and try again.",
+        );
       if (action === "accept") return acceptFriendRequest(requestId);
       if (action === "decline") return declineFriendRequest(requestId);
       return cancelFriendRequest(requestId);
     },
     onError: (error) => {
-      Alert.alert("Friend request", error instanceof ApiError ? error.getDisplayMessage() : error.message);
+      Alert.alert(
+        "Friend request",
+        error instanceof ApiError ? error.getDisplayMessage() : error.message,
+      );
     },
     onSettled: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["public-user", user.id] }),
         queryClient.invalidateQueries({ queryKey: ["friends"] }),
-        queryClient.invalidateQueries({ queryKey: ["leaderboards", "friends"] }),
+        queryClient.invalidateQueries({
+          queryKey: ["leaderboards", "friends"],
+        }),
       ]);
     },
   });
@@ -45,7 +53,11 @@ export function FriendshipControls({ user }: { user: PublicUser }) {
   function confirmRemoval() {
     Alert.alert("Remove friend", `Remove ${user.username} from your friends?`, [
       { text: "Cancel", style: "cancel" },
-      { text: "Remove", style: "destructive", onPress: () => mutation.mutate("remove") },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: () => mutation.mutate("remove"),
+      },
     ]);
   }
 
@@ -55,22 +67,42 @@ export function FriendshipControls({ user }: { user: PublicUser }) {
         accessibilityRole="button"
         accessibilityLabel={label.replaceAll("_", " ")}
         disabled={mutation.isPending}
-        onPress={() => action === "remove" ? confirmRemoval() : mutation.mutate(action)}
-        style={({ pressed }) => [styles.button, danger && styles.dangerButton, (pressed || mutation.isPending) && styles.dimmed]}
+        onPress={() =>
+          action === "remove" ? confirmRemoval() : mutation.mutate(action)
+        }
+        style={({ pressed }) => [
+          styles.button,
+          danger && styles.dangerButton,
+          (pressed || mutation.isPending) && styles.dimmed,
+        ]}
       >
-        <Text style={[styles.buttonText, danger && styles.dangerText]}>{label}</Text>
+        <Text style={[styles.buttonText, danger && styles.dangerText]}>
+          {label}
+        </Text>
       </Pressable>
     );
   }
 
   return (
     <View style={styles.panel}>
-      <Text style={styles.label}>FRIENDSHIP // {mutation.isPending ? "UPDATING..." : user.relationship.status.toUpperCase()}</Text>
+      <Text style={styles.label}>
+        FRIENDSHIP //{" "}
+        {mutation.isPending
+          ? "UPDATING..."
+          : user.relationship.status.toUpperCase()}
+      </Text>
       <View style={styles.actions}>
         {user.relationship.status === "none" && button("ADD_FRIEND", "send")}
-        {user.relationship.status === "outgoing" && button("CANCEL_REQUEST", "cancel")}
-        {user.relationship.status === "incoming" && <>{button("ACCEPT_REQUEST", "accept")}{button("DECLINE", "decline", true)}</>}
-        {user.relationship.status === "friends" && button("REMOVE_FRIEND", "remove", true)}
+        {user.relationship.status === "outgoing" &&
+          button("CANCEL_REQUEST", "cancel")}
+        {user.relationship.status === "incoming" && (
+          <>
+            {button("ACCEPT_REQUEST", "accept")}
+            {button("DECLINE", "decline", true)}
+          </>
+        )}
+        {user.relationship.status === "friends" &&
+          button("REMOVE_FRIEND", "remove", true)}
       </View>
     </View>
   );
@@ -78,10 +110,27 @@ export function FriendshipControls({ user }: { user: PublicUser }) {
 
 const styles = StyleSheet.create({
   panel: { marginBottom: 24, gap: 10 },
-  label: { color: Colors.dark.textTechnical, fontSize: 9, fontWeight: "900", letterSpacing: 1.2 },
+  label: {
+    color: Colors.dark.textTechnical,
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+  },
   actions: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  button: { minHeight: 44, justifyContent: "center", paddingHorizontal: 16, borderWidth: 1, borderColor: Colors.dark.accent, backgroundColor: Colors.dark.backgroundElement },
-  buttonText: { color: Colors.dark.accent, fontSize: 10, fontWeight: "900", letterSpacing: 1 },
+  button: {
+    minHeight: 44,
+    justifyContent: "center",
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: Colors.dark.accent,
+    backgroundColor: Colors.dark.backgroundElement,
+  },
+  buttonText: {
+    color: Colors.dark.accent,
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
   dangerButton: { borderColor: Colors.dark.danger },
   dangerText: { color: Colors.dark.danger },
   dimmed: { opacity: 0.5 },
