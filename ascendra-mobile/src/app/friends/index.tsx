@@ -1,3 +1,4 @@
+import { UserRoleName } from "@/components/user-role-badge";
 import { AppText as Text } from "@/components/app-text";
 import { useState } from "react";
 import { ActivityIndicator, Alert, FlatList, Image, Pressable, StyleSheet, View } from "react-native";
@@ -86,7 +87,7 @@ export default function FriendsScreen() {
                 {item.user.profileImage?.url ? <Image source={{ uri: item.user.profileImage.url }} style={styles.photo} /> : item.user.faction ? <Image source={factionEmblems[item.user.faction.slug]} style={styles.emblem} resizeMode="contain" /> : <Text style={styles.meta}>{"//"}</Text>}
               </View>
               <View style={styles.userText}>
-                <Text style={styles.username} numberOfLines={1}>{item.user.username}</Text>
+                <UserRoleName username={item.user.username} role={item.user.role} style={styles.username} />
                 <Text style={[styles.meta, { color: item.user.faction?.colors.primary ?? Colors.dark.textMuted }]}>{item.user.faction?.name.toUpperCase() ?? "UNASSIGNED"}</Text>
                 <Text style={styles.meta}>LEVEL {item.user.progression.level}{item.user.progression.echelon !== null ? ` // ECHELON ${item.user.progression.echelon}` : ""}</Text>
               </View>

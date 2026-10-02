@@ -1,3 +1,4 @@
+import { ACCESSIBLE_ACCOUNT_STATUSES, canAccessAccount } from "../constants/accountStatus.js";
 import ActivityEvent from "../models/ActivityEvent.js";
 import ActivityDismissal from "../models/ActivityDismissal.js";
 import NotFoundError from "../errors/NotFoundError.js";
@@ -21,7 +22,7 @@ async function getActivityVisibility(userId) {
   ];
   const activeIds = await User.find({
     _id: { $in: actorIds },
-    accountStatus: "active",
+    accountStatus: { $in: ACCESSIBLE_ACCOUNT_STATUSES },
   }).distinct("_id");
   const user = await User.findById(userId)
     .select("faction accountStatus")
@@ -31,7 +32,7 @@ async function getActivityVisibility(userId) {
     { actor: { $in: activeIds }, audience: "friends" },
     { audience: "global" },
   ];
-  if (user?.accountStatus === "active" && user.faction)
+  if (canAccessAccount(user?.accountStatus) && user.faction)
     audiences.push({ audience: "faction", faction: user.faction });
   return { $or: audiences };
 }
@@ -57,6 +58,40 @@ export const dismissActivityEvents = async ({ userId, eventIds }) => {
       ),
     ),
   );
+};
+
+export const dismissAllActivityEvents = async ({ userId }) => {
+  const dismissedAt = new Date();
+  const dismissedIds = await ActivityDismissal.find({ user: userId }).distinct(
+    "event",
+  );
+  const events = ActivityEvent.find({
+    ...(await getActivityVisibility(userId)),
+    _id: { $nin: dismissedIds },
+    // Preserve events created after this clear-all request began.
+    createdAt: { $lte: dismissedAt },
+  })
+    .select("_id")
+    .lean()
+    .cursor();
+
+  let operations = [];
+  for await (const event of events) {
+    operations.push({
+      updateOne: {
+        filter: { user: userId, event: event._id },
+        update: {
+          $setOnInsert: { user: userId, event: event._id, dismissedAt },
+        },
+        upsert: true,
+      },
+    });
+    if (operations.length === 500) {
+      await ActivityDismissal.bulkWrite(operations);
+      operations = [];
+    }
+  }
+  if (operations.length > 0) await ActivityDismissal.bulkWrite(operations);
 };
 
 export const createActivityEvent = async (event, { mongoSession } = {}) => {

@@ -1,3 +1,4 @@
+import { ACCESSIBLE_ACCOUNT_STATUSES } from "../constants/accountStatus.js";
 import mongoose from "mongoose";
 import User from "../models/User.js";
 import NotFoundError from "../errors/NotFoundError.js";
@@ -76,7 +77,7 @@ export const searchUsers = async (req, res, next) => {
     const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
     const filter = {
-      accountStatus: "active",
+      accountStatus: { $in: ACCESSIBLE_ACCOUNT_STATUSES },
       username: {
         $regex: escapedQuery,
         $options: "i",
@@ -87,7 +88,7 @@ export const searchUsers = async (req, res, next) => {
 
     const [users, totalUsers] = await Promise.all([
       User.find(filter)
-        .select("username faction lifetimeXP")
+        .select("username role faction lifetimeXP")
         .populate("faction", "name slug colors")
         .sort({ username: 1, _id: 1 })
         .skip(skip)
@@ -103,6 +104,7 @@ export const searchUsers = async (req, res, next) => {
       return {
         id: user._id,
         username: user.username,
+        role: user.role,
         faction: user.faction,
         lifetimeXP: user.lifetimeXP ?? 0,
         progression: {
@@ -136,10 +138,10 @@ export const getPublicUser = async (req, res, next) => {
 
     const user = await User.findOne({
       _id: userId,
-      accountStatus: "active",
+      accountStatus: { $in: ACCESSIBLE_ACCOUNT_STATUSES },
     })
       .select(
-        "username faction lifetimeXP totalWorkouts firstName lastName nameVisibility bio profileImage createdAt",
+        "username role faction lifetimeXP totalWorkouts firstName lastName nameVisibility bio profileImage createdAt",
       )
       .populate("faction", "name slug colors")
       .lean();
@@ -168,6 +170,7 @@ export const getPublicUser = async (req, res, next) => {
       user: {
         id: user._id,
         username: user.username,
+        role: user.role,
 
         firstName: canViewName ? user.firstName : null,
         lastName: canViewName ? user.lastName : null,

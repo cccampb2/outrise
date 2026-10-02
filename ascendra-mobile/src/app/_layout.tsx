@@ -6,6 +6,7 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { AppFonts } from "@/constants/fonts";
+import { AccountSessionGuard } from "@/components/account-session-guard";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -24,6 +25,7 @@ export default function RootLayout() {
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider value={DarkTheme}>
+          <AccountSessionGuard />
           <Stack screenOptions={{ headerShown: false }} />
         </ThemeProvider>
       </QueryClientProvider>

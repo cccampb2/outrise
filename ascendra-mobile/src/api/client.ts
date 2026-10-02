@@ -8,20 +8,41 @@ export type ValidationErrorDetail = {
   message: string;
 };
 
+export type AccountRestriction = {
+  code: "ACCOUNT_SUSPENDED" | "ACCOUNT_BANNED";
+  accountStatus: "suspended" | "banned";
+  suspendedUntil: string | null;
+  message: string;
+};
+
+const restrictionListeners = new Set<(restriction: AccountRestriction) => void>();
+export function onAccountRestricted(listener: (restriction: AccountRestriction) => void) {
+  restrictionListeners.add(listener);
+  return () => { restrictionListeners.delete(listener); };
+}
+
+export function accountRestrictionMessage(restriction: AccountRestriction) {
+  if (restriction.accountStatus !== "suspended" || !restriction.suspendedUntil) return restriction.message;
+  return `${restriction.message} Your suspension will lift on ${new Date(restriction.suspendedUntil).toLocaleString(undefined, { month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}.`;
+}
+
 export class ApiError extends Error {
   status: number;
   details?: ValidationErrorDetail[];
+  accountRestriction?: AccountRestriction;
 
   constructor(
     message: string,
     status: number,
     details?: ValidationErrorDetail[],
+    accountRestriction?: AccountRestriction,
   ) {
     super(message);
 
     this.name = "ApiError";
     this.status = status;
     this.details = details;
+    this.accountRestriction = accountRestriction;
   }
 
   getDisplayMessage() {
@@ -49,11 +70,19 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
 
   if (!response.ok) {
     const data = await response.json();
+    const restriction: AccountRestriction | undefined =
+      ["ACCOUNT_SUSPENDED", "ACCOUNT_BANNED"].includes(data.code)
+        ? { code: data.code, accountStatus: data.accountStatus, suspendedUntil: data.suspendedUntil ?? null, message: data.message }
+        : undefined;
+    if (restriction && token && !endpoint.startsWith("/auth/") && token === await getToken()) {
+      restrictionListeners.forEach((listener) => listener(restriction));
+    }
 
     throw new ApiError(
       data.message || "Request failed",
       response.status,
       data.details,
+      restriction,
     );
   }
 

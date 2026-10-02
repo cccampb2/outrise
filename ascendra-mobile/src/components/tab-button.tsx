@@ -11,7 +11,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 
-import { Colors } from "@/constants/theme";
+import { Fonts } from "@/constants/theme";
 
 type TabButtonProps = TabTriggerSlotProps & {
   label: string;
@@ -34,11 +34,11 @@ export function TabButton({
     });
   }, [isFocused, focusProgress]);
 
-  const moduleAnimatedStyle = useAnimatedStyle(() => {
+  const iconAnimatedStyle = useAnimatedStyle(() => {
     return {
       transform: [
         {
-          translateY: interpolate(focusProgress.value, [0, 1], [0, -7]),
+          scale: interpolate(focusProgress.value, [0, 1], [1, 1.05]),
         },
       ],
     };
@@ -50,52 +50,38 @@ export function TabButton({
 
       transform: [
         {
-          scale: interpolate(focusProgress.value, [0, 1], [0.4, 1]),
-        },
-        {
-          rotate: "45deg",
+          scaleX: interpolate(focusProgress.value, [0, 1], [0.4, 1]),
         },
       ],
     };
   });
 
-  const accentRailAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      opacity: focusProgress.value,
-
-      transform: [
-        {
-          scaleX: interpolate(focusProgress.value, [0, 1], [0.15, 1]),
-        },
-      ],
-    };
-  });
-
-  const color = isFocused ? Colors.dark.accent : Colors.dark.textMuted;
+  const color = isFocused ? "#FFFFFF" : "#87939F";
 
   return (
-    <Pressable {...props} style={styles.pressable}>
-      <Animated.View
-        style={[
-          styles.module,
-          isFocused && styles.moduleFocused,
-          moduleAnimatedStyle,
-        ]}
-      >
+    <Pressable
+      {...props}
+      accessibilityRole="tab"
+      accessibilityState={{
+        ...props.accessibilityState,
+        selected: Boolean(isFocused),
+      }}
+      style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
+    >
+      <View style={[styles.module, isFocused && styles.moduleFocused]}>
         <Animated.View
           pointerEvents="none"
-          style={[styles.focusDiamond, indicatorAnimatedStyle]}
+          style={[styles.activeIndicator, indicatorAnimatedStyle]}
         />
 
-        <Animated.View
-          pointerEvents="none"
-          style={[styles.accentRail, accentRailAnimatedStyle]}
-        />
-
-        <View style={styles.iconArea}>{icon(color)}</View>
+        <Animated.View style={[styles.iconArea, iconAnimatedStyle]}>
+          {icon(color)}
+        </Animated.View>
 
         <Text
           numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.85}
           style={[
             styles.label,
             {
@@ -105,21 +91,7 @@ export function TabButton({
         >
           {label}
         </Text>
-
-        <View style={styles.lowerDetail}>
-          <View
-            style={[styles.lowerLine, isFocused && styles.lowerLineFocused]}
-          />
-
-          <View
-            style={[styles.lowerNode, isFocused && styles.lowerNodeFocused]}
-          />
-
-          <View
-            style={[styles.lowerLine, isFocused && styles.lowerLineFocused]}
-          />
-        </View>
-      </Animated.View>
+      </View>
     </Pressable>
   );
 }
@@ -127,103 +99,59 @@ export function TabButton({
 const styles = StyleSheet.create({
   pressable: {
     flex: 1,
+    minWidth: 0,
     height: "100%",
-    justifyContent: "flex-end",
+    minHeight: 60,
+    borderRadius: 4,
   },
 
   module: {
-    height: 60,
+    flex: 1,
 
     alignItems: "center",
     justifyContent: "center",
 
-    backgroundColor: Colors.dark.backgroundElement,
-
     borderWidth: 1,
-    borderColor: Colors.dark.border,
+    borderColor: "transparent",
+    borderRadius: 4,
 
-    paddingTop: 7,
+    paddingTop: 9,
     paddingBottom: 5,
+    paddingHorizontal: 2,
   },
 
   moduleFocused: {
-    backgroundColor: Colors.dark.backgroundSelected,
-
-    borderColor: Colors.dark.borderStrong,
+    backgroundColor: "#111B26",
+    borderColor: "#34414E",
   },
 
-  focusDiamond: {
+  activeIndicator: {
     position: "absolute",
 
-    top: -4,
-
-    width: 7,
-    height: 7,
-
-    backgroundColor: Colors.dark.accent,
-  },
-
-  accentRail: {
-    position: "absolute",
-
-    top: 0,
-    left: 10,
-    right: 10,
-
+    top: 5,
+    width: 16,
     height: 2,
-
-    backgroundColor: Colors.dark.accent,
+    borderRadius: 1,
+    backgroundColor: "#FFFFFF",
   },
 
   iconArea: {
-    height: 25,
+    height: 26,
 
     alignItems: "center",
     justifyContent: "center",
   },
 
   label: {
-    marginTop: 3,
+    fontFamily: Fonts.display,
+    marginTop: 4,
 
-    fontSize: 8,
-    fontWeight: "800",
+    fontSize: 10,
+    fontWeight: "600",
+    lineHeight: 14,
+    maxWidth: "100%",
 
-    letterSpacing: 0.8,
+    letterSpacing: 0.1,
   },
-
-  lowerDetail: {
-    position: "absolute",
-
-    left: 9,
-    right: 9,
-    bottom: 4,
-
-    flexDirection: "row",
-    alignItems: "center",
-
-    gap: 3,
-  },
-
-  lowerLine: {
-    flex: 1,
-
-    height: StyleSheet.hairlineWidth,
-
-    backgroundColor: Colors.dark.borderSubtle,
-  },
-
-  lowerLineFocused: {
-    backgroundColor: Colors.dark.borderStrong,
-  },
-
-  lowerNode: {
-    width: 2,
-    height: 2,
-
-    backgroundColor: Colors.dark.textDim,
-  },
-
-  lowerNodeFocused: {
-    backgroundColor: Colors.dark.accent,
-  },
+  pressed: { opacity: 0.7 },
 });

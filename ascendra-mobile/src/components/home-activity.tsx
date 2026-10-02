@@ -9,6 +9,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
+  dismissAllActivityEvents,
   dismissActivityEvents,
   getActivityFeed,
   type ActivityEvent,
@@ -150,15 +151,13 @@ export function HomeActivity({
         params: { userId: event.actor },
       });
   }
-  const [selecting, setSelecting] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const queryClient = useQueryClient();
   const dismissal = useMutation({
-    mutationFn: dismissActivityEvents,
-    onSuccess: () => {
-      setSelectedIds([]);
-      setSelecting(false);
+    mutationFn: (eventIds?: string[]) =>
+      eventIds ? dismissActivityEvents(eventIds) : dismissAllActivityEvents(),
+    onSuccess: (_data, eventIds) => {
+      if (!eventIds) setExpanded(false);
     },
     onError: () =>
       Alert.alert("Activity", "Unable to clear activity. Please try again."),
@@ -166,15 +165,6 @@ export function HomeActivity({
       await queryClient.invalidateQueries({ queryKey: ["activity", userId] });
     },
   });
-  function toggleSelection(id: string) {
-    setSelectedIds((ids) =>
-      ids.includes(id)
-        ? ids.filter((value) => value !== id)
-        : ids.length < 50
-          ? [...ids, id]
-          : ids,
-    );
-  }
   const query = useInfiniteQuery({
     queryKey: ["activity", userId],
     queryFn: ({ pageParam }) => getActivityFeed(pageParam, 4),
@@ -193,7 +183,7 @@ export function HomeActivity({
         <Text style={styles.label}>LATEST_UPDATES</Text>
         <Pressable
           accessibilityRole="button"
-          disabled={query.isFetching}
+          disabled={query.isFetching || dismissal.isPending}
           onPress={() => {
             void query.refetch();
           }}
@@ -209,30 +199,15 @@ export function HomeActivity({
           <Pressable
             accessibilityRole="button"
             disabled={dismissal.isPending}
-            onPress={() => {
-              setSelecting(!selecting);
-              setSelectedIds([]);
-            }}
+            onPress={() => dismissal.mutate(undefined)}
             style={styles.button}
           >
             <Text style={[styles.action, { color: accentColor }]}>
-              {selecting ? "CANCEL SELECTION" : "SELECT EVENTS"}
+              {dismissal.isPending && !dismissal.variables
+                ? "CLEARING..."
+                : "CLEAR ALL"}
             </Text>
           </Pressable>
-          {selecting && (
-            <Pressable
-              accessibilityRole="button"
-              disabled={dismissal.isPending || selectedIds.length === 0}
-              onPress={() => dismissal.mutate(selectedIds)}
-              style={styles.button}
-            >
-              <Text style={[styles.action, { color: accentColor }]}>
-                {dismissal.isPending
-                  ? "CLEARING..."
-                  : `CLEAR (${selectedIds.length})`}
-              </Text>
-            </Pressable>
-          )}
         </View>
       )}
       {query.isPending ? (
@@ -244,27 +219,11 @@ export function HomeActivity({
         </Text>
       ) : (
         visibleEvents.map((event) => (
-          <View
-            key={event._id}
-            style={[
-              styles.row,
-              selectedIds.includes(event._id) && [
-                styles.selectedRow,
-                { borderLeftColor: accentColor },
-              ],
-            ]}
-          >
+          <View key={event._id} style={styles.row}>
             <Pressable
-              accessibilityRole={selecting ? "checkbox" : "button"}
-              accessibilityState={{
-                checked: selecting
-                  ? selectedIds.includes(event._id)
-                  : undefined,
-              }}
+              accessibilityRole="button"
               disabled={dismissal.isPending}
-              onPress={() =>
-                selecting ? toggleSelection(event._id) : openEvent(event)
-              }
+              onPress={() => openEvent(event)}
               style={({ pressed }) => [
                 styles.eventContent,
                 pressed && styles.pressed,
@@ -273,13 +232,7 @@ export function HomeActivity({
               <View style={styles.eventHeader}>
                 <View style={styles.eventIcon}>
                   <Ionicons
-                    name={
-                      selecting
-                        ? selectedIds.includes(event._id)
-                          ? "checkbox-outline"
-                          : "square-outline"
-                        : activityIcons[event.type]
-                    }
+                    name={activityIcons[event.type]}
                     size={18}
                     color={accentColor}
                   />
@@ -292,13 +245,11 @@ export function HomeActivity({
                     {activityActor(event, userId)}
                   </Text>
                 </View>
-                {!selecting && (
-                  <Ionicons
-                    name="chevron-forward"
-                    size={16}
-                    color={Colors.dark.textDim}
-                  />
-                )}
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color={Colors.dark.textDim}
+                />
               </View>
               <View style={styles.messageBox}>
                 <Text style={styles.message}>
@@ -325,29 +276,20 @@ export function HomeActivity({
                   {formatEventTime(event.occurredAt)}
                 </Text>
               </View>
-              {!selecting && (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={`Clear activity from ${activityActor(event, userId)}`}
-                  disabled={dismissal.isPending}
-                  onPress={() => dismissal.mutate([event._id])}
-                  style={styles.clearButton}
-                >
-                  <Ionicons
-                    name="close-outline"
-                    size={14}
-                    color={Colors.dark.textMuted}
-                  />
-                  <Text style={styles.clearText}>CLEAR</Text>
-                </Pressable>
-              )}
-              {selecting && (
-                <Text style={styles.clearText}>
-                  {selectedIds.includes(event._id)
-                    ? "SELECTED"
-                    : "TAP TO SELECT"}
-                </Text>
-              )}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Clear activity from ${activityActor(event, userId)}`}
+                disabled={dismissal.isPending}
+                onPress={() => dismissal.mutate([event._id])}
+                style={styles.clearButton}
+              >
+                <Ionicons
+                  name="close-outline"
+                  size={14}
+                  color={Colors.dark.textMuted}
+                />
+                <Text style={styles.clearText}>CLEAR</Text>
+              </Pressable>
             </View>
           </View>
         ))
@@ -373,7 +315,7 @@ export function HomeActivity({
         !query.isError && (
           <Pressable
             accessibilityRole="button"
-            disabled={query.isFetching}
+            disabled={query.isFetching || dismissal.isPending}
             onPress={() => {
               setExpanded(true);
               if (query.hasNextPage && (expanded || events.length <= 4))
@@ -391,8 +333,6 @@ export function HomeActivity({
           accessibilityRole="button"
           onPress={() => {
             setExpanded(false);
-            setSelectedIds([]);
-            setSelecting(false);
           }}
           style={styles.button}
         >
@@ -476,11 +416,6 @@ const styles = StyleSheet.create({
   },
   messageActor: { color: Colors.dark.text, fontWeight: "600" },
   eventContent: { gap: 8 },
-  selectedRow: {
-    backgroundColor: Colors.dark.backgroundSelected,
-    borderLeftWidth: 2,
-    borderLeftColor: Colors.dark.accent,
-  },
   eventFooter: {
     flexDirection: "row",
     alignItems: "center",

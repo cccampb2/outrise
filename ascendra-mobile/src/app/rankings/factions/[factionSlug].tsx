@@ -1,3 +1,4 @@
+import { UserRoleName } from "@/components/user-role-badge";
 import { AppText as Text } from "@/components/app-text";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
@@ -310,9 +311,7 @@ export default function FactionRankingsScreen() {
                   </View>
 
                   <View style={styles.currentUserDetails}>
-                    <Text style={styles.currentUsername} numberOfLines={1}>
-                      {currentUser.username}
-                    </Text>
+                    <UserRoleName username={currentUser.username} role={currentUser.role} style={styles.currentUsername} />
 
                     <Text style={styles.currentUserContribution}>
                       {formatXP(currentUser.seasonXP)} SEASON XP
@@ -420,9 +419,7 @@ function FactionMemberRow({
       </View>
 
       <View style={styles.memberIdentity}>
-        <Text style={styles.memberUsername} numberOfLines={1}>
-          {user.username}
-        </Text>
+        <UserRoleName username={user.username} role={user.role} style={styles.memberUsername} />
 
         <Text style={styles.memberContributionLabel}>SEASON CONTRIBUTION</Text>
       </View>

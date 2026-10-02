@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { ACCOUNT_STATUSES } from "../constants/accountStatus.js";
+import { USER_ROLES } from "../constants/userRoles.js";
 
 const { Schema, model } = mongoose;
 
@@ -24,14 +26,23 @@ const userSchema = new Schema(
     },
     role: {
       type: String,
-      enum: ["user", "moderator", "admin"],
+      enum: USER_ROLES,
       default: "user",
     },
     accountStatus: {
       type: String,
-      enum: ["active", "suspended", "banned"],
+      enum: ACCOUNT_STATUSES,
       default: "active",
     },
+    suspendedUntil: { type: Date, default: null },
+    moderationReason: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
+      select: false,
+    },
+    moderatedBy: { type: Schema.Types.ObjectId, ref: "User", select: false },
+    moderatedAt: { type: Date, select: false },
     faction: {
       type: Schema.Types.ObjectId,
       ref: "Faction",
@@ -92,6 +103,7 @@ userSchema.index({
   lifetimeXP: -1,
   _id: 1,
 });
+userSchema.index({ accountStatus: 1, suspendedUntil: 1 });
 
 const User = model("User", userSchema);
 

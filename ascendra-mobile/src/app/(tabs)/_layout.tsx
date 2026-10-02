@@ -90,16 +90,6 @@ function CustomTabBar() {
           />
         </TabTrigger>
       </View>
-
-      <View style={styles.systemRail}>
-        <View style={styles.railLine} />
-
-        <View style={styles.railCenter}>
-          <View style={styles.railDot} />
-        </View>
-
-        <View style={styles.railLine} />
-      </View>
     </Animated.View>
   );
 }
@@ -148,44 +138,14 @@ const styles = StyleSheet.create({
     flex: 1,
 
     flexDirection: "row",
-    alignItems: "flex-end",
-
-    gap: 0,
-  },
-
-  systemRail: {
-    height: 7,
-
-    flexDirection: "row",
-    alignItems: "center",
-
-    paddingHorizontal: 12,
-    gap: 7,
-  },
-
-  railLine: {
-    flex: 1,
-
-    height: StyleSheet.hairlineWidth,
-
-    backgroundColor: Colors.dark.borderSubtle,
-  },
-
-  railCenter: {
-    width: 18,
-    height: 7,
-
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  railDot: {
-    width: 3,
-    height: 3,
-
-    backgroundColor: Colors.dark.textDim,
-
-    transform: [{ rotate: "45deg" }],
+    alignItems: "stretch",
+    padding: 6,
+    gap: 4,
+    backgroundColor: "#080F18",
+    borderWidth: 1,
+    borderColor: "#25313D",
+    borderTopColor: "#394550",
+    borderRadius: 8,
   },
 
   hiddenTabList: {
@@ -197,8 +157,8 @@ const styles = StyleSheet.create({
     left: -12,
     right: -12,
 
-    top: -10,
-    bottom: -20,
+    top: -8,
+    bottom: -10,
 
     backgroundColor: Colors.dark.background,
   },

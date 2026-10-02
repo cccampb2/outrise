@@ -5,7 +5,7 @@ import { Redirect } from "expo-router";
 import { useDispatch } from "react-redux";
 import { getToken, deleteToken } from "@/storage/auth-storage";
 import { getCurrentUser } from "@/api/users";
-import { setCurrentUser } from "@/store/auth-slice";
+import { setCurrentUser, setAccountRestriction } from "@/store/auth-slice";
 import type { AppDispatch } from "@/store/store";
 import { Colors } from "@/constants/theme";
 import { ApiError } from "@/api/client";
@@ -37,6 +37,12 @@ export default function Index() {
           setDestination("/(tabs)");
         }
       } catch (error) {
+        if (error instanceof ApiError && error.accountRestriction) {
+          await deleteToken();
+          dispatch(setAccountRestriction(error.accountRestriction));
+          setDestination("/login");
+          return;
+        }
         if (error instanceof ApiError && error.status === 401) {
           await deleteToken();
           setDestination("/login");

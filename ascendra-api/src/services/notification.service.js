@@ -1,3 +1,4 @@
+import { canAccessAccount } from "../constants/accountStatus.js";
 import ActivityEvent from "../models/ActivityEvent.js";
 import NotificationState from "../models/NotificationState.js";
 import User from "../models/User.js";
@@ -16,7 +17,7 @@ export async function getNotificationVisibility(userId) {
   const user = await User.findById(userId)
     .select("faction accountStatus createdAt")
     .lean();
-  if (!user || user.accountStatus !== "active")
+  if (!user || !canAccessAccount(user.accountStatus))
     throw new NotFoundError("User not found");
   const audiences = [
     { audience: "personal", recipient: userId },

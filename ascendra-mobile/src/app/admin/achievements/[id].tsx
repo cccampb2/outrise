@@ -1,3 +1,4 @@
+import { hasAdminAccess } from "@/constants/user-roles";
 import { AppText as Text } from "@/components/app-text";
 import { ActivityIndicator, Pressable, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
@@ -10,7 +11,7 @@ import { adminAchievementStyles as styles } from "@/components/admin-achievement
 
 export default function EditAchievementScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const isAdmin = useSelector((state: { auth: { user: { role: string } | null } }) => state.auth.user?.role === "admin");
+  const isAdmin = useSelector((state: { auth: { user: { role: string } | null } }) => hasAdminAccess(state.auth.user?.role));
   const validId = typeof id === "string" && /^[a-f\d]{24}$/i.test(id);
   const query = useQuery({ queryKey: ["admin-achievement", id], queryFn: () => getAdminAchievement(id), enabled: isAdmin && validId });
   if (isAdmin && validId && query.data) return <AdminAchievementForm key={id} achievement={query.data.achievement} />;

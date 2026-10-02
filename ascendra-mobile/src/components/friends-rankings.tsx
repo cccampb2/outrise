@@ -1,3 +1,4 @@
+import { UserRoleName } from "@/components/user-role-badge";
 import { AppText as Text } from "@/components/app-text";
 import type { ReactNode } from "react";
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from "react-native";
@@ -47,10 +48,11 @@ export function FriendsRankings({ header }: { header: ReactNode }) {
       >
         <Text style={styles.rank}>#{user.rank}</Text>
         <View style={styles.identity}>
-          <Text style={styles.username} numberOfLines={1}>
-            {user.username}
-            {user.userId === userId ? " // YOU" : ""}
-          </Text>
+          <UserRoleName
+            username={`${user.username}${user.userId === userId ? " // YOU" : ""}`}
+            role={user.role}
+            style={styles.username}
+          />
           <Text style={styles.meta}>
             LVL {user.level}
             {user.echelon !== null ? ` // ECHELON ${user.echelon}` : ""}

@@ -1,7 +1,17 @@
 import {
+  dismissAllActivityEvents,
   dismissActivityEvents,
   getActivityFeed,
 } from "../services/activity.service.js";
+
+export const dismissAllActivityEventsController = async (req, res, next) => {
+  try {
+    await dismissAllActivityEvents({ userId: req.user.userId });
+    res.status(204).end();
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const dismissActivityEventsController = async (req, res, next) => {
   try {

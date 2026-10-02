@@ -1,7 +1,17 @@
 import { isCelebrateError } from "celebrate";
 import logger from "../utils/logger.js";
+import AccountRestrictedError from "../errors/AccountRestrictedError.js";
 
 export const errorHandler = (error, req, res, next) => {
+  if (error instanceof AccountRestrictedError) {
+    return res.status(error.statusCode).json({
+      error: error.name,
+      message: error.message,
+      code: error.code,
+      accountStatus: error.accountStatus,
+      suspendedUntil: error.suspendedUntil,
+    });
+  }
   if (isCelebrateError(error)) {
     const validationErrors = [];
 

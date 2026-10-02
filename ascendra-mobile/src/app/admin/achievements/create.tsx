@@ -1,3 +1,4 @@
+import { hasAdminAccess } from "@/constants/user-roles";
 import { AppText as Text } from "@/components/app-text";
 
 import { useSelector } from "react-redux";
@@ -6,6 +7,6 @@ import { AdminAchievementForm } from "@/components/admin-achievement-form";
 import { adminAchievementStyles } from "@/components/admin-achievement-ui";
 
 export default function CreateAchievementScreen() {
-  const isAdmin = useSelector((state: { auth: { user: { role: string } | null } }) => state.auth.user?.role === "admin");
+  const isAdmin = useSelector((state: { auth: { user: { role: string } | null } }) => hasAdminAccess(state.auth.user?.role));
   return isAdmin ? <AdminAchievementForm /> : <Screen><Text style={adminAchievementStyles.error}>Admin access required.</Text></Screen>;
 }

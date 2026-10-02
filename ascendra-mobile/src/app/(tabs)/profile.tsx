@@ -1,4 +1,7 @@
+import { UserRoleBadge } from "@/components/user-role-badge";
+import { hasAdminAccess } from "@/constants/user-roles";
 import { AppText as Text } from "@/components/app-text";
+import { AccountFlagNotice } from "@/components/account-flag-notice";
 import { ProfileRecords } from "@/components/profile-records";
 import { View, Pressable, StyleSheet, Image, Alert } from "react-native";
 import { Screen } from "@/components/screen";
@@ -148,7 +151,7 @@ export default function ProfileScreen() {
     );
   }
 
-  const isAdmin = user.role === "admin";
+  const isAdmin = hasAdminAccess(user.role);
 
   const echelon = user.progression.echelon as EchelonNumber | null;
 
@@ -172,6 +175,7 @@ export default function ProfileScreen() {
   return (
     <Screen scroll hideTabBarOnScroll bottomInSet={TAB_BAR_HEIGHT}>
       <View style={styles.page}>
+        <AccountFlagNotice />
         {/* PROFILE HERO */}
 
         <View
@@ -202,7 +206,7 @@ export default function ProfileScreen() {
                 ]}
               />
 
-              <Text style={styles.systemStatusText}>ASCENDRA_ID // ACTIVE</Text>
+              <Text style={styles.systemStatusText}>ASCENDRA_ID // {user.accountStatus.toUpperCase()}</Text>
             </View>
 
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
@@ -273,6 +277,8 @@ export default function ProfileScreen() {
               <Text style={styles.username} numberOfLines={1}>
                 {user.username.toUpperCase()}
               </Text>
+
+              <UserRoleBadge role={user.role} showLabel />
 
               {fullName ? (
                 <Text style={styles.realName} numberOfLines={1}>

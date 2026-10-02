@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import User from "../models/User.js";
 import ConflictError from "../errors/ConflictError.js";
 import UnauthorizedError from "../errors/UnauthorizedError.js";
+import { ensureAccountAccess } from "./accountAccess.service.js";
 
 export const registerUser = async ({ username, email, password }) => {
   const existingEmail = await User.findOne({ email });
@@ -39,5 +40,6 @@ export const loginUser = async ({ email, password }) => {
     throw new UnauthorizedError("Invalid email or password");
   }
 
-  return user;
+  const accessibleUser = await ensureAccountAccess(user);
+  return accessibleUser;
 };

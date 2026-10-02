@@ -1,3 +1,4 @@
+import { ACCESSIBLE_ACCOUNT_STATUSES } from "../constants/accountStatus.js";
 import User from "../models/User.js";
 import UserAchievement from "../models/UserAchievement.js";
 import Verification from "../models/Verification.js";
@@ -5,7 +6,7 @@ import Achievement from "../models/Achievement.js";
 import NotFoundError from "../errors/NotFoundError.js";
 
 async function ensurePublicUser(userId) {
-  if (!await User.exists({ _id: userId, accountStatus: "active" })) throw new NotFoundError("User not found");
+  if (!await User.exists({ _id: userId, accountStatus: { $in: ACCESSIBLE_ACCOUNT_STATUSES } })) throw new NotFoundError("User not found");
 }
 
 export const getProfileAchievements = async ({ userId, page, limit, view = "unlocked" }) => {

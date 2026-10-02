@@ -1,7 +1,15 @@
+import { UserRoleName } from "@/components/user-role-badge";
 import { AppText as Text } from "@/components/app-text";
 import { useState } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  Image,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
 
 import { router } from "expo-router";
 import {
@@ -90,7 +98,16 @@ export default function RankingsScreen() {
   }
 
   if (selectedTab === "friends") {
-    return <FriendsRankings header={<RankingsHeader selectedTab={selectedTab} onSelectTab={setSelectedTab} />} />;
+    return (
+      <FriendsRankings
+        header={
+          <RankingsHeader
+            selectedTab={selectedTab}
+            onSelectTab={setSelectedTab}
+          />
+        }
+      />
+    );
   }
 
   if (selectedTab === "global") {
@@ -341,18 +358,31 @@ function RankingsHeader({
   return (
     <>
       <View style={styles.header}>
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
           <Text style={styles.eyebrow}>ASCENDRA // RANKINGS</Text>
         </View>
 
         <Text style={styles.title}>
-          {isFriends ? "FRIENDS STANDINGS" : isFactions ? "FACTION STANDINGS" : "GLOBAL STANDINGS"}
+          {isFriends
+            ? "FRIENDS STANDINGS"
+            : isFactions
+              ? "FACTION STANDINGS"
+              : "GLOBAL STANDINGS"}
         </Text>
 
         <Text style={styles.description}>
-          {isFriends ? "Compare lifetime XP with your accepted friends. You are included in these standings." : isFactions
-            ? "Season XP determines faction position. Every contribution pushes your faction higher."
-            : "Lifetime XP determines your global position. The top 25 hold Zenith status."}
+          {isFriends
+            ? "Compare lifetime XP with your accepted friends. You are included in these standings."
+            : isFactions
+              ? "Season XP determines faction position. Every contribution pushes your faction higher."
+              : "Lifetime XP determines your global position. The top 25 hold Zenith status."}
         </Text>
       </View>
 
@@ -379,8 +409,15 @@ function RankingsHeader({
           </Text>
         </Pressable>
 
-        <Pressable onPress={() => onSelectTab("friends")} style={[styles.tab, isFriends ? styles.activeTab : null]}>
-          <Text style={isFriends ? styles.activeTabText : styles.inactiveTabText}>FRIENDS</Text>
+        <Pressable
+          onPress={() => onSelectTab("friends")}
+          style={[styles.tab, isFriends ? styles.activeTab : null]}
+        >
+          <Text
+            style={isFriends ? styles.activeTabText : styles.inactiveTabText}
+          >
+            FRIENDS
+          </Text>
         </Pressable>
       </View>
     </>
@@ -435,9 +472,7 @@ function CurrentUserCard({
         )}
 
         <View style={styles.currentUserInfo}>
-          <Text style={styles.currentUsername} numberOfLines={1}>
-            {user.username}
-          </Text>
+          <UserRoleName username={user.username} role={user.role} style={styles.currentUsername} />
 
           <View style={styles.currentMetadataRow}>
             <Text style={styles.currentLevel}>LEVEL {user.level}</Text>
@@ -543,9 +578,7 @@ function LeaderboardRow({
       </View>
 
       <View style={styles.rowIdentity}>
-        <Text style={styles.username} numberOfLines={1}>
-          {user.username}
-        </Text>
+        <UserRoleName username={user.username} role={user.role} style={styles.username} />
 
         <View style={styles.metadataRow}>
           <Text style={styles.metadataLevel}>LVL {user.level}</Text>
@@ -1111,6 +1144,7 @@ const styles = StyleSheet.create({
   xpColumn: {
     alignItems: "flex-end",
     minWidth: 58,
+    paddingHorizontal: 10,
   },
 
   xp: {

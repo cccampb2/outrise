@@ -1,4 +1,5 @@
 import { AppText as Text } from "@/components/app-text";
+import { AccountFlagNotice } from "@/components/account-flag-notice";
 import { Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
@@ -109,6 +110,7 @@ export default function HomeScreen() {
   return (
     <Screen scroll bottomInSet={TAB_BAR_HEIGHT} hideTabBarOnScroll>
       <View style={styles.page}>
+        <AccountFlagNotice />
         {/* HEADER */}
 
         <View style={styles.header}>
@@ -123,7 +125,7 @@ export default function HomeScreen() {
                 ]}
               />
 
-              <Text style={styles.systemStatusText}>ASCENDRA // ACTIVE</Text>
+              <Text style={styles.systemStatusText}>ASCENDRA // {user?.accountStatus.toUpperCase() ?? "ACTIVE"}</Text>
             </View>
 
             <View

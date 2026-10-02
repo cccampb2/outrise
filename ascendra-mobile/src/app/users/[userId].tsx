@@ -1,3 +1,4 @@
+import { UserRoleBadge } from "@/components/user-role-badge";
 import { AppText as Text } from "@/components/app-text";
 import { ProfileRecords } from "@/components/profile-records";
 import { Pressable, StyleSheet, View, Image } from "react-native";
@@ -286,6 +287,8 @@ export default function PublicUserProfileScreen() {
               <Text style={styles.username} numberOfLines={1}>
                 {user.username}
               </Text>
+
+              <UserRoleBadge role={user.role} showLabel />
 
               {fullName ? (
                 <Text style={styles.realName} numberOfLines={1}>

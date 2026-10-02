@@ -1,3 +1,4 @@
+import { UserRoleBadge } from "@/components/user-role-badge";
 import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
 import { useState, useEffect } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -262,6 +263,7 @@ function UserSearchRow({
           <Text style={styles.username} numberOfLines={1}>
             {user.username}
           </Text>
+          <UserRoleBadge role={user.role} />
 
           {user.faction ? (
             <Image

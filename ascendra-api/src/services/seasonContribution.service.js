@@ -1,3 +1,4 @@
+import { canAccessAccount } from "../constants/accountStatus.js";
 import Season from "../models/Season.js";
 import SeasonContribution from "../models/SeasonContribution.js";
 import User from "../models/User.js";
@@ -38,7 +39,7 @@ export const addSeasonContribution = async ({
     .select("faction accountStatus")
     .session(mongoSession);
 
-  if (!user || user.accountStatus !== "active" || !user.faction) {
+  if (!user || !canAccessAccount(user.accountStatus) || !user.faction) {
     return null;
   }
   // Serialize faction score changes so concurrent awards cannot invent rank transitions.

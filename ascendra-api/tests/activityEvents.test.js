@@ -21,7 +21,7 @@ import { buildFactionSeasonEvents, recordSeasonWin } from "../src/services/facti
 import { recordVerificationActivity } from "../src/services/verificationActivity.service.js";
 import { rejectVerification } from "../src/services/verification.service.js";
 import { reconcileWorkoutOfTheWeekOccurrences } from "../src/services/workoutOfTheWeek.service.js";
-import { getActivityFeed, dismissActivityEvents, createActivityEvent } from "../src/services/activity.service.js";
+import { getActivityFeed, dismissActivityEvents, dismissAllActivityEvents, createActivityEvent } from "../src/services/activity.service.js";
 
 const id = () => new mongoose.Types.ObjectId();
 const actor = id(), factionId = id(), sourceId = id();
@@ -114,6 +114,57 @@ test("feed and dismissal include only the viewer faction, global news, and exist
   assert.ok(filters[0].$or.some((filter) => filter.audience === "global"));
   await assert.rejects(() => dismissActivityEvents({ userId: actor, eventIds: [sourceId.toString()] }), /not found/);
   assert.deepEqual(filters[1].$or, filters[0].$or);
+});
+
+test("clear all dismisses beyond a page or selection limit, preserves visibility, and is safe to retry", async (t) => {
+  const friendId = id();
+  const alreadyDismissed = id();
+  const events = Array.from({ length: 503 }, () => ({ _id: id() }));
+  const stored = new Map([[alreadyDismissed.toString(), { user: actor, event: alreadyDismissed }]]);
+  t.mock.method(Friendship, "find", () => ({ select() { return this; }, lean: async () => [{ requester: actor, recipient: friendId }] }));
+  t.mock.method(User, "find", () => ({ distinct: async () => [actor, friendId] }));
+  t.mock.method(User, "findById", () => ({ select() { return this; }, lean: async () => ({ faction: factionId, accountStatus: "active" }) }));
+  t.mock.method(ActivityDismissal, "find", (filter) => {
+    assert.equal(filter.user, actor);
+    return { distinct: async () => [...stored.values()].map((dismissal) => dismissal.event) };
+  });
+  const filters = [];
+  t.mock.method(ActivityEvent, "find", (filter) => {
+    filters.push(filter);
+    return {
+      select() { return this; }, lean() { return this; },
+      cursor: async function* () {
+        const excluded = new Set(filter._id.$nin.map(String));
+        for (const event of events) if (!excluded.has(event._id.toString())) yield event;
+      },
+    };
+  });
+  const batchSizes = [];
+  t.mock.method(ActivityDismissal, "bulkWrite", async (operations) => {
+    batchSizes.push(operations.length);
+    for (const { updateOne } of operations) {
+      assert.equal(updateOne.filter.user, actor);
+      assert.equal(updateOne.upsert, true);
+      const dismissal = updateOne.update.$setOnInsert;
+      assert.equal(dismissal.user, actor);
+      assert.equal(dismissal.dismissedAt, filters[0].createdAt.$lte);
+      stored.set(dismissal.event.toString(), dismissal);
+    }
+  });
+  await dismissAllActivityEvents({ userId: actor });
+  assert.equal(stored.size, 504);
+  assert.deepEqual(batchSizes, [500, 3]);
+  assert.deepEqual(filters[0].$or, [
+    { recipient: actor, audience: "personal" },
+    { actor: { $in: [actor, friendId] }, audience: "friends" },
+    { audience: "global" },
+    { audience: "faction", faction: factionId },
+  ]);
+  assert.ok(filters[0].createdAt.$lte instanceof Date);
+  assert.deepEqual(filters[0]._id.$nin, [alreadyDismissed]);
+  await dismissAllActivityEvents({ userId: actor });
+  assert.equal(stored.size, 504);
+  assert.deepEqual(batchSizes, [500, 3]);
 });
 
 test("system event retries use insert-only upserts with the same key", async (t) => {

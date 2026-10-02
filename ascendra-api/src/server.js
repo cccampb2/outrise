@@ -10,11 +10,20 @@ import { reconcileWorkoutOfTheWeekOccurrences } from "./services/workoutOfTheWee
 import WorkoutOfTheWeekOccurrence from "./models/WorkoutOfTheWeekOccurrence.js";
 import WorkoutSession from "./models/WorkoutSession.js";
 import NoEligibleWorkoutOfTheWeekError from "./errors/NoEligibleWorkoutOfTheWeekError.js";
+import { restoreExpiredSuspensions } from "./services/accountAccess.service.js";
+import { startAccountSuspensionJob } from "./jobs/accountSuspension.job.js";
+import AccountModeration from "./models/AccountModeration.js";
+import IssueReport from "./models/IssueReport.js";
+import UserRoleChange from "./models/UserRoleChange.js";
 const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
   try {
     await connectDB();
+    await AccountModeration.init();
+    await IssueReport.init();
+    await UserRoleChange.init();
+    await restoreExpiredSuspensions();
     await Season.init();
     await WorkoutOfTheWeekOccurrence.init();
     await WorkoutSession.init();
@@ -31,6 +40,7 @@ const startServer = async () => {
       }
     }
     startSeasonJob();
+    startAccountSuspensionJob();
     startWorkoutOfTheWeekJob();
     app.listen(PORT, () => {
       logger.info(`Ascendra API is running on port ${PORT}`);

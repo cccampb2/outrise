@@ -1,3 +1,4 @@
+import { ACCESSIBLE_ACCOUNT_STATUSES } from "../constants/accountStatus.js";
 import mongoose from "mongoose";
 import { createActivityEvent } from "./activity.service.js";
 import Friendship from "../models/Friendship.js";
@@ -28,8 +29,8 @@ async function getRelationshipList({ userId, page = 1, limit = 25, kind }) {
         localField: "otherUserId",
         foreignField: "_id",
         pipeline: [
-          { $match: { accountStatus: "active" } },
-          { $project: { username: 1, faction: 1, lifetimeXP: 1, profileImage: 1 } },
+          { $match: { accountStatus: { $in: ACCESSIBLE_ACCOUNT_STATUSES } } },
+          { $project: { username: 1, role: 1, faction: 1, lifetimeXP: 1, profileImage: 1 } },
         ],
         as: "user",
       },
@@ -59,6 +60,7 @@ async function getRelationshipList({ userId, page = 1, limit = 25, kind }) {
     const user = {
       id: row.user._id,
       username: row.user.username,
+      role: row.user.role,
       faction: row.user.faction ?? null,
       lifetimeXP: row.user.lifetimeXP ?? 0,
       profileImage: row.user.profileImage ?? { url: null, publicId: null },
@@ -179,7 +181,7 @@ export const acceptFriendRequest = async ({ userId, requestId }) => {
 
   const recipient = await User.findOne({
     _id: userId,
-    accountStatus: "active",
+    accountStatus: { $in: ACCESSIBLE_ACCOUNT_STATUSES },
   }).select("_id username");
 
   if (!recipient) {
@@ -188,7 +190,7 @@ export const acceptFriendRequest = async ({ userId, requestId }) => {
 
   const requester = await User.findOne({
     _id: request.requester,
-    accountStatus: "active",
+    accountStatus: { $in: ACCESSIBLE_ACCOUNT_STATUSES },
   }).select("_id");
 
   if (!requester) {
@@ -235,7 +237,7 @@ export const sendFriendRequest = async ({ requesterId, recipientId }) => {
 
   const requester = await User.findOne({
     _id: requesterId,
-    accountStatus: "active",
+    accountStatus: { $in: ACCESSIBLE_ACCOUNT_STATUSES },
   }).select("_id username");
 
   if (!requester) {
@@ -244,7 +246,7 @@ export const sendFriendRequest = async ({ requesterId, recipientId }) => {
 
   const recipient = await User.findOne({
     _id: recipientId,
-    accountStatus: "active",
+    accountStatus: { $in: ACCESSIBLE_ACCOUNT_STATUSES },
   }).select("_id");
 
   if (!recipient) {

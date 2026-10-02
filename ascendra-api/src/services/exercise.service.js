@@ -2,6 +2,7 @@ import Exercise from "../models/Exercise.js";
 import ConflictError from "../errors/ConflictError.js";
 import NotFoundError from "../errors/NotFoundError.js";
 import ForbiddenError from "../errors/ForbiddenError.js";
+import { hasAdminAccess } from "../constants/userRoles.js";
 
 export const createExercise = async ({
   name,
@@ -59,7 +60,7 @@ export const getExercises = async ({
 }) => {
   const requiresAdmin = status === "archived" || status === "all";
 
-  if (requiresAdmin && userRole !== "admin") {
+  if (requiresAdmin && !hasAdminAccess(userRole)) {
     throw new ForbiddenError(
       "You do not have permission to view archived exercises",
     );

@@ -1,3 +1,4 @@
+import type { UserRole } from "@/constants/user-roles";
 import { apiRequest } from "./client";
 import { FactionSlug } from "./factions";
 
@@ -10,6 +11,7 @@ export type LeaderboardFaction = {
 export type GlobalLeaderboardUser = {
   userId: string;
   username: string;
+  role: UserRole;
   lifetimeXP: number;
   level: number;
   echelon: number | null;
@@ -101,6 +103,7 @@ export type FactionLeaderboardFaction = {
 export type FactionLeaderboardUser = {
   userId: string;
   username: string;
+  role: UserRole;
   seasonXP: number;
   rank: number;
 };

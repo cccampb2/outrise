@@ -2,18 +2,20 @@ import { AppText as Text, AppTextInput as TextInput } from "@/components/app-tex
 import { useState } from "react";
 import { StyleSheet, View, Pressable } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 import { Screen } from "@/components/screen";
 import { Colors, Fonts } from "@/constants/theme";
 import { login } from "@/api/auth";
 import { saveToken } from "@/storage/auth-storage";
 import { getCurrentUser } from "@/api/users";
-import { setCurrentUser } from "@/store/auth-slice";
-import type { AppDispatch } from "@/store/store";
+import { setCurrentUser, clearAccountNotice } from "@/store/auth-slice";
+import type { AppDispatch, RootState } from "@/store/store";
+import { ApiError, accountRestrictionMessage } from "@/api/client";
 
 export default function LoginScreen() {
   const dispatch = useDispatch<AppDispatch>();
+  const accountNotice = useSelector((state: RootState) => state.auth.accountNotice);
 
   const params = useLocalSearchParams<{
     email?: string;
@@ -24,9 +26,14 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [errorTitle, setErrorTitle] = useState("ACCESS_ERROR");
+  const displayedError = error || (accountNotice ? accountRestrictionMessage(accountNotice) : "");
+  const displayedErrorTitle = error ? errorTitle : accountNotice?.accountStatus === "suspended" ? "ACCOUNT_SUSPENDED" : "ACCOUNT_BANNED";
 
   async function handleLogin() {
     setError("");
+    setErrorTitle("ACCESS_ERROR");
+    dispatch(clearAccountNotice());
 
     if (!email.trim()) {
       setError("Email is required");
@@ -58,7 +65,10 @@ export default function LoginScreen() {
         router.replace("/(tabs)");
       }
     } catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof ApiError && error.accountRestriction) {
+        setError(accountRestrictionMessage(error.accountRestriction));
+        setErrorTitle(error.accountRestriction.code);
+      } else if (error instanceof Error) {
         setError(error.message);
       }
 
@@ -143,15 +153,15 @@ export default function LoginScreen() {
             />
           </View>
 
-          {error ? (
+          {displayedError ? (
             <View style={styles.errorMessage}>
               <View style={styles.errorTop}>
                 <View style={styles.errorDot} />
 
-                <Text style={styles.errorLabel}>ACCESS_ERROR</Text>
+                <Text style={styles.errorLabel}>{displayedErrorTitle}</Text>
               </View>
 
-              <Text style={styles.errorText}>{error}</Text>
+              <Text style={styles.errorText}>{displayedError}</Text>
             </View>
           ) : null}
 
@@ -173,6 +183,15 @@ export default function LoginScreen() {
             <Text style={styles.buttonArrow}>→</Text>
           </Pressable>
         </View>
+
+        <Pressable
+          accessibilityRole="button"
+          disabled={isLoading}
+          onPress={() => router.push({ pathname: "/report-issue", params: { email: email.trim() } })}
+          style={({ pressed }) => [styles.reportButton, pressed && styles.linkPressed]}
+        >
+          <Text style={styles.reportText}>REPORT AN ISSUE →</Text>
+        </Pressable>
 
         {/* REGISTER */}
 
@@ -206,6 +225,8 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
+  reportButton: { minHeight: 44, justifyContent: "center", alignItems: "center", marginTop: 14 },
+  reportText: { color: Colors.dark.textSecondary, fontSize: 11, fontWeight: "700", letterSpacing: 1 },
   container: {
     flexGrow: 1,
     paddingTop: 54,

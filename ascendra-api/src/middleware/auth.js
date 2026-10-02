@@ -1,7 +1,9 @@
 import jwt from "jsonwebtoken";
 import UnauthorizedError from "../errors/UnauthorizedError.js";
+import User from "../models/User.js";
+import { ensureAccountAccess } from "../services/accountAccess.service.js";
 
-export const authenticate = (req, res, next) => {
+export const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -13,7 +15,11 @@ export const authenticate = (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.user = decoded;
+    const user = await ensureAccountAccess(
+      await User.findById(decoded.userId).select("role accountStatus suspendedUntil"),
+    );
+    // Use the current database role, rather than a potentially stale token role.
+    req.user = { ...decoded, userId: user._id.toString(), role: user.role };
 
     next();
   } catch (error) {

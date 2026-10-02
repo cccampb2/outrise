@@ -1,3 +1,4 @@
+import type { UserRole } from "@/constants/user-roles";
 import { apiRequest } from "./client";
 import type { FactionColors, FactionSlug } from "./factions";
 import { File } from "expo-file-system";
@@ -17,12 +18,14 @@ export type UserRanking = {
   zenithRank: number | null;
 };
 
+export type AccountStatus = "active" | "flagged" | "suspended" | "banned";
+
 export type CurrentUser = {
   id: string;
   username: string;
   email: string;
-  role: string;
-  accountStatus: string;
+  role: UserRole;
+  accountStatus: AccountStatus;
   faction: string | null;
   lifetimeXP: number;
   totalWorkouts: number;
@@ -50,6 +53,7 @@ export type PublicUser = {
   relationship: FriendshipRelationship;
   id: string;
   username: string;
+  role: UserRole;
   faction: PublicUserFaction | null;
   lifetimeXP: number;
   totalWorkouts: number;
@@ -77,6 +81,7 @@ export type UserSearchProgression = {
 export type UserSearchResult = {
   id: string;
   username: string;
+  role: UserRole;
   faction: PublicUserFaction | null;
   lifetimeXP: number;
   progression: UserSearchProgression;

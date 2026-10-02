@@ -1,3 +1,4 @@
+import { hasAdminAccess } from "@/constants/user-roles";
 import { AppText as Text } from "@/components/app-text";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
@@ -10,7 +11,7 @@ import { getAdminAchievements, setAdminAchievementStatus } from "@/api/admin-ach
 import { ApiError } from "@/api/client";
 
 export default function AdminAchievementsScreen() {
-  const isAdmin = useSelector((state: { auth: { user: { role: string } | null } }) => state.auth.user?.role === "admin");
+  const isAdmin = useSelector((state: { auth: { user: { role: string } | null } }) => hasAdminAccess(state.auth.user?.role));
   const [search, setSearch] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
   const [status, setStatus] = useState("all");

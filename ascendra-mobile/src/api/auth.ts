@@ -1,3 +1,4 @@
+import type { UserRole } from "@/constants/user-roles";
 import { apiRequest } from "./client";
 
 type LoginCredentials = {
@@ -9,7 +10,7 @@ type AuthUser = {
   id: string;
   username: string;
   email: string;
-  role: string;
+  role: UserRole;
   faction: string | null;
 };
 
@@ -31,7 +32,7 @@ type RegisterResponse = {
     id: string;
     username: string;
     email: string;
-    role: string;
+    role: UserRole;
     faction: string | null;
   };
 };

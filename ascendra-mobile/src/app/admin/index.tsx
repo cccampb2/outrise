@@ -1,3 +1,4 @@
+import { hasAdminAccess } from "@/constants/user-roles";
 import { AppText as Text } from "@/components/app-text";
 import { Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
@@ -79,7 +80,7 @@ function AdminOption({
 export default function AdminScreen() {
   const user = useSelector((state: RootState) => state.auth.user);
 
-  const isAdmin = user?.role === "admin";
+  const isAdmin = hasAdminAccess(user?.role);
 
   if (!isAdmin) {
     return (
@@ -156,6 +157,20 @@ export default function AdminScreen() {
         </View>
 
         <View style={styles.options}>
+          <AdminOption
+            code="SUPPORT"
+            title="ISSUE_REPORTS"
+            description="Review member issues and account appeals in a shared admin inbox."
+            status="ACTIVE"
+            onPress={() => router.push("/admin/issue-reports")}
+          />
+          <AdminOption
+            code="USERS"
+            title="ACCOUNT_MODERATION"
+            description="Review users, flag accounts, suspend access, ban users, and restore accounts."
+            status="ACTIVE"
+            onPress={() => router.push("/admin/users")}
+          />
           <AdminOption
             code="ACHIEVEMENT"
             title="ACHIEVEMENTS"

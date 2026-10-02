@@ -1,3 +1,4 @@
+import { ACCESSIBLE_ACCOUNT_STATUSES, canAccessAccount } from "../constants/accountStatus.js";
 import User from "../models/User.js";
 import { getProgressFromXP } from "../utils/progression.js";
 import Faction from "../models/Faction.js";
@@ -17,7 +18,7 @@ export const getFriendsLeaderboard = async ({ userId, page = 1, limit = 25 }) =>
       ? friendship.recipient
       : friendship.requester,
   )];
-  const filter = { _id: { $in: participantIds }, accountStatus: "active" };
+  const filter = { _id: { $in: participantIds }, accountStatus: { $in: ACCESSIBLE_ACCOUNT_STATUSES } };
   const skip = (page - 1) * limit;
 
   const [users, totalUsers, viewer] = await Promise.all([
@@ -25,12 +26,12 @@ export const getFriendsLeaderboard = async ({ userId, page = 1, limit = 25 }) =>
       .sort({ lifetimeXP: -1, _id: 1 })
       .skip(skip)
       .limit(limit)
-      .select("username lifetimeXP faction")
+      .select("username role lifetimeXP faction")
       .populate("faction", "name slug")
       .lean(),
     User.countDocuments(filter),
-    User.findOne({ _id: userId, accountStatus: "active" })
-      .select("username lifetimeXP faction")
+    User.findOne({ _id: userId, accountStatus: { $in: ACCESSIBLE_ACCOUNT_STATUSES } })
+      .select("username role lifetimeXP faction")
       .populate("faction", "name slug")
       .lean(),
   ]);
@@ -40,6 +41,7 @@ export const getFriendsLeaderboard = async ({ userId, page = 1, limit = 25 }) =>
     return {
       userId: user._id,
       username: user.username,
+      role: user.role,
       lifetimeXP: user.lifetimeXP ?? 0,
       level: progression.level,
       echelon: progression.echelon,
@@ -148,14 +150,14 @@ export const getFactionStandings = async () => {
 
 export const getZenithLeaderBoard = async () => {
   const users = await User.find({
-    accountStatus: "active",
+    accountStatus: { $in: ACCESSIBLE_ACCOUNT_STATUSES },
     lifetimeXP: {
       $gt: 0,
     },
   })
     .sort({ lifetimeXP: -1, _id: 1 })
     .limit(25)
-    .select("username lifetimeXP faction")
+    .select("username role lifetimeXP faction")
     .lean();
 
   const leaderboard = users.map((user, index) => {
@@ -166,6 +168,7 @@ export const getZenithLeaderBoard = async () => {
     return {
       userId: user._id,
       username: user.username,
+      role: user.role,
       lifetimeXP: user.lifetimeXP ?? 0,
       level: progression.level,
       echelon: progression.echelon,
@@ -182,7 +185,7 @@ export const getGlobalLeaderboard = async ({ page, limit }) => {
   const skip = (page - 1) * limit;
 
   const query = {
-    accountStatus: "active",
+    accountStatus: { $in: ACCESSIBLE_ACCOUNT_STATUSES },
     lifetimeXP: {
       $gt: 0,
     },
@@ -192,7 +195,7 @@ export const getGlobalLeaderboard = async ({ page, limit }) => {
     .sort({ lifetimeXP: -1, _id: 1 })
     .skip(skip)
     .limit(limit)
-    .select("username lifetimeXP faction")
+    .select("username role lifetimeXP faction")
     .populate("faction", "name slug")
     .lean();
 
@@ -207,6 +210,7 @@ export const getGlobalLeaderboard = async ({ page, limit }) => {
     return {
       userId: user._id,
       username: user.username,
+      role: user.role,
       lifetimeXP: user.lifetimeXP ?? 0,
       level: progression.level,
       echelon: progression.echelon,
@@ -232,7 +236,7 @@ export const getUserGlobalRank = async (userId) => {
     .select("lifetimeXP accountStatus")
     .lean();
 
-  if (!user || user.accountStatus !== "active" || user.lifetimeXP <= 0) {
+  if (!user || !canAccessAccount(user.accountStatus) || user.lifetimeXP <= 0) {
     return {
       globalRank: null,
       zenithRank: null,
@@ -240,7 +244,7 @@ export const getUserGlobalRank = async (userId) => {
   }
 
   const usersAbove = await User.countDocuments({
-    accountStatus: "active",
+    accountStatus: { $in: ACCESSIBLE_ACCOUNT_STATUSES },
     $or: [
       { lifetimeXP: { $gt: user.lifetimeXP } },
       { lifetimeXP: user.lifetimeXP, _id: { $lt: user._id } },
@@ -255,10 +259,10 @@ export const getUserGlobalRank = async (userId) => {
 export const getCurrentUserLeaderboardPosition = async (userId) => {
   const user = await User.findOne({
     _id: userId,
-    accountStatus: "active",
+    accountStatus: { $in: ACCESSIBLE_ACCOUNT_STATUSES },
     lifetimeXP: { $gt: 0 },
   })
-    .select("username lifetimeXP faction")
+    .select("username role lifetimeXP faction")
     .populate("faction", "name slug")
     .lean();
 
@@ -267,7 +271,7 @@ export const getCurrentUserLeaderboardPosition = async (userId) => {
   }
 
   const usersAbove = await User.countDocuments({
-    accountStatus: "active",
+    accountStatus: { $in: ACCESSIBLE_ACCOUNT_STATUSES },
     $or: [
       { lifetimeXP: { $gt: user.lifetimeXP } },
       { lifetimeXP: user.lifetimeXP, _id: { $lt: user._id } },
@@ -281,6 +285,7 @@ export const getCurrentUserLeaderboardPosition = async (userId) => {
   return {
     userId: user._id,
     username: user.username,
+    role: user.role,
     lifetimeXP: user.lifetimeXP ?? 0,
     level: progression.level,
     echelon: progression.echelon,
@@ -357,7 +362,7 @@ export const getFactionLeaderboard = async ({
         })
         .skip(skip)
         .limit(limit)
-        .populate("user", "username accountStatus")
+        .populate("user", "username role accountStatus")
         .lean(),
 
       SeasonContribution.countDocuments(contributionQuery),
@@ -368,19 +373,20 @@ export const getFactionLeaderboard = async ({
         user: userId,
         xp: { $gt: 0 },
       })
-        .populate("user", "username accountStatus")
+        .populate("user", "username role accountStatus")
         .lean(),
     ]);
 
   const leaderboard = contributions
     .filter(
       (contribution) =>
-        contribution.user && contribution.user.accountStatus === "active",
+        contribution.user && canAccessAccount(contribution.user.accountStatus),
     )
     .map((contribution, index) => {
       return {
         userId: contribution.user._id,
         username: contribution.user.username,
+        role: contribution.user.role,
         seasonXP: contribution.xp,
         rank: skip + index + 1,
       };
@@ -391,7 +397,7 @@ export const getFactionLeaderboard = async ({
   if (
     currentUserContribution &&
     currentUserContribution.user &&
-    currentUserContribution.user.accountStatus === "active"
+    canAccessAccount(currentUserContribution.user.accountStatus)
   ) {
     const usersAbove = await SeasonContribution.countDocuments({
       season: activeSeasonId,
@@ -415,6 +421,7 @@ export const getFactionLeaderboard = async ({
     currentUser = {
       userId: currentUserContribution.user._id,
       username: currentUserContribution.user.username,
+      role: currentUserContribution.user.role,
       seasonXP: currentUserContribution.xp,
       rank: usersAbove + 1,
     };

@@ -16,6 +16,9 @@ import friendRoutes from "./routes/friend.routes.js";
 import activityRoutes from "./routes/activity.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
 import adminAchievementRoutes from "./routes/adminAchievement.routes.js";
+import adminUserRoutes from "./routes/adminUser.routes.js";
+import issueReportRoutes from "./routes/issueReport.routes.js";
+import adminIssueReportRoutes from "./routes/adminIssueReport.routes.js";
 const app = express();
 
 app.use(cors());
@@ -36,6 +39,9 @@ app.use("/friends", friendRoutes);
 app.use("/activity", activityRoutes);
 app.use("/notifications", notificationRoutes);
 app.use("/admin/achievements", adminAchievementRoutes);
+app.use("/admin/users", adminUserRoutes);
+app.use("/issue-reports", issueReportRoutes);
+app.use("/admin/issue-reports", adminIssueReportRoutes);
 app.use(errorHandler);
 
 export default app;

@@ -1,9 +1,11 @@
+import type { UserRole } from "@/constants/user-roles";
 import { apiRequest } from "./client";
 import type { PublicUserFaction, UserSearchProgression } from "./users";
 
 export type FriendUser = {
   id: string;
   username: string;
+  role: UserRole;
   faction: PublicUserFaction | null;
   lifetimeXP: number;
   progression: UserSearchProgression;

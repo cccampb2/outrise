@@ -6,11 +6,13 @@ import {
   dismissActivityEventsSchema,
 } from "../middleware/validators/activity.validators.js";
 import {
+  dismissAllActivityEventsController,
   dismissActivityEventsController,
   getActivityFeedController,
 } from "../controllers/activity.controller.js";
 
 const router = express.Router();
+router.post("/dismiss-all", authenticate, dismissAllActivityEventsController);
 router.post(
   "/dismiss",
   authenticate,

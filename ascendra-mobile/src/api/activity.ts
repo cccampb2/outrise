@@ -1,5 +1,9 @@
 import { apiRequest } from "./client";
 
+export async function dismissAllActivityEvents(): Promise<void> {
+  await apiRequest("/activity/dismiss-all", { method: "POST" });
+}
+
 export async function dismissActivityEvents(eventIds: string[]): Promise<void> {
   await apiRequest("/activity/dismiss", { method: "POST", body: JSON.stringify({ eventIds }) });
 }
