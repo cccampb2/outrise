@@ -1,9 +1,21 @@
+import Animated from "react-native-reanimated";
+import { useTabBarScroll } from "@/hooks/use-tab-bar-scroll";
+import { BrandHeader } from "@/components/brand-header";
 import { UserRoleBadge } from "@/components/user-role-badge";
-import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
+import {
+  AppText as Text,
+  AppTextInput as TextInput,
+} from "@/components/app-text";
 import { useState, useEffect } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
 
 import { searchUsers, type UserSearchResult } from "@/api/users";
 import { Screen } from "@/components/screen";
@@ -15,6 +27,7 @@ const colors = Colors.dark;
 const PAGE_SIZE = 25;
 
 export default function CommunityScreen() {
+  const scrollHandler = useTabBarScroll();
   const [searchText, setSearchText] = useState("");
   const [debouncedSearchText, setDebouncedSearchText] = useState("");
 
@@ -74,7 +87,9 @@ export default function CommunityScreen() {
 
   return (
     <Screen keyboardAvoiding>
-      <FlatList
+      <Animated.FlatList
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
         style={styles.list}
         data={users}
         keyExtractor={(item) => item.id}
@@ -90,20 +105,47 @@ export default function CommunityScreen() {
         ListHeaderComponent={
           <>
             <View style={styles.header}>
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-              <Text style={styles.headerEyebrow}>ASCENDRA // COMMUNITY</Text>
-            </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
+                }}
+              >
+                <BrandHeader label="COMMUNITY" />
+              </View>
 
               <Text style={styles.headerTitle}>USER NETWORK</Text>
 
               <Text style={styles.headerDescription}>
-                Search the Ascendra network and view athlete profiles.
+                Search the Outrise network and view athlete profiles.
               </Text>
             </View>
 
             <View style={styles.searchSection}>
-              <Pressable accessibilityRole="button" onPress={() => router.push("../friends")} style={{ minHeight: 44, justifyContent: "center", marginBottom: 16, borderWidth: 1, borderColor: colors.borderStrong, paddingHorizontal: 14 }}>
-                <Text style={{ color: colors.accent, fontSize: 11, fontWeight: "900", letterSpacing: 1 }}>FRIENDS // REQUESTS →</Text>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => router.push("../friends")}
+                style={{
+                  minHeight: 44,
+                  justifyContent: "center",
+                  marginBottom: 16,
+                  borderWidth: 1,
+                  borderColor: colors.borderStrong,
+                  paddingHorizontal: 14,
+                }}
+              >
+                <Text
+                  style={{
+                    color: colors.accent,
+                    fontSize: 11,
+                    fontWeight: "900",
+                    letterSpacing: 1,
+                  }}
+                >
+                  FRIENDS // REQUESTS →
+                </Text>
               </Pressable>
               <Text style={styles.searchLabel}>USER_SEARCH</Text>
 
@@ -161,7 +203,7 @@ export default function CommunityScreen() {
                 <Text style={styles.initialTitle}>SEARCH THE NETWORK</Text>
 
                 <Text style={styles.initialDescription}>
-                  Enter a username to locate another Ascendra member.
+                  Enter a username to locate another Outrise member.
                 </Text>
               </View>
             ) : null}
@@ -313,13 +355,6 @@ const styles = StyleSheet.create({
 
   header: {
     marginBottom: 26,
-  },
-
-  headerEyebrow: {
-    color: colors.textTechnical,
-    fontSize: 9,
-    fontWeight: "800",
-    letterSpacing: 1.7,
   },
 
   headerTitle: {

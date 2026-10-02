@@ -9,6 +9,23 @@ const historySchema = new Schema({
   note: { type: String, trim: true, maxlength: 2000, default: "" },
   createdAt: { type: Date, required: true, default: Date.now },
 });
+const replySchema = new Schema({
+  admin: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  to: { type: String, required: true },
+  recipientName: { type: String, required: true },
+  subject: { type: String, required: true, maxlength: 120 },
+  message: { type: String, required: true, maxlength: 2000 },
+  from: { type: String, required: true },
+  templateId: { type: String, required: true },
+  idempotencyKey: { type: String, required: true },
+  status: { type: String, enum: ["pending", "sent", "failed"], required: true },
+  providerId: { type: String, default: null },
+  error: { type: String, default: "" },
+  sentAt: { type: Date, default: null },
+  createdAt: { type: Date, required: true },
+  lastAttemptAt: { type: Date, required: true },
+  attemptId: { type: Schema.Types.ObjectId, required: true },
+});
 const issueReportSchema = new Schema(
   {
     email: {
@@ -43,6 +60,7 @@ const issueReportSchema = new Schema(
     resolvedAt: { type: Date, default: null },
     revision: { type: Number, min: 0, default: 0 },
     history: { type: [historySchema], default: [] },
+    replies: { type: [replySchema], default: [] },
   },
   { timestamps: true },
 );

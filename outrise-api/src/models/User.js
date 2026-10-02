@@ -4,6 +4,16 @@ import { USER_ROLES } from "../constants/userRoles.js";
 
 const { Schema, model } = mongoose;
 
+const passwordResetSchema = new Schema(
+  {
+    id: { type: String, required: true, match: /^[a-f0-9]{32}$/ },
+    codeHash: { type: String, required: true, match: /^[a-f0-9]{64}$/ },
+    expiresAt: { type: Date, required: true },
+    attempts: { type: Number, default: 0, min: 0, max: 5 },
+  },
+  { _id: false },
+);
+
 const userSchema = new Schema(
   {
     username: {
@@ -24,6 +34,10 @@ const userSchema = new Schema(
       required: true,
       select: false,
     },
+    // Hidden recovery state; never included in normal profile/account queries.
+    passwordReset: { type: passwordResetSchema, select: false },
+    passwordResetRequestedAt: { type: Date, select: false },
+    tokenVersion: { type: Number, default: 0, min: 0, select: false },
     role: {
       type: String,
       enum: USER_ROLES,

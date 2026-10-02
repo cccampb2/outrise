@@ -1,3 +1,4 @@
+import { BrandHeader } from "@/components/brand-header";
 import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -80,15 +81,9 @@ export default function RegisterScreen() {
         {/* BRAND */}
 
         <View style={styles.brandHeader}>
-          <View style={styles.systemStatus}>
-            <View style={styles.statusDot} />
+          <BrandHeader label="REGISTRATION" style={styles.brandLabelLayout} />
 
-            <Text style={styles.systemStatusText}>
-              ASCENDRA // REGISTRATION
-            </Text>
-          </View>
-
-          <Text style={styles.brand}>ASCENDRA</Text>
+          <Text style={styles.brand}>OUTRISE</Text>
 
           <View style={styles.brandRule}>
             <View style={styles.brandRuleAccent} />
@@ -231,7 +226,7 @@ export default function RegisterScreen() {
         <View style={styles.brandFooter}>
           <View style={styles.footerLine} />
 
-          <Text style={styles.footerWordmark}>ASCENDRA</Text>
+          <Text style={styles.footerWordmark}>OUTRISE</Text>
 
           <View style={styles.footerLine} />
         </View>
@@ -241,6 +236,10 @@ export default function RegisterScreen() {
 }
 
 const styles = StyleSheet.create({
+  brandLabelLayout: {
+    marginBottom: 14,
+  },
+
   container: {
     flexGrow: 1,
     paddingTop: 44,
@@ -251,27 +250,6 @@ const styles = StyleSheet.create({
 
   brandHeader: {
     marginBottom: 36,
-  },
-
-  systemStatus: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-    marginBottom: 14,
-  },
-
-  statusDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: Colors.dark.accent,
-  },
-
-  systemStatusText: {
-    color: Colors.dark.textTechnical,
-    fontSize: 8,
-    fontWeight: "900",
-    letterSpacing: 1.5,
   },
 
   brand: {

@@ -1,3 +1,4 @@
+import { BrandHeader } from "@/components/brand-header";
 import { AppText as Text } from "@/components/app-text";
 import { ActivityIndicator, Image, Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
@@ -24,7 +25,7 @@ export default function FactionSelectionScreen() {
   return (
     <Screen scroll>
       <Pressable accessibilityRole="button" onPress={() => router.canGoBack() ? router.back() : router.replace("/(onboarding)/reveal")} style={styles.back}><Text style={styles.backText}>← BACK</Text></Pressable>
-      <Text style={styles.eyebrow}>{"ASCENDRA // FACTION_SELECTION"}</Text>
+      <BrandHeader label="FACTION_SELECTION" style={styles.brandLabelLayout} />
       <Text style={styles.title}>CHOOSE YOUR FACTION</Text>
       <Text style={styles.description}>Your assessment recommends a faction. You can choose any faction before confirming. Once confirmed, your allegiance is permanent.</Text>
       {query.isPending ? <ActivityIndicator color={Colors.dark.accent} style={styles.state} /> : query.isError ? <View style={styles.state}><Text style={styles.description}>Unable to load factions.</Text><Pressable accessibilityRole="button" onPress={() => { void query.refetch(); }} style={styles.button}><Text style={styles.buttonText}>RETRY</Text></Pressable></View> : query.data.factions.length === 0 ? <Text style={styles.description}>No factions available.</Text> : query.data.factions.map((faction) => (
@@ -49,9 +50,12 @@ export default function FactionSelectionScreen() {
 }
 
 const styles = StyleSheet.create({
+  brandLabelLayout: {
+    marginTop: 12,
+  },
+
   back: { minHeight: 44, justifyContent: "center", alignSelf: "flex-start" },
   backText: { color: Colors.dark.textSecondary, fontSize: 10, fontWeight: "900", letterSpacing: 1 },
-  eyebrow: { color: Colors.dark.accent, fontSize: 9, fontWeight: "900", letterSpacing: 1.2, marginTop: 12 },
   title: {
     fontFamily: Fonts.display, color: Colors.dark.text, fontSize: 24, fontWeight: "900", marginVertical: 12 },
   description: { color: Colors.dark.textSecondary, fontSize: 13, lineHeight: 20 },

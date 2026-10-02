@@ -15,6 +15,12 @@ export type AccountRestriction = {
   message: string;
 };
 
+const sessionExpiredListeners = new Set<() => void>();
+export function onSessionExpired(listener: () => void) {
+  sessionExpiredListeners.add(listener);
+  return () => { sessionExpiredListeners.delete(listener); };
+}
+
 const restrictionListeners = new Set<(restriction: AccountRestriction) => void>();
 export function onAccountRestricted(listener: (restriction: AccountRestriction) => void) {
   restrictionListeners.add(listener);
@@ -76,6 +82,10 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
         : undefined;
     if (restriction && token && !endpoint.startsWith("/auth/") && token === await getToken()) {
       restrictionListeners.forEach((listener) => listener(restriction));
+    }
+
+    if (data.code === "SESSION_EXPIRED" && token && !endpoint.startsWith("/auth/") && token === await getToken()) {
+      sessionExpiredListeners.forEach((listener) => listener());
     }
 
     throw new ApiError(

@@ -1,3 +1,4 @@
+import { BrandHeader } from "@/components/brand-header";
 import { AppText as Text } from "@/components/app-text";
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
@@ -202,7 +203,7 @@ export default function WorkoutDetailScreen() {
       </Pressable>
 
       <View style={styles.header}>
-        <Text style={styles.eyebrow}>ASCENDRA // TRAINING</Text>
+        <BrandHeader label="TRAINING" style={styles.brandLabelLayout} />
 
         <Text style={styles.title}>{workout.name}</Text>
 
@@ -409,6 +410,10 @@ export default function WorkoutDetailScreen() {
 }
 
 const styles = StyleSheet.create({
+  brandLabelLayout: {
+    marginBottom: 10,
+  },
+
   stateContainer: {
     flex: 1,
     alignItems: "center",
@@ -460,14 +465,6 @@ const styles = StyleSheet.create({
 
   header: {
     marginBottom: 34,
-  },
-
-  eyebrow: {
-    color: Colors.dark.textTechnical,
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 1.5,
-    marginBottom: 10,
   },
 
   title: {

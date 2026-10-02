@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "ascendra-mobile",
-    "slug": "ascendra-mobile",
+    "name": "Outrise",
+    "slug": "outrise",
     "version": "1.0.0",
     "orientation": "portrait",
-    "scheme": "ascendramobile",
+    "scheme": "outrise",
     "userInterfaceStyle": "automatic",
     "ios": {},
     "android": {

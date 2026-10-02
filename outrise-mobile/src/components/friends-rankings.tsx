@@ -1,7 +1,9 @@
+import Animated from "react-native-reanimated";
+import { useTabBarScroll } from "@/hooks/use-tab-bar-scroll";
 import { UserRoleName } from "@/components/user-role-badge";
 import { AppText as Text } from "@/components/app-text";
 import type { ReactNode } from "react";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
@@ -14,6 +16,7 @@ import { Colors, Fonts } from "@/constants/theme";
 import { Screen } from "@/components/screen";
 
 export function FriendsRankings({ header }: { header: ReactNode }) {
+  const scrollHandler = useTabBarScroll();
   const userId = useSelector((state: RootState) => state.auth.user?.id);
   const query = useInfiniteQuery({
     queryKey: ["leaderboards", "friends", userId],
@@ -73,7 +76,11 @@ export function FriendsRankings({ header }: { header: ReactNode }) {
 
   return (
     <Screen>
-      <FlatList
+      <Animated.FlatList
+        style={styles.list}
+        showsVerticalScrollIndicator={false}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
         data={users}
         keyExtractor={(user) => user.userId}
         renderItem={({ item }) => row(item)}
@@ -137,7 +144,8 @@ export function FriendsRankings({ header }: { header: ReactNode }) {
 }
 
 const styles = StyleSheet.create({
-  content: { flexGrow: 1, paddingBottom: 30 },
+  list: { flex: 1 },
+  content: { flexGrow: 1, paddingBottom: 120 },
   label: {
     color: Colors.dark.textTechnical,
     fontSize: 9,

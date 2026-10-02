@@ -38,7 +38,7 @@ function ModerationForm({ user }: { user: AdminUser }) {
     }
     const data: AccountStatusInput = { status, reason: reason.trim(), ...(status === "suspended" ? { suspensionDays } : {}) };
     const description = status === "active" ? "Restore account access and remove any flag or restriction."
-      : status === "flagged" ? "Show a community-rules warning. The user can continue using ASCENDRA."
+      : status === "flagged" ? "Show a community-rules warning. The user can continue using OUTRISE."
       : status === "suspended" ? `Block access for ${suspensionDays} days, then automatically restore it.`
       : "Block account access indefinitely. An administrator can restore it later.";
     Alert.alert(`Set ${user.username} to ${status}?`, description, [

@@ -28,10 +28,10 @@ async function recordPRActivity(personalRecord, mongoSession) {
   }, { mongoSession });
 }
 
-// Rep counts that Ascendra recognizes as official strength PR categories.
+// Rep counts that Outrise recognizes as official strength PR categories.
 export const STRENGTH_PR_REPS = new Set([1, 3, 5, 8, 10, 12]);
 
-// Official running distances stored in Ascendra's canonical distance unit: miles.
+// Official running distances stored in Outrise's canonical distance unit: miles.
 export const RUNNING_PR_DISTANCES = [
   { category: "100m", distanceMiles: 0.0621371 },
   { category: "200m", distanceMiles: 0.124274 },

@@ -57,7 +57,7 @@ export default function Index() {
   if (sessionError) {
     return (
       <View style={styles.loading}>
-        <Text style={styles.errorText}>Unable to connect to Ascendra</Text>
+        <Text style={styles.errorText}>Unable to connect to Outrise</Text>
       </View>
     );
   }

@@ -1,3 +1,4 @@
+import { IssueReportEmailReply } from "@/components/issue-report-email-reply";
 import { hasAdminAccess } from "@/constants/user-roles";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
@@ -25,13 +26,17 @@ export default function IssueReportScreen() {
     mutationFn: (data: IssueReportUpdate) => updateIssueReport(reportId, data),
     onSuccess: async ({ report }) => {
       setNote("");
-      client.setQueryData<IssueReportDetail>(queryKey, (data) => data ? { ...data, report } : data);
-      await Promise.all([
-        client.invalidateQueries({ queryKey: ["issue-reports"] }),
-        client.invalidateQueries({ queryKey: ["issue-report", reportId] }),
-      ]);
+      await updateReportCache(report);
     },
   });
+  async function updateReportCache(report: IssueReportDetail["report"]) {
+    client.setQueryData<IssueReportDetail>(queryKey, (data) => data ? { ...data, report } : data);
+    await Promise.all([
+      client.invalidateQueries({ queryKey: ["issue-reports"] }),
+      client.invalidateQueries({ queryKey: ["issue-report", reportId] }),
+    ]);
+  }
+
   const report = query.data?.report;
   function save(status: IssueReportStatus) {
     if (!report || mutation.isPending) return;
@@ -62,7 +67,7 @@ export default function IssueReportScreen() {
               {query.data?.account ? <>
                 <Text style={styles.text}>{query.data.account.username} · {query.data.account.accountStatus.toUpperCase()}</Text>
                 <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: "/admin/users/[userId]", params: { userId: query.data!.account!._id } })} style={styles.button}><Text style={styles.action}>REVIEW ACCOUNT →</Text></Pressable>
-              </> : <Text style={styles.text}>No ASCENDRA account currently matches this email.</Text>}
+              </> : <Text style={styles.text}>No OUTRISE account currently matches this email.</Text>}
             </View>
             <View style={styles.card}>
               <Text style={styles.cardTitle}>Admin actions</Text>
@@ -78,6 +83,7 @@ export default function IssueReportScreen() {
               {mutation.isSuccess && <Text style={styles.text}>Report updated.</Text>}
               {mutation.isError && <Text style={styles.error}>{mutation.error instanceof ApiError ? mutation.error.getDisplayMessage() : "Unable to update report."}</Text>}
             </View>
+            <IssueReportEmailReply key={report._id} report={report} onUpdated={updateReportCache} onRefresh={refetch} />
             <Text style={styles.cardTitle}>Internal history</Text>
             {report.history.length === 0 && <Text style={styles.text}>No admin actions yet.</Text>}
             {[...report.history].reverse().map((entry) => <View key={entry._id} style={styles.card}>

@@ -28,7 +28,7 @@ export const Colors = {
     borderSubtle: "#101D2B",
     borderStrong: "#1B334A",
 
-    // Ascendra system accent
+    // Outrise system accent
     accent: "#8c1a35", // Muted crimson
     accentPressed: "#74162C",
 
@@ -60,7 +60,7 @@ export const Colors = {
  * A ThemeColor must exist in BOTH the light and dark themes.
  *
  * This type is useful for components that support either theme.
- * Dark-only Ascendra colors such as echelon and zenith are intentionally
+ * Dark-only Outrise colors such as echelon and zenith are intentionally
  * excluded because they do not exist in the light theme.
  */
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;

@@ -72,7 +72,7 @@ test("inbox is shared, paginates by status, and searches literal email or subjec
   t.mock.method(IssueReport, "find", (value) => {
     filter = value;
     const result = query([{ _id: reportId }]);
-    result.select = (fields) => { assert.equal(fields, "-history"); return result; };
+    result.select = (fields) => { assert.equal(fields, "-history -replies"); return result; };
     result.skip = (count) => { assert.equal(count, 20); return result; };
     result.limit = (count) => { assert.equal(count, 20); return result; };
     return result;

@@ -1,10 +1,11 @@
+import { BrandHeader } from "@/components/brand-header";
 import { AppText as Text } from "@/components/app-text";
 import { Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 
 import { Screen } from "@/components/screen";
-import { Colors, Fonts } from "@/constants/theme";
+import { Colors, Fonts, TAB_BAR_HEIGHT } from "@/constants/theme";
 import { getActiveWorkoutSession } from "@/api/workout-sessions";
 import {
   getCurrentWorkoutOfTheWeek,
@@ -48,17 +49,13 @@ export default function TrainScreen() {
   const workoutOfTheWeekStatus = workoutOfTheWeekSession?.status;
 
   return (
-    <Screen scroll>
+    <Screen scroll hideTabBarOnScroll bottomInSet={TAB_BAR_HEIGHT}>
       <View style={styles.page}>
         {/* HEADER */}
 
         <View style={styles.header}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-          <View style={styles.systemStatus}>
-            <View style={styles.statusDot} />
-
-            <Text style={styles.systemStatusText}>ASCENDRA // TRAINING</Text>
-          </View>
+          <BrandHeader label="TRAINING" style={styles.brandLabelLayout} />
           </View>
 
           <Text style={styles.sectionEyebrow}>TRAINING_CENTER</Text>
@@ -348,7 +345,7 @@ export default function TrainScreen() {
         <View style={styles.brandFooter}>
           <View style={styles.brandLine} />
 
-          <Text style={styles.brandWordmark}>ASCENDRA</Text>
+          <Text style={styles.brandWordmark}>OUTRISE</Text>
 
           <View style={styles.brandLine} />
         </View>
@@ -358,6 +355,10 @@ export default function TrainScreen() {
 }
 
 const styles = StyleSheet.create({
+  brandLabelLayout: {
+    marginBottom: 18,
+  },
+
   page: {
     paddingBottom: 24,
   },
@@ -367,27 +368,6 @@ const styles = StyleSheet.create({
   header: {
     paddingTop: 16,
     marginBottom: 28,
-  },
-
-  systemStatus: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-    marginBottom: 18,
-  },
-
-  statusDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: Colors.dark.accent,
-  },
-
-  systemStatusText: {
-    color: Colors.dark.textTechnical,
-    fontSize: 8,
-    fontWeight: "900",
-    letterSpacing: 1.5,
   },
 
   sectionEyebrow: {

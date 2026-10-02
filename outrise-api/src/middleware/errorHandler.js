@@ -12,6 +12,13 @@ export const errorHandler = (error, req, res, next) => {
       suspendedUntil: error.suspendedUntil,
     });
   }
+  if (error.statusCode === 401 && error.code === "SESSION_EXPIRED") {
+    return res.status(401).json({
+      error: error.name,
+      code: error.code,
+      message: error.message,
+    });
+  }
   if (isCelebrateError(error)) {
     const validationErrors = [];
 

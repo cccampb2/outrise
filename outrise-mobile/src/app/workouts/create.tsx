@@ -1,3 +1,4 @@
+import { BrandHeader } from "@/components/brand-header";
 import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -264,7 +265,7 @@ export default function CreateWorkoutScreen() {
       </Pressable>
 
       <View style={styles.header}>
-        <Text style={styles.eyebrow}>ASCENDRA // TRAINING</Text>
+        <BrandHeader label="TRAINING" style={styles.brandLabelLayout} />
 
         <Text style={styles.title}>CREATE_WORKOUT</Text>
 
@@ -554,6 +555,10 @@ export default function CreateWorkoutScreen() {
 }
 
 const styles = StyleSheet.create({
+  brandLabelLayout: {
+    marginBottom: 10,
+  },
+
   backButton: {
     alignSelf: "flex-start",
     paddingVertical: 6,
@@ -569,14 +574,6 @@ const styles = StyleSheet.create({
 
   header: {
     marginBottom: 34,
-  },
-
-  eyebrow: {
-    color: Colors.dark.textTechnical,
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 1.5,
-    marginBottom: 10,
   },
 
   title: {

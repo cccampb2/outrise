@@ -1,3 +1,4 @@
+import { BrandHeader } from "@/components/brand-header";
 import { AppText as Text } from "@/components/app-text";
 import { StyleSheet, View, Pressable } from "react-native";
 import { router } from "expo-router";
@@ -12,11 +13,7 @@ export default function FactionScreen() {
         {/* SYSTEM HEADER */}
 
         <View style={styles.systemHeader}>
-          <View style={styles.systemStatus}>
-            <View style={styles.statusDot} />
-
-            <Text style={styles.systemStatusText}>ASCENDRA // ONBOARDING</Text>
-          </View>
+          <BrandHeader label="ONBOARDING" />
 
           <Text style={styles.stepCode}>STEP_01</Text>
         </View>
@@ -29,7 +26,7 @@ export default function FactionScreen() {
           <Text style={styles.title}>Find where you belong.</Text>
 
           <Text style={styles.description}>
-            Your answers will determine which Ascendra faction best matches you.
+            Your answers will determine which Outrise faction best matches you.
           </Text>
 
           <View style={styles.divider}>
@@ -79,7 +76,7 @@ export default function FactionScreen() {
         <View style={styles.brandFooter}>
           <View style={styles.brandLine} />
 
-          <Text style={styles.brandWordmark}>ASCENDRA</Text>
+          <Text style={styles.brandWordmark}>OUTRISE</Text>
 
           <View style={styles.brandLine} />
         </View>
@@ -101,26 +98,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-  },
-
-  systemStatus: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-  },
-
-  statusDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: Colors.dark.accent,
-  },
-
-  systemStatusText: {
-    color: Colors.dark.textTechnical,
-    fontSize: 8,
-    fontWeight: "900",
-    letterSpacing: 1.5,
   },
 
   stepCode: {

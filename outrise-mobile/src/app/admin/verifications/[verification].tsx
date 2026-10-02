@@ -705,7 +705,7 @@ export default function AdminVerificationScreen() {
         <View style={styles.footer}>
           <View style={styles.footerLine} />
 
-          <Text style={styles.footerText}>ASCENDRA // ADMIN</Text>
+          <Text style={styles.footerText}>OUTRISE // ADMIN</Text>
 
           <View style={styles.footerLine} />
         </View>

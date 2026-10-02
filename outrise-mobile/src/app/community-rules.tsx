@@ -1,3 +1,4 @@
+import { BrandHeader } from "@/components/brand-header";
 import { AppText as Text } from "@/components/app-text";
 import { Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
@@ -20,7 +21,7 @@ const communityRules = [
     paragraphs: [
       "Do not use excessive profanity or vulgar language.",
       "Do not use slurs, hateful language, sexually explicit language, or language intended to demean or attack another person.",
-      "Ascendra should remain a community that people can comfortably use in public and around others.",
+      "Outrise should remain a community that people can comfortably use in public and around others.",
     ],
   },
   {
@@ -47,8 +48,8 @@ const communityRules = [
     number: "05",
     title: "NO_SPAM_OR_ABUSE",
     paragraphs: [
-      "No spam posts, repeated unwanted messages, scams, malicious links, automated abuse, or attempts to manipulate Ascendra systems.",
-      "Do not exploit XP, achievements, leaderboards, factions, verification, or other Ascendra systems.",
+      "No spam posts, repeated unwanted messages, scams, malicious links, automated abuse, or attempts to manipulate Outrise systems.",
+      "Do not exploit XP, achievements, leaderboards, factions, verification, or other Outrise systems.",
     ],
   },
   {
@@ -56,7 +57,7 @@ const communityRules = [
     title: "PROTECT_PRIVACY",
     paragraphs: [
       "Do not post another person's private information without permission.",
-      "Do not use Ascendra to dox, stalk, threaten, or expose another member's personal information.",
+      "Do not use Outrise to dox, stalk, threaten, or expose another member's personal information.",
     ],
   },
 ];
@@ -84,7 +85,7 @@ const enforcementLevels = [
     number: "04",
     title: "PERMANENT_BAN",
     description:
-      "Severe violations, repeated abuse, dangerous behavior, exploitation of Ascendra systems, or attempts to evade previous enforcement may result in permanent account removal.",
+      "Severe violations, repeated abuse, dangerous behavior, exploitation of Outrise systems, or attempts to evade previous enforcement may result in permanent account removal.",
   },
 ];
 
@@ -96,12 +97,12 @@ export default function CommunityStandardsScreen() {
       </Pressable>
 
       <View style={styles.header}>
-        <Text style={styles.eyebrow}>ASCENDRA // COMMUNITY</Text>
+        <BrandHeader label="COMMUNITY" style={styles.brandLabelLayout} />
 
         <Text style={styles.title}>COMMUNITY_STANDARDS</Text>
 
         <Text style={styles.subtitle}>
-          Ascendra is a competitive fitness community. Competition,
+          Outrise is a competitive fitness community. Competition,
           encouragement, and friendly trash talk are welcome — but everyone is
           expected to keep the community respectful and safe.
         </Text>
@@ -192,7 +193,7 @@ export default function CommunityStandardsScreen() {
         <Text style={styles.noticeLabel}>IMPORTANT</Text>
 
         <Text style={styles.noticeText}>
-          Ascendra administrators may skip earlier enforcement steps when a
+          Outrise administrators may skip earlier enforcement steps when a
           violation is sufficiently serious. A user does not need to receive
           three warnings before being suspended or banned.
         </Text>
@@ -232,14 +233,14 @@ export default function CommunityStandardsScreen() {
 
       <View style={styles.evolutionNotice}>
         <Text style={styles.evolutionText}>
-          These rules may evolve as Ascendra and its community grow.
+          These rules may evolve as Outrise and its community grow.
         </Text>
       </View>
 
       <View style={styles.footer}>
         <View style={styles.footerLine} />
 
-        <Text style={styles.footerText}>ASCENDRA // COMMUNITY_PROTOCOL</Text>
+        <Text style={styles.footerText}>OUTRISE // COMMUNITY_PROTOCOL</Text>
 
         <View style={styles.footerLine} />
       </View>
@@ -248,6 +249,10 @@ export default function CommunityStandardsScreen() {
 }
 
 const styles = StyleSheet.create({
+  brandLabelLayout: {
+    marginBottom: 10,
+  },
+
   backButton: {
     alignSelf: "flex-start",
     paddingVertical: 6,
@@ -263,14 +268,6 @@ const styles = StyleSheet.create({
 
   header: {
     marginBottom: 20,
-  },
-
-  eyebrow: {
-    color: Colors.dark.textTechnical,
-    fontSize: 9,
-    fontWeight: "900",
-    letterSpacing: 1.6,
-    marginBottom: 10,
   },
 
   title: {

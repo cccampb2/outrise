@@ -4,6 +4,18 @@ import type { AccountStatus } from "./users";
 export const issueReportStatuses = ["open", "in_review", "resolved"] as const;
 export type IssueReportStatus = typeof issueReportStatuses[number];
 type ReportAdmin = { _id: string; username: string } | null;
+export type IssueReportReply = {
+  _id: string;
+  admin: ReportAdmin;
+  to: string;
+  subject: string;
+  message: string;
+  status: "pending" | "sent" | "failed";
+  error: string;
+  createdAt: string;
+  sentAt: string | null;
+};
+export type IssueReportReplyInput = { subject: string; message: string; expectedRevision: number };
 export type IssueReport = {
   _id: string;
   email: string;
@@ -19,6 +31,7 @@ export type IssueReport = {
 };
 export type IssueReportDetail = {
   report: IssueReport & {
+    replies?: IssueReportReply[];
     history: { _id: string; admin: ReportAdmin; previousStatus: IssueReportStatus; status: IssueReportStatus; note: string; createdAt: string }[];
   };
   account: { _id: string; username: string; accountStatus: AccountStatus; suspendedUntil: string | null } | null;
@@ -44,5 +57,14 @@ export async function getIssueReport(reportId: string): Promise<IssueReportDetai
 }
 export async function updateIssueReport(reportId: string, data: IssueReportUpdate): Promise<{ report: IssueReportDetail["report"] }> {
   const response = await apiRequest(`/admin/issue-reports/${reportId}`, { method: "PATCH", body: JSON.stringify(data) });
+  return response.json();
+}
+
+export async function sendIssueReportReply(reportId: string, data: IssueReportReplyInput): Promise<{ report: IssueReportDetail["report"] }> {
+  const response = await apiRequest(`/admin/issue-reports/${reportId}/replies`, { method: "POST", body: JSON.stringify(data) });
+  return response.json();
+}
+export async function retryIssueReportReply(reportId: string, replyId: string): Promise<{ report: IssueReportDetail["report"] }> {
+  const response = await apiRequest(`/admin/issue-reports/${reportId}/replies/${replyId}/retry`, { method: "POST", body: JSON.stringify({}) });
   return response.json();
 }

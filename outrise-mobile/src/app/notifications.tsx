@@ -1,3 +1,4 @@
+import { BrandHeader } from "@/components/brand-header";
 import { AppText as Text } from "@/components/app-text";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
@@ -39,7 +40,7 @@ export default function NotificationsScreen() {
   function clearNotification(id?: string) { void dismiss(id).catch(() => {}); }
   return <Screen scroll bottomInSet={24}><View style={styles.page}>
     <Pressable accessibilityRole="button" accessibilityLabel="Go back" onPress={() => router.back()} style={styles.back}><Ionicons name="arrow-back" size={20} color={Colors.dark.text} /><Text style={styles.backText}>BACK</Text></Pressable>
-    <Text style={styles.eyebrow}>ASCENDRA // INBOX</Text>
+    <BrandHeader label="INBOX" />
     <View style={styles.header}><Text style={styles.title}>Notifications</Text><Ionicons name="notifications-outline" size={26} color={Colors.dark.accent} /></View>
     <Text style={styles.subtitle}>{unreadCount ? `${unreadCount} unread notifications` : "You’re all caught up"}</Text>
     <View style={styles.tools}>
@@ -64,7 +65,6 @@ const styles = StyleSheet.create({
   page: { paddingTop: 8 },
   back: { flexDirection: "row", alignItems: "center", gap: 8, minHeight: 44, alignSelf: "flex-start", marginBottom: 20 },
   backText: { color: Colors.dark.textSecondary, fontSize: 10, fontWeight: "800" },
-  eyebrow: { color: Colors.dark.textTechnical, fontSize: 9, fontWeight: "800", letterSpacing: 1.3 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 8 },
   title: {
     fontFamily: Fonts.display, color: Colors.dark.text, fontSize: 28, fontWeight: "900" },

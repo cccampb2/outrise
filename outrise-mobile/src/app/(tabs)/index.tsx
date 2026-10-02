@@ -1,3 +1,4 @@
+import { BrandHeader } from "@/components/brand-header";
 import { AppText as Text } from "@/components/app-text";
 import { AccountFlagNotice } from "@/components/account-flag-notice";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -115,18 +116,7 @@ export default function HomeScreen() {
 
         <View style={styles.header}>
           <View style={styles.headerTop}>
-            <View style={styles.systemStatus}>
-              <View
-                style={[
-                  styles.statusDot,
-                  {
-                    backgroundColor: accent,
-                  },
-                ]}
-              />
-
-              <Text style={styles.systemStatusText}>ASCENDRA // {user?.accountStatus.toUpperCase() ?? "ACTIVE"}</Text>
-            </View>
+            <BrandHeader label={user?.accountStatus.toUpperCase() ?? "ACTIVE"} accentColor={accent} />
 
             <View
               style={{ flexDirection: "row", alignItems: "center", gap: 12 }}
@@ -480,7 +470,7 @@ export default function HomeScreen() {
           <View>
             <Text style={styles.sectionEyebrow}>REFERENCE</Text>
 
-            <Text style={styles.sectionTitle}>Ascendra Guide</Text>
+            <Text style={styles.sectionTitle}>Outrise Guide</Text>
           </View>
 
           <Text style={styles.sectionNumber}>04</Text>
@@ -512,7 +502,7 @@ export default function HomeScreen() {
             <View style={styles.referenceContent}>
               <Text style={styles.referenceEyebrow}>SYSTEM_GUIDE</Text>
 
-              <Text style={styles.referenceTitle}>How Ascendra Works</Text>
+              <Text style={styles.referenceTitle}>How Outrise Works</Text>
 
               <Text style={styles.referenceDescription}>
                 XP, levels, Echelon, Zenith, factions, PRs and competition.
@@ -611,7 +601,7 @@ export default function HomeScreen() {
         <View style={styles.brandFooter}>
           <View style={styles.brandLine} />
 
-          <Text style={styles.brandWordmark}>ASCENDRA</Text>
+          <Text style={styles.brandWordmark}>OUTRISE</Text>
 
           <View style={styles.brandLine} />
         </View>
@@ -637,25 +627,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 18,
-  },
-
-  systemStatus: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-  },
-
-  statusDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-  },
-
-  systemStatusText: {
-    color: Colors.dark.textTechnical,
-    fontSize: 8,
-    fontWeight: "900",
-    letterSpacing: 1.5,
   },
 
   levelCode: {

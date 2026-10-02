@@ -1,3 +1,4 @@
+import { BrandHeader } from "@/components/brand-header";
 import { UserRoleName } from "@/components/user-role-badge";
 import { AppText as Text } from "@/components/app-text";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -165,7 +166,7 @@ export default function FactionRankingsScreen() {
               </View>
 
               <View style={styles.bannerFooter}>
-                <Text style={styles.bannerLabel}>ASCENDRA // FACTION</Text>
+                <BrandHeader label="FACTION" accentColor={faction.colors.primary} />
 
                 <Text
                   style={[
@@ -538,13 +539,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     marginTop: 8,
-  },
-
-  bannerLabel: {
-    color: colors.textTechnical,
-    fontSize: 8,
-    fontWeight: "800",
-    letterSpacing: 1.5,
   },
 
   bannerStatus: {

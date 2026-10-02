@@ -1,3 +1,4 @@
+import { BrandHeader } from "@/components/brand-header";
 import { UserRoleBadge } from "@/components/user-role-badge";
 import { hasAdminAccess } from "@/constants/user-roles";
 import { AppText as Text } from "@/components/app-text";
@@ -126,7 +127,7 @@ export default function ProfileScreen() {
   }
 
   function signOut() {
-    Alert.alert("Sign Out", "Are you sure you want to sign out of Ascendra?", [
+    Alert.alert("Sign Out", "Are you sure you want to sign out of Outrise?", [
       {
         text: "Cancel",
         style: "cancel",
@@ -196,18 +197,7 @@ export default function ProfileScreen() {
           />
 
           <View style={styles.topBar}>
-            <View style={styles.systemStatus}>
-              <View
-                style={[
-                  styles.statusDot,
-                  {
-                    backgroundColor: accent,
-                  },
-                ]}
-              />
-
-              <Text style={styles.systemStatusText}>ASCENDRA_ID // {user.accountStatus.toUpperCase()}</Text>
-            </View>
+            <BrandHeader label={user.accountStatus.toUpperCase()} accentColor={accent} />
 
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <View style={styles.badgeCode}>
@@ -458,10 +448,10 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          {/* ASCENDRA STATUS */}
+          {/* OUTRISE STATUS */}
 
           <View style={styles.subsystemHeader}>
-            <Text style={styles.subsystemLabel}>ASCENDRA_STATUS</Text>
+            <Text style={styles.subsystemLabel}>OUTRISE_STATUS</Text>
 
             <View style={styles.subsystemLine} />
           </View>
@@ -921,7 +911,7 @@ export default function ProfileScreen() {
           <View style={styles.brandFooter}>
             <View style={styles.brandLine} />
 
-            <Text style={styles.brandWordmark}>ASCENDRA</Text>
+            <Text style={styles.brandWordmark}>OUTRISE</Text>
 
             <View style={styles.brandLine} />
           </View>
@@ -979,25 +969,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 26,
-  },
-
-  systemStatus: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-
-  systemStatusText: {
-    color: Colors.dark.textTechnical,
-    fontSize: 9,
-    fontWeight: "900",
-    letterSpacing: 1.5,
   },
 
   badgeCode: {
@@ -1338,7 +1309,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
 
-  /* ASCENDRA STATUS */
+  /* OUTRISE STATUS */
 
   subsystemHeader: {
     flexDirection: "row",

@@ -1,3 +1,4 @@
+import { BrandHeader } from "@/components/brand-header";
 import { AppText as Text } from "@/components/app-text";
 import { StyleSheet, View, Image, Pressable } from "react-native";
 import Animated, {
@@ -180,20 +181,7 @@ export default function RevealScreen() {
         {/* SYSTEM HEADER */}
 
         <View style={styles.systemHeader}>
-          <View style={styles.systemStatus}>
-            <View
-              style={[
-                styles.statusDot,
-                {
-                  backgroundColor: accent,
-                },
-              ]}
-            />
-
-            <Text style={styles.systemStatusText}>
-              ASCENDRA // FACTION_MATCH
-            </Text>
-          </View>
+          <BrandHeader label="FACTION_MATCH" accentColor={accent} />
 
           <Text
             style={[
@@ -406,25 +394,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-  },
-
-  systemStatus: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-  },
-
-  statusDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-  },
-
-  systemStatusText: {
-    color: Colors.dark.textTechnical,
-    fontSize: 9,
-    fontWeight: "900",
-    letterSpacing: 1.3,
   },
 
   matchStatus: {

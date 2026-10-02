@@ -1,3 +1,4 @@
+import { BrandHeader } from "@/components/brand-header";
 import { AppText as Text } from "@/components/app-text";
 import { StyleSheet, View, ActivityIndicator, Pressable } from "react-native";
 import { useEffect, useState } from "react";
@@ -105,7 +106,7 @@ export default function AssessmentScreen() {
         <View style={styles.center}>
           <ActivityIndicator size="large" color={Colors.dark.accent} />
 
-          <Text style={styles.loadingLabel}>ASCENDRA // ASSESSMENT</Text>
+          <BrandHeader label="ASSESSMENT" style={styles.brandLoadingLayout} />
 
           <Text style={styles.loadingText}>INITIALIZING_ASSESSMENT...</Text>
         </View>
@@ -137,11 +138,7 @@ export default function AssessmentScreen() {
         {/* SYSTEM HEADER */}
 
         <View style={styles.systemHeader}>
-          <View style={styles.systemStatus}>
-            <View style={styles.statusDot} />
-
-            <Text style={styles.systemStatusText}>ASCENDRA // ASSESSMENT</Text>
-          </View>
+          <BrandHeader label="ASSESSMENT" />
 
           <Text style={styles.questionCode}>
             {`${String(currentQuestionIndex + 1).padStart(2, "0")}/${String(
@@ -277,6 +274,10 @@ export default function AssessmentScreen() {
 }
 
 const styles = StyleSheet.create({
+  brandLoadingLayout: {
+    marginTop: 18,
+  },
+
   container: {
     flex: 1,
     paddingTop: 34,
@@ -290,14 +291,6 @@ const styles = StyleSheet.create({
   },
 
   /* LOADING / ERROR */
-
-  loadingLabel: {
-    color: Colors.dark.textTechnical,
-    fontSize: 8,
-    fontWeight: "900",
-    letterSpacing: 1.5,
-    marginTop: 18,
-  },
 
   loadingText: {
     color: Colors.dark.textMuted,
@@ -328,26 +321,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-  },
-
-  systemStatus: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-  },
-
-  statusDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: Colors.dark.accent,
-  },
-
-  systemStatusText: {
-    color: Colors.dark.textTechnical,
-    fontSize: 8,
-    fontWeight: "900",
-    letterSpacing: 1.5,
   },
 
   questionCode: {

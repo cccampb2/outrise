@@ -1,3 +1,4 @@
+import { BrandHeader } from "@/components/brand-header";
 import { hasAdminAccess } from "@/constants/user-roles";
 import { AppText as Text } from "@/components/app-text";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -91,7 +92,7 @@ export default function AdminScreen() {
           <Text style={styles.deniedTitle}>ADMIN_ACCESS_REQUIRED</Text>
 
           <Text style={styles.deniedDescription}>
-            This area is restricted to Ascendra administrators.
+            This area is restricted to Outrise administrators.
           </Text>
 
           <Pressable
@@ -123,7 +124,7 @@ export default function AdminScreen() {
         </Pressable>
 
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>ASCENDRA // ADMINISTRATION</Text>
+          <BrandHeader label="ADMINISTRATION" style={styles.brandLabelLayout} />
 
           <Text style={styles.title}>ADMIN_CENTER</Text>
 
@@ -189,7 +190,7 @@ export default function AdminScreen() {
           <AdminOption
             code="EXERCISE"
             title="EXERCISE_LIBRARY"
-            description="Create, update, archive, and manage exercises available throughout Ascendra."
+            description="Create, update, archive, and manage exercises available throughout Outrise."
             status="PLANNED"
             disabled
           />
@@ -206,7 +207,7 @@ export default function AdminScreen() {
         <View style={styles.footer}>
           <View style={styles.footerLine} />
 
-          <Text style={styles.footerText}>ASCENDRA // ADMIN_SYSTEM</Text>
+          <Text style={styles.footerText}>OUTRISE // ADMIN_SYSTEM</Text>
         </View>
       </View>
     </Screen>
@@ -214,6 +215,10 @@ export default function AdminScreen() {
 }
 
 const styles = StyleSheet.create({
+  brandLabelLayout: {
+    marginBottom: 10,
+  },
+
   page: {
     flexGrow: 1,
     paddingTop: 8,
@@ -236,14 +241,6 @@ const styles = StyleSheet.create({
 
   header: {
     paddingBottom: 24,
-  },
-
-  eyebrow: {
-    color: Colors.dark.textTechnical,
-    fontSize: 7,
-    fontWeight: "800",
-    letterSpacing: 1.5,
-    marginBottom: 10,
   },
 
   title: {

@@ -12,7 +12,7 @@ export function AccountFlagNotice() {
     <View style={styles.notice}>
       <Text style={styles.title}>ACCOUNT FLAGGED</Text>
       <Text style={styles.text}>
-        Your account has been flagged for breaking ASCENDRA community rules.
+        Your account has been flagged for breaking OUTRISE community rules.
         Please review the rules. Further violations may result in suspension or a ban.
       </Text>
       <Pressable accessibilityRole="button" onPress={() => router.push("/community-rules")} style={styles.button}>

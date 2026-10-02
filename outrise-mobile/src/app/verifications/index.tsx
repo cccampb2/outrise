@@ -1,3 +1,4 @@
+import { BrandHeader } from "@/components/brand-header";
 import { AppText as Text } from "@/components/app-text";
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
@@ -318,7 +319,7 @@ export default function VerificationsScreen() {
         </Pressable>
 
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>ASCENDRA // VERIFICATION</Text>
+          <BrandHeader label="VERIFICATION" style={styles.brandLabelLayout} />
 
           <Text style={styles.title}>
             PERFORMANCE_
@@ -512,7 +513,7 @@ export default function VerificationsScreen() {
         <View style={styles.footer}>
           <View style={styles.footerLine} />
 
-          <Text style={styles.footerText}>ASCENDRA // VERIFICATION_SYSTEM</Text>
+          <Text style={styles.footerText}>OUTRISE // VERIFICATION_SYSTEM</Text>
         </View>
       </View>
     </Screen>
@@ -520,6 +521,10 @@ export default function VerificationsScreen() {
 }
 
 const styles = StyleSheet.create({
+  brandLabelLayout: {
+    marginBottom: 10,
+  },
+
   page: {
     flexGrow: 1,
     paddingTop: 8,
@@ -550,14 +555,6 @@ const styles = StyleSheet.create({
 
   header: {
     paddingBottom: 24,
-  },
-
-  eyebrow: {
-    color: Colors.dark.textTechnical,
-    fontSize: 7,
-    fontWeight: "800",
-    letterSpacing: 1.5,
-    marginBottom: 10,
   },
 
   title: {

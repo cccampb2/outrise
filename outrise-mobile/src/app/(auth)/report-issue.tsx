@@ -1,3 +1,4 @@
+import { BrandHeader } from "@/components/brand-header";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
@@ -48,12 +49,12 @@ export default function ReportIssueScreen() {
         <Pressable accessibilityRole="button" disabled={pending} onPress={() => router.canGoBack() ? router.back() : router.replace("/login")} style={styles.back}>
           <Text style={styles.backText}>← BACK</Text>
         </Pressable>
-        <Text style={styles.eyebrow}>ASCENDRA // SUPPORT</Text>
+        <BrandHeader label="SUPPORT" />
         <Text style={styles.title}>{submitted ? "Report received" : "Report an issue"}</Text>
         {submitted ? <>
           <View style={styles.success}>
             <Text style={styles.successTitle}>SUBMITTED TO THE ADMIN TEAM</Text>
-            <Text style={styles.text}>Thank you. The ASCENDRA admin team can now review your report.</Text>
+            <Text style={styles.text}>Thank you. The OUTRISE admin team can now review your report.</Text>
           </View>
           <Pressable accessibilityRole="button" onPress={() => router.replace({ pathname: "/login", params: { email: email.trim() } })} style={styles.button}>
             <Text style={styles.buttonText}>RETURN TO SIGN IN →</Text>
@@ -62,7 +63,7 @@ export default function ReportIssueScreen() {
           <Text style={styles.text}>Having trouble signing in, or think your account was restricted by mistake? Tell the admin team what happened.</Text>
           <View style={styles.field}>
             <Text style={styles.label}>EMAIL ADDRESS</Text>
-            <TextInput accessibilityLabel="Email address" editable={!pending} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} maxLength={254} placeholder="Email used for your ASCENDRA account" placeholderTextColor={Colors.dark.textMuted} style={styles.input} />
+            <TextInput accessibilityLabel="Email address" editable={!pending} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} maxLength={254} placeholder="Email used for your OUTRISE account" placeholderTextColor={Colors.dark.textMuted} style={styles.input} />
           </View>
           <View style={styles.field}>
             <Text style={styles.label}>SUBJECT</Text>
@@ -88,7 +89,6 @@ const styles = StyleSheet.create({
   page: { paddingTop: 8, paddingBottom: 32, gap: 20 },
   back: { minHeight: 44, justifyContent: "center", alignSelf: "flex-start" },
   backText: { color: Colors.dark.textSecondary, fontSize: 12, fontWeight: "700" },
-  eyebrow: { color: Colors.dark.textTechnical, fontSize: 10, fontWeight: "700", letterSpacing: 1 },
   title: { fontFamily: Fonts.display, color: Colors.dark.text, fontSize: 32, fontWeight: "700" },
   text: { color: Colors.dark.textSecondary, fontSize: 14, lineHeight: 21 },
   field: { gap: 8 },

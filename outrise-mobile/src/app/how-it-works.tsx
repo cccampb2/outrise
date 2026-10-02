@@ -1,3 +1,4 @@
+import { BrandHeader } from "@/components/brand-header";
 import { AppText as Text } from "@/components/app-text";
 import { Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
@@ -52,13 +53,13 @@ export default function HowItWorksScreen() {
       </Pressable>
 
       <View style={styles.header}>
-        <Text style={styles.eyebrow}>ASCENDRA // SYSTEM_GUIDE</Text>
+        <BrandHeader label="SYSTEM_GUIDE" style={styles.brandLabelLayout} />
 
-        <Text style={styles.title}>HOW_ASCENDRA_WORKS</Text>
+        <Text style={styles.title}>HOW_OUTRISE_WORKS</Text>
 
         <Text style={styles.subtitle}>
           Understand progression, competition, records, and the systems that
-          power Ascendra.
+          power Outrise.
         </Text>
 
         <View style={styles.headerLine}>
@@ -122,7 +123,7 @@ export default function HowItWorksScreen() {
       <View style={styles.card}>
         <InfoItem title="FACTIONS">
           <BodyText>
-            Ascendra has four factions, each with its own identity. You are
+            Outrise has four factions, each with its own identity. You are
             matched with a faction through an assessment after signup, and
             faction membership is permanent.
           </BodyText>
@@ -169,7 +170,7 @@ export default function HowItWorksScreen() {
       <View style={styles.card}>
         <InfoItem title="PERSONAL_RECORDS">
           <BodyText>
-            Ascendra recognizes performances as personal records only when they
+            Outrise recognizes performances as personal records only when they
             meet the requirements for that exercise's measurement type. Official
             rules are listed below.
           </BodyText>
@@ -300,7 +301,7 @@ export default function HowItWorksScreen() {
 
       <View style={styles.footer}>
         <View style={styles.footerLine} />
-        <Text style={styles.footerText}>ASCENDRA // SYSTEM_REFERENCE</Text>
+        <Text style={styles.footerText}>OUTRISE // SYSTEM_REFERENCE</Text>
         <View style={styles.footerLine} />
       </View>
     </Screen>
@@ -308,6 +309,10 @@ export default function HowItWorksScreen() {
 }
 
 const styles = StyleSheet.create({
+  brandLabelLayout: {
+    marginBottom: 10,
+  },
+
   backButton: {
     alignSelf: "flex-start",
     paddingVertical: 6,
@@ -323,14 +328,6 @@ const styles = StyleSheet.create({
 
   header: {
     marginBottom: 34,
-  },
-
-  eyebrow: {
-    color: Colors.dark.textTechnical,
-    fontSize: 9,
-    fontWeight: "900",
-    letterSpacing: 1.6,
-    marginBottom: 10,
   },
 
   title: {

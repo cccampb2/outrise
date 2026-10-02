@@ -43,10 +43,10 @@ const startServer = async () => {
     startAccountSuspensionJob();
     startWorkoutOfTheWeekJob();
     app.listen(PORT, () => {
-      logger.info(`Ascendra API is running on port ${PORT}`);
+      logger.info(`Outrise API is running on port ${PORT}`);
     });
   } catch (error) {
-    logger.error("Failed to start Ascendra API", {
+    logger.error("Failed to start Outrise API", {
       error: error.message,
     });
     process.exit(1);

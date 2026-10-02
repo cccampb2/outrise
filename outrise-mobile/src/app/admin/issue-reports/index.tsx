@@ -33,7 +33,7 @@ export default function IssueReportsScreen() {
         <Pressable accessibilityRole="button" onPress={() => router.back()} style={styles.button}><Text style={styles.action}>← BACK</Text></Pressable>
         {!isAdmin ? <Text style={styles.error}>Admin access required.</Text> : <>
           <Text style={styles.title}>Issue Reports</Text>
-          <Text style={styles.text}>Shared inbox for all ASCENDRA administrators.</Text>
+          <Text style={styles.text}>Shared inbox for all OUTRISE administrators.</Text>
           <AdminField label="Search by email or subject" value={search} onChange={setSearch} />
           <Pressable accessibilityRole="button" onPress={() => setAppliedSearch(search.trim())} style={styles.button}><Text style={styles.action}>SEARCH</Text></Pressable>
           <AdminChoices label="Report status" options={["all", ...issueReportStatuses]} value={status} onChange={setStatus} />

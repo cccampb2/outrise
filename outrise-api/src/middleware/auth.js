@@ -15,9 +15,15 @@ export const authenticate = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const user = await ensureAccountAccess(
-      await User.findById(decoded.userId).select("role accountStatus suspendedUntil"),
-    );
+    const account = await User.findById(decoded.userId)
+      .select("role accountStatus suspendedUntil +tokenVersion");
+    // Legacy tokens/documents count as version zero until the first reset.
+    if (account && (decoded.tokenVersion ?? 0) !== (account.tokenVersion ?? 0)) {
+      const error = new UnauthorizedError("Your session ended. Sign in again.");
+      error.code = "SESSION_EXPIRED";
+      throw error;
+    }
+    const user = await ensureAccountAccess(account);
     // Use the current database role, rather than a potentially stale token role.
     req.user = { ...decoded, userId: user._id.toString(), role: user.role };
 

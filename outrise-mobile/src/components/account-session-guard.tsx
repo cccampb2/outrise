@@ -3,10 +3,10 @@ import { AppState } from "react-native";
 import { router } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDispatch, useSelector } from "react-redux";
-import { onAccountRestricted, type AccountRestriction } from "@/api/client";
+import { onAccountRestricted, onSessionExpired, type AccountRestriction } from "@/api/client";
 import { getCurrentUser } from "@/api/users";
 import { deleteToken } from "@/storage/auth-storage";
-import { setAccountRestriction, setCurrentUser } from "@/store/auth-slice";
+import { setAccountRestriction, setCurrentUser, clearCurrentUser } from "@/store/auth-slice";
 import { store, type AppDispatch, type RootState } from "@/store/store";
 
 export function AccountSessionGuard() {
@@ -20,21 +20,25 @@ export function AccountSessionGuard() {
     let handlingRestriction = false;
     let refreshing = false;
 
-    async function restrict(restriction: AccountRestriction) {
+    async function endSession(restriction?: AccountRestriction) {
       if (handlingRestriction || store.getState().auth.user?.id !== userId) return;
       handlingRestriction = true;
-      dispatch(setAccountRestriction(restriction));
+      dispatch(restriction ? setAccountRestriction(restriction) : clearCurrentUser());
       await client.cancelQueries();
       client.clear();
       try {
         await deleteToken();
       } finally {
-        router.replace("/login");
+        router.replace(restriction ? "/login" : { pathname: "/login", params: { sessionExpired: "true" } });
       }
     }
 
     const unsubscribe = onAccountRestricted((restriction) => {
-      void restrict(restriction).catch(console.error);
+      void endSession(restriction).catch(console.error);
+    });
+
+    const unsubscribeSession = onSessionExpired(() => {
+      void endSession().catch(console.error);
     });
 
     async function refreshAccount() {
@@ -46,7 +50,7 @@ export function AccountSessionGuard() {
           dispatch(setCurrentUser(user));
         }
       } catch {
-        // Restrictions are handled by the API listener; connectivity failures keep the session.
+        // Restrictions and revoked sessions are handled by API listeners; connectivity failures keep the session.
       } finally {
         refreshing = false;
       }
@@ -63,6 +67,7 @@ export function AccountSessionGuard() {
       clearInterval(interval);
       subscription.remove();
       unsubscribe();
+      unsubscribeSession();
     };
   }, [userId, dispatch, client]);
   return null;

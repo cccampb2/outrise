@@ -1,10 +1,8 @@
 import { ReactNode } from "react";
 import { StyleSheet, View, Platform, KeyboardAvoidingView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Animated, {
-  useAnimatedScrollHandler,
-  withTiming,
-} from "react-native-reanimated";
+import Animated from "react-native-reanimated";
+import { useTabBarScroll } from "@/hooks/use-tab-bar-scroll";
 import { useOptionalTabBar } from "@/context/tab-bar-context";
 import { Colors } from "@/constants/theme";
 
@@ -15,11 +13,6 @@ type ScreenProps = {
   hideTabBarOnScroll?: boolean;
   bottomInSet?: number;
 };
-type ScrollContext = {
-  previousY: number;
-  accumulatedDistance: number;
-  direction: "up" | "down" | null;
-};
 
 export function Screen({
   children,
@@ -29,65 +22,7 @@ export function Screen({
   bottomInSet = 0,
 }: ScreenProps) {
   const tabBar = useOptionalTabBar();
-  const tabBarTranslateY = tabBar?.translateY;
-  const scrollHandler = useAnimatedScrollHandler<ScrollContext>({
-    onBeginDrag: (event, context) => {
-      context.previousY = event.contentOffset.y;
-      context.accumulatedDistance = 0;
-      context.direction = null;
-    },
-    onScroll: (event, context) => {
-      if (!hideTabBarOnScroll || !tabBarTranslateY) {
-        return;
-      }
-
-      const currentY = event.contentOffset.y;
-
-      const previousY = context.previousY ?? currentY;
-
-      const difference = currentY - previousY;
-
-      if (currentY <= 0) {
-        tabBarTranslateY.value = withTiming(0, {
-          duration: 200,
-        });
-        context.accumulatedDistance = 0;
-        context.direction = null;
-        context.previousY = currentY;
-
-        return;
-      }
-
-      const newDirection =
-        difference > 0 ? "down" : difference < 0 ? "up" : context.direction;
-
-      if (newDirection !== context.direction) {
-        context.accumulatedDistance = 0;
-
-        context.direction = newDirection;
-      }
-
-      context.accumulatedDistance += Math.abs(difference);
-
-      if (context.direction === "down" && context.accumulatedDistance >= 10) {
-        tabBarTranslateY.value = withTiming(100, {
-          duration: 200,
-        });
-
-        context.accumulatedDistance = 0;
-      }
-
-      if (context.direction === "up" && context.accumulatedDistance >= 10) {
-        tabBarTranslateY.value = withTiming(0, {
-          duration: 200,
-        });
-
-        context.accumulatedDistance = 0;
-      }
-
-      context.previousY = currentY;
-    },
-  });
+  const scrollHandler = useTabBarScroll(hideTabBarOnScroll);
   const content = scroll ? (
     <Animated.ScrollView
       style={styles.scrollView}
@@ -106,7 +41,7 @@ export function Screen({
       {children}
     </Animated.ScrollView>
   ) : (
-    <View style={[styles.content, tabBar && { paddingTop: 72 }]}>
+    <View style={[styles.content, styles.staticContent, tabBar && { paddingTop: 72 }]}>
       {children}
     </View>
   );
@@ -138,6 +73,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 24,
     paddingBottom: 32,
+  },
+  staticContent: {
+    flex: 1,
   },
   keyboardAvoidingView: {
     flex: 1,

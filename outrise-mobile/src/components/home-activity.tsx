@@ -29,7 +29,7 @@ function activityActor(event: ActivityEvent, userId?: string) {
   if (event.actor && event.actor === userId) return "YOU";
   if ("actorUsername" in event.details) return event.details.actorUsername;
   if ("factionName" in event.details) return event.details.factionName;
-  return "ASCENDRA";
+  return "OUTRISE";
 }
 
 const activityCategories: Record<ActivityEvent["type"], string> = {

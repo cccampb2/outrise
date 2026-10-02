@@ -1,3 +1,4 @@
+import { BrandHeader } from "@/components/brand-header";
 import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
 import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from "react-native";
 import { useMemo, useState } from "react";
@@ -135,7 +136,7 @@ export default function SubmitVerificationScreen() {
     if (!permission.granted) {
       Alert.alert(
         "Permission Required",
-        "Ascendra needs access to your media library to select a verification video.",
+        "Outrise needs access to your media library to select a verification video.",
       );
 
       return;
@@ -170,7 +171,7 @@ export default function SubmitVerificationScreen() {
     if (!permission.granted) {
       Alert.alert(
         "Permission Required",
-        "Ascendra needs camera access to record a verification video.",
+        "Outrise needs camera access to record a verification video.",
       );
 
       return;
@@ -315,7 +316,7 @@ export default function SubmitVerificationScreen() {
         </Pressable>
 
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>ASCENDRA // VERIFICATION</Text>
+          <BrandHeader label="VERIFICATION" style={styles.brandLabelLayout} />
 
           <Text style={styles.title}>Submit Verification</Text>
 
@@ -619,6 +620,10 @@ function PerformanceInput({
 }
 
 const styles = StyleSheet.create({
+  brandLabelLayout: {
+    marginBottom: 7,
+  },
+
   page: {
     paddingBottom: 40,
   },
@@ -639,14 +644,6 @@ const styles = StyleSheet.create({
 
   header: {
     marginBottom: 30,
-  },
-
-  eyebrow: {
-    color: Colors.dark.accent,
-    fontSize: 9,
-    fontWeight: "900",
-    letterSpacing: 2,
-    marginBottom: 7,
   },
 
   title: {

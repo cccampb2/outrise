@@ -1,10 +1,12 @@
+import Animated from "react-native-reanimated";
+import { useTabBarScroll } from "@/hooks/use-tab-bar-scroll";
+import { BrandHeader } from "@/components/brand-header";
 import { UserRoleName } from "@/components/user-role-badge";
 import { AppText as Text } from "@/components/app-text";
 import { useState } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import {
   ActivityIndicator,
-  FlatList,
   Image,
   Pressable,
   StyleSheet,
@@ -32,6 +34,7 @@ const PAGE_SIZE = 25;
 type RankingsTab = "global" | "factions" | "friends";
 
 export default function RankingsScreen() {
+  const scrollHandler = useTabBarScroll();
   const [selectedTab, setSelectedTab] = useState<RankingsTab>("global");
 
   const factionsQuery = useQuery({
@@ -149,7 +152,9 @@ export default function RankingsScreen() {
 
     return (
       <Screen>
-        <FlatList
+        <Animated.FlatList
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
           style={styles.list}
           data={leaderboard}
           keyExtractor={(item) => item.userId}
@@ -240,7 +245,9 @@ export default function RankingsScreen() {
 
   return (
     <Screen>
-      <FlatList
+      <Animated.FlatList
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
         style={styles.list}
         data={factionStandingsQuery.data?.standings ?? []}
         keyExtractor={(item) => item.faction._id}
@@ -366,7 +373,7 @@ function RankingsHeader({
             gap: 12,
           }}
         >
-          <Text style={styles.eyebrow}>ASCENDRA // RANKINGS</Text>
+          <BrandHeader label="RANKINGS" style={styles.brandLabelLayout} />
         </View>
 
         <Text style={styles.title}>
@@ -472,7 +479,11 @@ function CurrentUserCard({
         )}
 
         <View style={styles.currentUserInfo}>
-          <UserRoleName username={user.username} role={user.role} style={styles.currentUsername} />
+          <UserRoleName
+            username={user.username}
+            role={user.role}
+            style={styles.currentUsername}
+          />
 
           <View style={styles.currentMetadataRow}>
             <Text style={styles.currentLevel}>LEVEL {user.level}</Text>
@@ -578,7 +589,11 @@ function LeaderboardRow({
       </View>
 
       <View style={styles.rowIdentity}>
-        <UserRoleName username={user.username} role={user.role} style={styles.username} />
+        <UserRoleName
+          username={user.username}
+          role={user.role}
+          style={styles.username}
+        />
 
         <View style={styles.metadataRow}>
           <Text style={styles.metadataLevel}>LVL {user.level}</Text>
@@ -705,6 +720,10 @@ function formatRank(rank: number) {
 }
 
 const styles = StyleSheet.create({
+  brandLabelLayout: {
+    marginBottom: 8,
+  },
+
   list: {
     flex: 1,
   },
@@ -762,14 +781,6 @@ const styles = StyleSheet.create({
 
   header: {
     marginBottom: 20,
-  },
-
-  eyebrow: {
-    color: colors.textTechnical,
-    fontSize: 10,
-    fontWeight: "700",
-    letterSpacing: 2,
-    marginBottom: 8,
   },
 
   title: {

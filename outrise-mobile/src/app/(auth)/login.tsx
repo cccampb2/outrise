@@ -1,3 +1,4 @@
+import { BrandHeader } from "@/components/brand-header";
 import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
 import { useState } from "react";
 import { StyleSheet, View, Pressable } from "react-native";
@@ -20,6 +21,8 @@ export default function LoginScreen() {
   const params = useLocalSearchParams<{
     email?: string;
     registered?: string;
+    passwordReset?: string;
+    sessionExpired?: string;
   }>();
 
   const [email, setEmail] = useState(params.email ?? "");
@@ -27,8 +30,8 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [errorTitle, setErrorTitle] = useState("ACCESS_ERROR");
-  const displayedError = error || (accountNotice ? accountRestrictionMessage(accountNotice) : "");
-  const displayedErrorTitle = error ? errorTitle : accountNotice?.accountStatus === "suspended" ? "ACCOUNT_SUSPENDED" : "ACCOUNT_BANNED";
+  const displayedError = error || (accountNotice ? accountRestrictionMessage(accountNotice) : params.sessionExpired === "true" ? "Your session ended. Sign in again." : "");
+  const displayedErrorTitle = error ? errorTitle : accountNotice?.accountStatus === "suspended" ? "ACCOUNT_SUSPENDED" : accountNotice ? "ACCOUNT_BANNED" : "SESSION_EXPIRED";
 
   async function handleLogin() {
     setError("");
@@ -84,13 +87,9 @@ export default function LoginScreen() {
         {/* BRAND */}
 
         <View style={styles.brandHeader}>
-          <View style={styles.systemStatus}>
-            <View style={styles.statusDot} />
+          <BrandHeader label="ACCESS" style={styles.brandLabelLayout} />
 
-            <Text style={styles.systemStatusText}>ASCENDRA // ACCESS</Text>
-          </View>
-
-          <Text style={styles.brand}>ASCENDRA</Text>
+          <Text style={styles.brand}>OUTRISE</Text>
 
           <View style={styles.brandRule}>
             <View style={styles.brandRuleAccent} />
@@ -109,16 +108,16 @@ export default function LoginScreen() {
 
         {/* REGISTRATION SUCCESS */}
 
-        {params.registered === "true" ? (
+        {params.registered === "true" || params.passwordReset === "true" ? (
           <View style={styles.successMessage}>
             <View style={styles.successTop}>
               <View style={styles.successDot} />
 
-              <Text style={styles.successLabel}>ACCOUNT_CREATED</Text>
+              <Text style={styles.successLabel}>{params.passwordReset === "true" ? "PASSWORD_UPDATED" : "ACCOUNT_CREATED"}</Text>
             </View>
 
             <Text style={styles.successText}>
-              Your account is ready. Sign in to continue.
+              {params.passwordReset === "true" ? "Your password has been reset. Sign in with your new password." : "Your account is ready. Sign in to continue."}
             </Text>
           </View>
         ) : null}
@@ -152,6 +151,15 @@ export default function LoginScreen() {
               secureTextEntry
             />
           </View>
+
+          <Pressable
+            accessibilityRole="button"
+            disabled={isLoading}
+            onPress={() => router.push({ pathname: "/forgot-password", params: { email: email.trim() } })}
+            style={({ pressed }) => [styles.reportButton, pressed && styles.linkPressed]}
+          >
+            <Text style={styles.reportText}>FORGOT PASSWORD? →</Text>
+          </Pressable>
 
           {displayedError ? (
             <View style={styles.errorMessage}>
@@ -199,7 +207,7 @@ export default function LoginScreen() {
           <View style={styles.registerRule} />
 
           <View style={styles.registerRow}>
-            <Text style={styles.registerText}>New to Ascendra?</Text>
+            <Text style={styles.registerText}>New to Outrise?</Text>
 
             <Pressable
               onPress={() => router.push("/register")}
@@ -215,7 +223,7 @@ export default function LoginScreen() {
         <View style={styles.brandFooter}>
           <View style={styles.footerLine} />
 
-          <Text style={styles.footerWordmark}>ASCENDRA</Text>
+          <Text style={styles.footerWordmark}>OUTRISE</Text>
 
           <View style={styles.footerLine} />
         </View>
@@ -225,6 +233,10 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
+  brandLabelLayout: {
+    marginBottom: 14,
+  },
+
   reportButton: { minHeight: 44, justifyContent: "center", alignItems: "center", marginTop: 14 },
   reportText: { color: Colors.dark.textSecondary, fontSize: 11, fontWeight: "700", letterSpacing: 1 },
   container: {
@@ -237,27 +249,6 @@ const styles = StyleSheet.create({
 
   brandHeader: {
     marginBottom: 42,
-  },
-
-  systemStatus: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-    marginBottom: 14,
-  },
-
-  statusDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: Colors.dark.accent,
-  },
-
-  systemStatusText: {
-    color: Colors.dark.textTechnical,
-    fontSize: 8,
-    fontWeight: "900",
-    letterSpacing: 1.5,
   },
 
   brand: {

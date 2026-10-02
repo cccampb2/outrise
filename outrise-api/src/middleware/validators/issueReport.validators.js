@@ -26,3 +26,19 @@ export const updateIssueReportSchema = {
     note: Joi.string().trim().allow("").max(2000).default(""),
   }),
 };
+
+export const sendIssueReportReplySchema = {
+  params,
+  body: Joi.object({
+    subject: Joi.string().trim().min(1).max(120).pattern(/^[^\r\n]+$/).required(),
+    message: Joi.string().trim().min(1).max(2000).required(),
+    expectedRevision: Joi.number().integer().min(0).required(),
+  }),
+};
+export const retryIssueReportReplySchema = {
+  params: Joi.object({
+    reportId: Joi.string().hex().length(24).required(),
+    replyId: Joi.string().hex().length(24).required(),
+  }),
+  body: Joi.object({}),
+};

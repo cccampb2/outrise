@@ -7,7 +7,7 @@ export const uploadVerificationVideo = async (fileBuffer) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         resource_type: "video",
-        folder: "ascendra/verifications",
+        folder: "outrise/verifications",
       },
       (error, result) => {
         if (error) {
@@ -51,7 +51,7 @@ export function uploadProfileImageBuffer(buffer) {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
-        folder: "ascendra/profile-images",
+        folder: "outrise/profile-images",
         resource_type: "image",
 
         transformation: [

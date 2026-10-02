@@ -7,7 +7,7 @@ import NotFoundError from "../errors/NotFoundError.js";
 function populateAdmins(query) {
   return query
     .populate("reviewer resolvedBy", "username")
-    .populate("history.admin", "username");
+    .populate("history.admin replies.admin", "username");
 }
 
 export async function createIssueReport({ email, subject, message }) {
@@ -33,7 +33,7 @@ export async function listIssueReports({
   }
   const [reports, total] = await Promise.all([
     IssueReport.find(filter)
-      .select("-history")
+      .select("-history -replies")
       .sort({ createdAt: -1, _id: -1 })
       .skip((page - 1) * limit)
       .limit(limit)

@@ -1,3 +1,4 @@
+import { BrandHeader } from "@/components/brand-header";
 import { UserRoleBadge } from "@/components/user-role-badge";
 import { AppText as Text } from "@/components/app-text";
 import { ProfileRecords } from "@/components/profile-records";
@@ -222,7 +223,7 @@ export default function PublicUserProfileScreen() {
         {/* HEADER */}
 
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>ASCENDRA // USER_PROFILE</Text>
+          <BrandHeader label="USER_PROFILE" />
 
           <Text style={styles.headerTitle}>Operative Profile</Text>
 
@@ -492,7 +493,7 @@ export default function PublicUserProfileScreen() {
         <View style={styles.footer}>
           <View style={styles.footerLine} />
 
-          <Text style={styles.footerText}>ASCENDRA // PROFILE</Text>
+          <Text style={styles.footerText}>OUTRISE // PROFILE</Text>
 
           <View style={styles.footerLine} />
         </View>
@@ -587,13 +588,6 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.dark.borderSubtle,
     paddingBottom: 20,
     marginBottom: 22,
-  },
-
-  eyebrow: {
-    color: Colors.dark.accent,
-    fontSize: 8,
-    fontWeight: "900",
-    letterSpacing: 1.6,
   },
 
   headerTitle: {

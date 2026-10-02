@@ -200,7 +200,7 @@ const seedFactions = async () => {
       await Faction.findOneAndUpdate({ slug: factionData.slug }, factionData, {
         upsert: true,
         runValidators: true,
-        new: true,
+        returnDocument: "after",
       });
     }
 

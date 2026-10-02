@@ -602,7 +602,7 @@ export default function WorkoutOfTheWeekScreen() {
         <View style={styles.brandFooter}>
           <View style={styles.brandLine} />
 
-          <Text style={styles.brandWordmark}>ASCENDRA</Text>
+          <Text style={styles.brandWordmark}>OUTRISE</Text>
 
           <View style={styles.brandLine} />
         </View>

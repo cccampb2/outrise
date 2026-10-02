@@ -1,3 +1,4 @@
+import { BrandHeader } from "@/components/brand-header";
 import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, View, Image } from "react-native";
@@ -25,7 +26,7 @@ const visibilityOptions: {
   {
     value: "public",
     label: "PUBLIC",
-    description: "VISIBLE TO ALL ASCENDRA USERS",
+    description: "VISIBLE TO ALL OUTRISE USERS",
   },
   {
     value: "friends",
@@ -187,12 +188,12 @@ export default function EditProfileScreen() {
         </Pressable>
 
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>ASCENDRA_ID // PROFILE_CONFIG</Text>
+          <BrandHeader label="PROFILE_CONFIG" style={styles.brandLabelLayout} />
 
           <Text style={styles.title}>Edit Profile</Text>
 
           <Text style={styles.subtitle}>
-            CONTROL HOW YOUR IDENTITY APPEARS ACROSS ASCENDRA.
+            CONTROL HOW YOUR IDENTITY APPEARS ACROSS OUTRISE.
           </Text>
         </View>
 
@@ -345,7 +346,7 @@ export default function EditProfileScreen() {
           <TextInput
             value={bio}
             onChangeText={setBio}
-            placeholder="Tell the Ascendra community about yourself..."
+            placeholder="Tell the Outrise community about yourself..."
             placeholderTextColor={Colors.dark.textDim}
             maxLength={250}
             multiline
@@ -501,6 +502,10 @@ export default function EditProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+  brandLabelLayout: {
+    marginBottom: 6,
+  },
+
   page: {
     flexGrow: 1,
     paddingTop: 8,
@@ -543,14 +548,6 @@ const styles = StyleSheet.create({
 
   header: {
     marginBottom: 34,
-  },
-
-  eyebrow: {
-    color: Colors.dark.accent,
-    fontSize: 8,
-    fontWeight: "900",
-    letterSpacing: 2,
-    marginBottom: 6,
   },
 
   title: {

@@ -28,7 +28,7 @@ export const registerUser = async ({ username, email, password }) => {
 };
 
 export const loginUser = async ({ email, password }) => {
-  const user = await User.findOne({ email }).select("+password");
+  const user = await User.findOne({ email }).select("+password +tokenVersion");
 
   if (!user) {
     throw new UnauthorizedError("Invalid email or password");
@@ -41,5 +41,7 @@ export const loginUser = async ({ email, password }) => {
   }
 
   const accessibleUser = await ensureAccountAccess(user);
+  // Suspension restoration may return a fresh document with hidden fields omitted.
+  accessibleUser.tokenVersion = user.tokenVersion ?? 0;
   return accessibleUser;
 };

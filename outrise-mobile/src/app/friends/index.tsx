@@ -1,3 +1,4 @@
+import { BrandHeader } from "@/components/brand-header";
 import { UserRoleName } from "@/components/user-role-badge";
 import { AppText as Text } from "@/components/app-text";
 import { useState } from "react";
@@ -65,7 +66,7 @@ export default function FriendsScreen() {
   return (
     <Screen>
       <Pressable accessibilityRole="button" onPress={() => router.back()} style={styles.back}><Text style={styles.backText}>← BACK</Text></Pressable>
-      <Text style={styles.eyebrow}>{"ASCENDRA // COMMUNITY"}</Text>
+      <BrandHeader label="COMMUNITY" style={styles.brandLabelLayout} />
       <Text style={styles.title}>FRIENDS</Text>
       <View style={styles.tabs}>
         {sections.map((value) => <Pressable key={value} accessibilityRole="button" accessibilityState={{ selected: section === value }} onPress={() => setSection(value)} style={[styles.tab, section === value && styles.selectedTab]}><Text style={[styles.tabText, section === value && styles.selectedText]}>{value.toUpperCase()}</Text></Pressable>)}
@@ -107,9 +108,12 @@ export default function FriendsScreen() {
 }
 
 const styles = StyleSheet.create({
+  brandLabelLayout: {
+    marginTop: 12,
+  },
+
   back: { alignSelf: "flex-start", paddingVertical: 12 },
   backText: { color: Colors.dark.textSecondary, fontSize: 10, fontWeight: "900", letterSpacing: 1 },
-  eyebrow: { color: Colors.dark.accent, fontSize: 9, fontWeight: "900", letterSpacing: 1.4, marginTop: 12 },
   title: {
     fontFamily: Fonts.display, color: Colors.dark.text, fontSize: 28, fontWeight: "900", marginVertical: 8 },
   tabs: { flexDirection: "row", gap: 6, marginVertical: 16 },

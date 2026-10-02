@@ -100,7 +100,7 @@ export const createActivityEvent = async (event, { mongoSession } = {}) => {
   return ActivityEvent.findOneAndUpdate(
     { idempotencyKey: event.idempotencyKey },
     { $setOnInsert: event },
-    { upsert: true, new: true, runValidators: true, session: mongoSession },
+    { upsert: true, returnDocument: "after", runValidators: true, session: mongoSession },
   );
 };
 

@@ -204,7 +204,7 @@ export const acceptFriendRequest = async ({ userId, requestId }) => {
       const friendship = await Friendship.findOneAndUpdate(
         { _id: requestId, recipient: userId, status: "pending" },
         { $set: { status: "accepted", acceptedAt: new Date() } },
-        { new: true, runValidators: true, session: mongoSession },
+        { returnDocument: "after", runValidators: true, session: mongoSession },
       );
 
       if (!friendship) {
