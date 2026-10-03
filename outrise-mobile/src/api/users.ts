@@ -24,6 +24,7 @@ export type CurrentUser = {
   id: string;
   username: string;
   email: string;
+  emailVerified: boolean;
   role: UserRole;
   accountStatus: AccountStatus;
   faction: string | null;
@@ -103,8 +104,8 @@ export type SearchUsersParams = {
   limit?: number;
 };
 
-export async function getCurrentUser(): Promise<CurrentUser> {
-  const response = await apiRequest("/users/me");
+export async function getCurrentUser(signal?: AbortSignal): Promise<CurrentUser> {
+  const response = await apiRequest("/users/me", { signal });
 
   return await response.json();
 }

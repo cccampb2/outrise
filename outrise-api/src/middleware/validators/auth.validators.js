@@ -35,3 +35,13 @@ export const resetPasswordSchema = {
       .messages({ "any.only": "Passwords must match." }),
   }),
 };
+
+export const requestEmailVerificationSchema = {
+  body: Joi.object({}),
+};
+
+export const verifyEmailSchema = {
+  body: Joi.object({
+    code: Joi.string().trim().pattern(/^\d{6}$/).required(),
+  }),
+};

@@ -216,7 +216,7 @@ test("valid reset hashes the password and consumes code plus revokes sessions in
 
 test("JWT versions reject old tokens after reset, accept new/legacy tokens appropriately, and expose the expiry code", async (t) => {
   environment(t);
-  let account = { _id: id, role: "user", accountStatus: "active", tokenVersion: 1 };
+  let account = { _id: id, role: "user", emailVerified: true, accountStatus: "active", tokenVersion: 1 };
   t.mock.method(User, "findById", () => query(account, (fields) => assert.ok(fields.includes("+tokenVersion"))));
   const request = (version) => ({ headers: { authorization: `Bearer ${jwt.sign({ userId: id.toString(), ...(version === undefined ? {} : { tokenVersion: version }) }, process.env.JWT_SECRET)}` } });
   for (const version of [undefined, 0]) {
@@ -233,7 +233,7 @@ test("JWT versions reject old tokens after reset, accept new/legacy tokens appro
   await authenticate(req, {}, (result) => { error = result; });
   assert.equal(error, undefined);
   assert.equal(req.user.userId, id.toString());
-  account = { _id: id, role: "user", accountStatus: "active" };
+  account = { _id: id, role: "user", emailVerified: true, accountStatus: "active" };
   await authenticate(request(undefined), {}, (result) => { error = result; });
   assert.equal(error, undefined);
   account = { ...account, accountStatus: "banned", tokenVersion: 1 };
@@ -312,7 +312,7 @@ test("full reset works through Mongoose queries and real bcrypt, and only the ne
   const emails = environment(t);
   let stored = {
     _id: id, username: "tester", email, role: "user", faction: null,
-    accountStatus: "active", password: await bcrypt.hash("old password 123", 12),
+    emailVerified: true, accountStatus: "active", password: await bcrypt.hash("old password 123", 12),
   };
   t.mock.method(User.collection, "findOne", async () => structuredClone(stored));
   t.mock.method(User.collection, "findOneAndUpdate", async (filter, update, options) => {

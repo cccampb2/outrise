@@ -1,6 +1,6 @@
 // IP limits protect the public endpoints. Per-account cooldowns and code guess
 // limits are also persisted on User, so restarting this process cannot reset them.
-export function createPasswordResetLimiter({ max = 5, windowMs = 15 * 60 * 1000, now = Date.now } = {}) {
+export function createPasswordResetLimiter({ max = 5, windowMs = 15 * 60 * 1000, now = Date.now, message = "Too many password reset requests. Please wait a few minutes and try again." } = {}) {
   const buckets = new Map();
   let lastSweep = 0;
   return (req, res, next) => {
@@ -21,7 +21,7 @@ export function createPasswordResetLimiter({ max = 5, windowMs = 15 * 60 * 1000,
       res.set("Retry-After", String(Math.ceil((bucket.expiresAt - time) / 1000)));
       return res.status(429).json({
         error: "TooManyRequests",
-        message: "Too many password reset requests. Please wait a few minutes and try again.",
+        message,
       });
     }
     bucket.count += 1;

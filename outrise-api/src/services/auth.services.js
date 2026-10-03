@@ -1,4 +1,6 @@
 import bcrypt from "bcrypt";
+import logger from "../utils/logger.js";
+import { requestEmailVerification } from "./emailVerification.service.js";
 import User from "../models/User.js";
 import ConflictError from "../errors/ConflictError.js";
 import UnauthorizedError from "../errors/UnauthorizedError.js";
@@ -24,6 +26,14 @@ export const registerUser = async ({ username, email, password }) => {
     email,
     password: hashedPassword,
   });
+  try {
+    await requestEmailVerification({ userId: user._id });
+  } catch (error) {
+    // The account already exists. Let the user sign in and request another code
+    // instead of reporting registration failure and encouraging duplicate signup.
+    logger.warn("Initial verification email delivery could not be confirmed.",
+      error.deliveryFailure || { reason: "EMAIL_CONFIGURATION" });
+  }
   return user;
 };
 

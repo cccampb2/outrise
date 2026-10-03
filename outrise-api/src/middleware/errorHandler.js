@@ -19,6 +19,9 @@ export const errorHandler = (error, req, res, next) => {
       message: error.message,
     });
   }
+  if (error.statusCode === 403 && error.code === "EMAIL_VERIFICATION_REQUIRED") {
+    return res.status(403).json({ error: error.name, code: error.code, message: error.message });
+  }
   if (isCelebrateError(error)) {
     const validationErrors = [];
 
@@ -52,6 +55,9 @@ export const errorHandler = (error, req, res, next) => {
   });
 
   const statusCode = error.statusCode || 500;
+  if ([429, 502].includes(statusCode) && Number.isInteger(error.retryAfterSeconds) && error.retryAfterSeconds > 0) {
+    res.set("Retry-After", String(error.retryAfterSeconds));
+  }
   return res.status(statusCode).json({
     error: error.name || "InternalServerError",
     message: error.message || "Something went wrong",

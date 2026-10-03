@@ -1,21 +1,24 @@
 import { BrandHeader } from "@/components/brand-header";
 import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { StyleSheet, View, Pressable } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { Screen } from "@/components/screen";
 import { Colors, Fonts } from "@/constants/theme";
 import { login } from "@/api/auth";
-import { saveToken } from "@/storage/auth-storage";
+import { saveToken, deleteToken } from "@/storage/auth-storage";
 import { getCurrentUser } from "@/api/users";
-import { setCurrentUser, clearAccountNotice } from "@/store/auth-slice";
+import { setCurrentUser, clearAccountNotice, clearCurrentUser } from "@/store/auth-slice";
 import type { AppDispatch, RootState } from "@/store/store";
 import { ApiError, accountRestrictionMessage } from "@/api/client";
 
 export default function LoginScreen() {
   const dispatch = useDispatch<AppDispatch>();
+  const client = useQueryClient();
+  const inFlight = useRef(false);
   const accountNotice = useSelector((state: RootState) => state.auth.accountNotice);
 
   const params = useLocalSearchParams<{
@@ -34,6 +37,7 @@ export default function LoginScreen() {
   const displayedErrorTitle = error ? errorTitle : accountNotice?.accountStatus === "suspended" ? "ACCOUNT_SUSPENDED" : accountNotice ? "ACCOUNT_BANNED" : "SESSION_EXPIRED";
 
   async function handleLogin() {
+    if (inFlight.current) return;
     setError("");
     setErrorTitle("ACCESS_ERROR");
     dispatch(clearAccountNotice());
@@ -48,7 +52,9 @@ export default function LoginScreen() {
       return;
     }
 
+    inFlight.current = true;
     setIsLoading(true);
+    let tokenSaved = false;
 
     try {
       const data = await login({
@@ -56,18 +62,25 @@ export default function LoginScreen() {
         password,
       });
 
+      await client.cancelQueries();
+      client.clear();
+      dispatch(clearCurrentUser());
       await saveToken(data.token);
+      tokenSaved = true;
 
       const user = await getCurrentUser();
 
       dispatch(setCurrentUser(user));
 
-      if (data.user.faction === null) {
+      if (user.emailVerified !== true) {
+        router.replace("/verify-email");
+      } else if (user.faction === null) {
         router.replace("/(onboarding)/faction");
       } else {
         router.replace("/(tabs)");
       }
     } catch (error) {
+      if (tokenSaved) await deleteToken().catch(() => {});
       if (error instanceof ApiError && error.accountRestriction) {
         setError(accountRestrictionMessage(error.accountRestriction));
         setErrorTitle(error.accountRestriction.code);
@@ -77,6 +90,7 @@ export default function LoginScreen() {
 
       console.error(error);
     } finally {
+      inFlight.current = false;
       setIsLoading(false);
     }
   }
@@ -117,7 +131,7 @@ export default function LoginScreen() {
             </View>
 
             <Text style={styles.successText}>
-              {params.passwordReset === "true" ? "Your password has been reset. Sign in with your new password." : "Your account is ready. Sign in to continue."}
+              {params.passwordReset === "true" ? "Your password has been reset. Sign in with your new password." : "Your account is ready. Check your email for a verification code, then sign in to continue."}
             </Text>
           </View>
         ) : null}
@@ -131,6 +145,7 @@ export default function LoginScreen() {
             <TextInput
               style={styles.input}
               value={email}
+              editable={!isLoading}
               onChangeText={setEmail}
               placeholder="Enter your email"
               placeholderTextColor={Colors.dark.textMuted}
@@ -145,6 +160,7 @@ export default function LoginScreen() {
             <TextInput
               style={styles.input}
               value={password}
+              editable={!isLoading}
               onChangeText={setPassword}
               placeholder="Enter your password"
               placeholderTextColor={Colors.dark.textMuted}
@@ -210,6 +226,7 @@ export default function LoginScreen() {
             <Text style={styles.registerText}>New to Outrise?</Text>
 
             <Pressable
+              disabled={isLoading}
               onPress={() => router.push("/register")}
               style={({ pressed }) => [pressed ? styles.linkPressed : null]}
             >

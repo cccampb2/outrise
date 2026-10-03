@@ -43,7 +43,7 @@ test("promotion and demotion save a role history entry in the same transaction",
   let ended = 0;
   const session = { withTransaction: async (callback) => callback(), endSession: async () => { ended++; } };
   const user = {
-    _id: userId, role: "user", accountStatus: "active", lifetimeXP: 300,
+    _id: userId, role: "user", emailVerified: true, accountStatus: "active", lifetimeXP: 300,
     save: async (options) => { assert.equal(options.session, session); },
   };
   t.mock.method(mongoose, "startSession", async () => session);
@@ -70,7 +70,7 @@ test("the service protects owners, checks the acting owner and rejects stale or 
   const session = { withTransaction: async (callback) => callback(), endSession: async () => {} };
   t.mock.method(mongoose, "startSession", async () => session);
   let actorRole = "admin";
-  let user = { _id: userId, role: "user", accountStatus: "active" };
+  let user = { _id: userId, role: "user", emailVerified: true, accountStatus: "active" };
   t.mock.method(User, "findById", (value) => query(value.toString() === ownerId.toString() ? { role: actorRole } : user));
   const request = { userId, ownerId, role: "admin", expectedRole: "user", reason: "Staff" };
   await assert.rejects(() => setUserRole(request), (error) => error.statusCode === 403);
@@ -121,7 +121,7 @@ test("a demoted admin loses permission on their next request despite an old admi
   const previousSecret = process.env.JWT_SECRET;
   process.env.JWT_SECRET = "role-demotion-test";
   t.after(() => { if (previousSecret === undefined) delete process.env.JWT_SECRET; else process.env.JWT_SECRET = previousSecret; });
-  t.mock.method(User, "findById", () => query({ _id: userId, role: "user", accountStatus: "active" }));
+  t.mock.method(User, "findById", () => query({ _id: userId, role: "user", emailVerified: true, accountStatus: "active" }));
   const token = jwt.sign({ userId: userId.toString(), role: "admin" }, process.env.JWT_SECRET);
   const req = { headers: { authorization: `Bearer ${token}` } };
   await authenticate(req, {}, (error) => { assert.equal(error, undefined); });

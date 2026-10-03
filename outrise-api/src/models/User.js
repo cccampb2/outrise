@@ -14,6 +14,16 @@ const passwordResetSchema = new Schema(
   { _id: false },
 );
 
+const emailVerificationSchema = new Schema(
+  {
+    id: { type: String, required: true, match: /^[a-f0-9]{32}$/ },
+    codeHash: { type: String, required: true, match: /^[a-f0-9]{64}$/ },
+    expiresAt: { type: Date, required: true },
+    attempts: { type: Number, default: 0, min: 0, max: 5 },
+  },
+  { _id: false },
+);
+
 const userSchema = new Schema(
   {
     username: {
@@ -34,6 +44,10 @@ const userSchema = new Schema(
       required: true,
       select: false,
     },
+    // Existing documents without this flag also require email verification.
+    emailVerified: { type: Boolean, default: false },
+    emailVerification: { type: emailVerificationSchema, select: false },
+    emailVerificationRequestedAt: { type: Date, select: false },
     // Hidden recovery state; never included in normal profile/account queries.
     passwordReset: { type: passwordResetSchema, select: false },
     passwordResetRequestedAt: { type: Date, select: false },

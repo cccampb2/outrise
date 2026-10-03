@@ -14,7 +14,7 @@ import { clearCurrentUser } from "@/store/auth-slice";
 import { Colors, TAB_BAR_HEIGHT, Fonts } from "@/constants/theme";
 import { getFactions } from "@/api/factions";
 import { factionEmblems } from "@/constants/faction-assets";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getWorkoutHistory, type WorkoutSession } from "@/api/workout-sessions";
 import { EchelonEmblem } from "@/components/echelon-emblem";
 import { ZenithEmblem } from "@/components/zenith-emblem";
@@ -101,6 +101,7 @@ function formatMemberSince(date: string) {
 
 export default function ProfileScreen() {
   const dispatch = useDispatch<AppDispatch>();
+  const client = useQueryClient();
 
   const user = useSelector((state: RootState) => state.auth.user);
 
@@ -123,6 +124,8 @@ export default function ProfileScreen() {
   async function performSignOut() {
     await deleteToken();
     dispatch(clearCurrentUser());
+    await client.cancelQueries();
+    client.clear();
     router.replace("/(auth)/login");
   }
 

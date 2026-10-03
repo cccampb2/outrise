@@ -42,7 +42,7 @@ test("a database promotion to owner is recognized even with an older token", asy
   const secret = process.env.JWT_SECRET;
   process.env.JWT_SECRET = "owner-tests-only";
   t.after(() => { if (secret === undefined) delete process.env.JWT_SECRET; else process.env.JWT_SECRET = secret; });
-  const user = { _id: id(), role: "owner", accountStatus: "active" };
+  const user = { _id: id(), role: "owner", emailVerified: true, accountStatus: "active" };
   t.mock.method(User, "findById", () => query(user));
   const token = jwt.sign({ userId: user._id.toString(), role: "user" }, process.env.JWT_SECRET);
   const req = { headers: { authorization: `Bearer ${token}` } };
@@ -55,7 +55,7 @@ test("a database promotion to owner is recognized even with an older token", asy
 test("another administrator cannot flag, suspend or ban an owner", async (t) => {
   const session = { withTransaction: async (callback) => callback(), endSession: async () => {} };
   t.mock.method(mongoose, "startSession", async () => session);
-  const owner = { _id: id(), role: "owner", accountStatus: "active" };
+  const owner = { _id: id(), role: "owner", emailVerified: true, accountStatus: "active" };
   t.mock.method(User, "findById", () => query(owner));
   for (const status of ["flagged", "suspended", "banned"]) {
     await assert.rejects(() => setUserAccountStatus({ userId: owner._id, adminId: id(), status, reason: "Test" }), (error) => error.statusCode === 403);

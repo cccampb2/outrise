@@ -52,7 +52,7 @@ test("existing sessions use the database status and role, and cannot bypass a ne
   const previousSecret = process.env.JWT_SECRET;
   process.env.JWT_SECRET = "moderation-tests-only-secret";
   t.after(() => { if (previousSecret === undefined) delete process.env.JWT_SECRET; else process.env.JWT_SECRET = previousSecret; });
-  let user = { _id: userId, role: "user", accountStatus: "flagged" };
+  let user = { _id: userId, role: "user", emailVerified: true, accountStatus: "flagged" };
   t.mock.method(User, "findById", () => query(user));
   const token = jwt.sign({ userId: userId.toString(), role: "admin" }, process.env.JWT_SECRET);
   const req = { headers: { authorization: `Bearer ${token}` } };
@@ -117,7 +117,7 @@ test("restriction responses contain only the public message, status, code and li
 test("moderation writes a seven-day suspension and private audit in one transaction, and can restore or ban", async (t) => {
   const session = { withTransaction: async (callback) => callback(), endSession: async () => {} };
   t.mock.method(mongoose, "startSession", async () => session);
-  const user = { _id: userId, role: "user", accountStatus: "flagged", save: async (options) => assert.equal(options.session, session) };
+  const user = { _id: userId, role: "user", emailVerified: true, accountStatus: "flagged", save: async (options) => assert.equal(options.session, session) };
   t.mock.method(User, "findById", () => query(user));
   const actions = [];
   t.mock.method(AccountModeration, "create", async ([action], options) => { assert.equal(options.session, session); actions.push(action); });

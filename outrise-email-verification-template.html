@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="supported-color-schemes" content="dark" />
+    <title>Verify your Outrise email</title>
+    <style>
+      body, table, td, p, h1 { margin: 0; padding: 0; }
+      table { border-collapse: collapse; }
+      @media only screen and (max-width: 600px) {
+        .outer-padding { padding: 24px 12px !important; }
+        .card-padding { padding: 28px 22px !important; }
+        .message-padding { padding: 20px !important; }
+        .verification-code { font-size: 30px !important; letter-spacing: 4px !important; }
+        .email-title { font-size: 26px !important; line-height: 34px !important; }
+      }
+    </style>
+  </head>
+  <!--
+    OUTRISE / RESEND EMAIL VERIFICATION TEMPLATE
+
+    Import: Resend > Templates > Create template, then paste or drag in this file.
+    Suggested template alias: email-verification
+    Sender: Outrise Support <support@outrisefitness.com>
+    Suggested email subject: Verify your Outrise email
+
+    Define these custom variables in Resend:
+      RECIPIENT_NAME:     string; fallback: there
+      VERIFICATION_CODE:         string; REQUIRED; no production fallback
+      EXPIRES_IN_MINUTES: string; fallback: "10"
+
+    Example test values:
+      RECIPIENT_NAME: Caleb
+      VERIFICATION_CODE: "042817"
+      EXPIRES_IN_MINUTES: "10"
+
+    Keep VERIFICATION_CODE a string so leading zeros are preserved.
+    The backend must generate, store securely and validate the code. This HTML
+    displays it; it does not generate codes or verify accounts.
+    Set EXPIRES_IN_MINUTES to the backend's actual code lifetime as a string.
+    The suggested 10-minute fallback is for the future verification flow.
+    Validate VERIFICATION_CODE as exactly six digits before sending.
+    HTML-escape RECIPIENT_NAME before passing it to the triple-brace variable.
+    Never send a password in this email.
+
+    Documentation:
+      https://resend.com/docs/dashboard/templates/create-template
+      https://resend.com/docs/dashboard/templates/template-variables
+  -->
+  <body style="margin: 0; padding: 0; width: 100%; background-color: #03060A; color: #B7C0C9; -webkit-text-size-adjust: 100%;">
+    <div style="display: none; max-height: 0; overflow: hidden; opacity: 0; mso-hide: all;">
+      Your Outrise email verification code expires in {{{EXPIRES_IN_MINUTES}}} minutes.
+    </div>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#03060A" style="width: 100%; background-color: #03060A;">
+      <tr>
+        <td class="outer-padding" align="center" style="padding: 48px 20px;">
+          <!--[if mso]>
+          <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td>
+          <![endif]-->
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 600px;">
+            <tr>
+              <td style="padding: 0 0 24px; font-family: 'Barlow Condensed', 'Arial Narrow', Arial, sans-serif; font-size: 30px; line-height: 36px; font-weight: 800; letter-spacing: 4px; color: #F1F5F9;">
+                OUTRISE
+              </td>
+            </tr>
+            <tr>
+              <td bgcolor="#050B14" style="background-color: #050B14; border: 1px solid #162636; border-top: 3px solid #8C1A35;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%;">
+                  <tr>
+                    <td class="card-padding" style="padding: 36px 36px 32px;">
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td width="6" valign="middle" style="width: 6px;">
+                            <div style="width: 6px; height: 6px; border-radius: 3px; background-color: #8C1A35;"></div>
+                          </td>
+                          <td style="padding-left: 10px; font-family: 'Barlow', Arial, sans-serif; font-size: 11px; line-height: 18px; font-weight: 700; letter-spacing: 1.6px; color: #9BA7B2;">
+                            OUTRISE // EMAIL VERIFICATION
+                          </td>
+                        </tr>
+                      </table>
+
+                      <h1 class="email-title" style="margin: 18px 0 24px; font-family: 'Barlow Condensed', 'Arial Narrow', Arial, sans-serif; font-size: 30px; line-height: 38px; font-weight: 700; letter-spacing: 0.2px; color: #F1F5F9; overflow-wrap: anywhere;">
+                        Verify your email
+                      </h1>
+
+                      <p style="margin: 0 0 18px; font-family: 'Barlow', Arial, sans-serif; font-size: 16px; line-height: 26px; color: #D3DBE3; overflow-wrap: anywhere;">
+                        Hey {{{RECIPIENT_NAME}}},
+                      </p>
+
+                      <p style="margin: 0 0 24px; font-family: 'Barlow', Arial, sans-serif; font-size: 16px; line-height: 26px; color: #C5CED7;">
+                        Enter this code in Outrise to confirm your email and continue setting up your account.
+                      </p>
+
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#060D17" style="width: 100%; background-color: #060D17; border: 1px solid #1B334A;">
+                        <tr>
+                          <td class="message-padding" align="center" style="padding: 26px 24px;">
+                            <p style="margin: 0 0 12px; font-family: 'Barlow', Arial, sans-serif; font-size: 11px; line-height: 18px; font-weight: 700; letter-spacing: 1.6px; color: #9BA7B2;">
+                              EMAIL VERIFICATION CODE
+                            </p>
+                            <p class="verification-code" dir="ltr" style="margin: 0; font-family: 'Courier New', Courier, monospace; font-size: 36px; line-height: 48px; font-weight: 700; letter-spacing: 3px; color: #F1F5F9; white-space: nowrap;">
+                              {{{VERIFICATION_CODE}}}
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
+
+                      <p style="margin: 20px 0 0; font-family: 'Barlow', Arial, sans-serif; font-size: 14px; line-height: 23px; color: #B7C0C9;">
+                        This code expires in <strong style="font-weight: 700; color: #F1F5F9;">{{{EXPIRES_IN_MINUTES}}} minutes</strong> and can only be used once. Do not share it with anyone.
+                      </p>
+                      <p style="margin: 20px 0 0; font-family: 'Barlow', Arial, sans-serif; font-size: 14px; line-height: 23px; color: #9BA7B2;">
+                        If you didn't create an Outrise account or request this code, you can ignore this email.
+                      </p>
+                      <p style="margin: 24px 0 0; font-family: 'Barlow', Arial, sans-serif; font-size: 15px; line-height: 24px; color: #B7C0C9;">
+                        The Outrise Team
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="card-padding" style="padding: 22px 36px; border-top: 1px solid #162636; font-family: 'Barlow', Arial, sans-serif; font-size: 13px; line-height: 22px; color: #9BA7B2;">
+                      Need more help? Use <strong style="font-weight: 700; color: #C5CED7;">Report an issue</strong> on Outrise's sign-in screen.
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding: 26px 16px 0;">
+                <p style="margin: 0 0 8px; font-family: 'Barlow', Arial, sans-serif; font-size: 11px; line-height: 18px; font-weight: 700; letter-spacing: 1.8px; color: #9BA7B2;">
+                  RISE BEYOND. GET BETTER.
+                </p>
+                <p style="margin: 0; font-family: 'Barlow', Arial, sans-serif; font-size: 12px; line-height: 20px; color: #9BA7B2;">
+                  outrisefitness.com
+                </p>
+              </td>
+            </tr>
+          </table>
+          <!--[if mso]>
+          </td></tr></table>
+          <![endif]-->
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

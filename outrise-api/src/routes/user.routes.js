@@ -1,7 +1,7 @@
 import express from "express";
 import { profileRecordsSchema, profileAchievementsSchema } from "../middleware/validators/profileRecords.validators.js";
 import { getProfileAchievementsController, getProfilePerformancesController } from "../controllers/profileRecords.controller.js";
-import { authenticate } from "../middleware/auth.js";
+import { authenticate, authenticateUnverified } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
 import { updateProfileSchema } from "../middleware/validators/user.validators.js";
 import {
@@ -17,7 +17,7 @@ import { uploadProfileImage } from "../middleware/upload-profile-image.js";
 
 const router = express.Router();
 
-router.get("/me", authenticate, getCurrentUser);
+router.get("/me", authenticateUnverified, getCurrentUser);
 
 router.patch(
   "/me",

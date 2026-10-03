@@ -10,6 +10,7 @@ type AuthUser = {
   id: string;
   username: string;
   email: string;
+  emailVerified: boolean;
   role: UserRole;
   faction: string | null;
 };
@@ -28,13 +29,7 @@ type RegisterCredentials = {
 
 type RegisterResponse = {
   message: string;
-  user: {
-    id: string;
-    username: string;
-    email: string;
-    role: UserRole;
-    faction: string | null;
-  };
+  user: AuthUser;
 };
 
 export async function login(
@@ -81,6 +76,35 @@ export async function resetPassword(credentials: {
   const response = await apiRequest("/auth/reset-password", {
     method: "POST",
     body: JSON.stringify(credentials),
+  });
+  return await response.json();
+}
+
+type EmailVerificationRequestResponse = {
+  message: string;
+  emailVerified: false;
+  expiresInMinutes: number;
+  resendAfterSeconds: number;
+} | {
+  message: string;
+  emailVerified: true;
+  alreadyVerified?: true;
+};
+
+export async function requestEmailVerification(signal?: AbortSignal): Promise<EmailVerificationRequestResponse> {
+  const response = await apiRequest("/auth/email-verification/request", {
+    method: "POST",
+    body: JSON.stringify({}),
+    signal,
+  });
+  return await response.json();
+}
+
+export async function confirmEmailVerification(code: string, signal?: AbortSignal): Promise<{ message: string; emailVerified: true }> {
+  const response = await apiRequest("/auth/email-verification/confirm", {
+    method: "POST",
+    body: JSON.stringify({ code }),
+    signal,
   });
   return await response.json();
 }

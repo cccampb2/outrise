@@ -1,9 +1,10 @@
 import jwt from "jsonwebtoken";
 import UnauthorizedError from "../errors/UnauthorizedError.js";
+import ForbiddenError from "../errors/ForbiddenError.js";
 import User from "../models/User.js";
 import { ensureAccountAccess } from "../services/accountAccess.service.js";
 
-export const authenticate = async (req, res, next) => {
+const createAuthentication = ({ allowUnverified = false } = {}) => async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -16,7 +17,7 @@ export const authenticate = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const account = await User.findById(decoded.userId)
-      .select("role accountStatus suspendedUntil +tokenVersion");
+      .select("role accountStatus suspendedUntil emailVerified +tokenVersion");
     // Legacy tokens/documents count as version zero until the first reset.
     if (account && (decoded.tokenVersion ?? 0) !== (account.tokenVersion ?? 0)) {
       const error = new UnauthorizedError("Your session ended. Sign in again.");
@@ -25,7 +26,13 @@ export const authenticate = async (req, res, next) => {
     }
     const user = await ensureAccountAccess(account);
     // Use the current database role, rather than a potentially stale token role.
-    req.user = { ...decoded, userId: user._id.toString(), role: user.role };
+    const emailVerified = user.emailVerified === true;
+    req.user = { ...decoded, userId: user._id.toString(), role: user.role, emailVerified };
+    if (!allowUnverified && !emailVerified) {
+      const error = new ForbiddenError("Verify your email before continuing.");
+      error.code = "EMAIL_VERIFICATION_REQUIRED";
+      throw error;
+    }
 
     next();
   } catch (error) {
@@ -38,3 +45,9 @@ export const authenticate = async (req, res, next) => {
     next(error);
   }
 };
+
+// App endpoints require verification. Only account status and code endpoints
+// explicitly opt into the identity-only middleware, while retaining moderation
+// and token-revocation checks.
+export const authenticate = createAuthentication();
+export const authenticateUnverified = createAuthentication({ allowUnverified: true });

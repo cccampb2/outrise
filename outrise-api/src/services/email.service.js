@@ -82,8 +82,18 @@ export function getPasswordResetEmailConfig() {
   };
 }
 
+export function getEmailVerificationEmailConfig() {
+  if (!process.env.RESEND_API_KEY?.trim()) {
+    throw new AppError("Email sending is not configured on the server.", 503);
+  }
+  return {
+    from: process.env.EMAIL_FROM?.trim() || DEFAULT_FROM,
+    templateId: process.env.RESEND_EMAIL_VERIFICATION_TEMPLATE?.trim() || "email-verification",
+  };
+}
+
 function authEmailFailure(reason, httpStatus = null, providerCode = null) {
-  const error = new AppError("Password email could not be sent.", 502);
+  const error = new AppError("Account email could not be sent.", 502);
   // Only fixed diagnostic labels are attached; provider messages can include
   // personal data and must never be logged or returned to the client.
   error.deliveryFailure = { reason, httpStatus, providerCode };
@@ -122,8 +132,7 @@ function classifyAuthEmailFailure(response, result) {
   return authEmailFailure(reason, response.status, providerCode);
 }
 
-async function sendAuthEmail(payload, idempotencyKey) {
-  const config = getPasswordResetEmailConfig();
+async function sendAuthEmail(payload, idempotencyKey, config = getPasswordResetEmailConfig()) {
   let response, result;
   try {
     response = await fetch("https://api.resend.com/emails", {
@@ -172,4 +181,20 @@ export async function sendPasswordChangedEmail({ to, resetId }) {
     subject: "Your Outrise password was changed",
     text: "Your Outrise password was just reset. Sign in using your new password. If you did not make this change, use Forgot password to secure your account and Report an issue on the sign-in screen to contact the admin team.",
   }, `password-changed/${resetId}`);
+}
+
+export async function sendEmailVerificationEmail({ to, recipientName, code, expiresInMinutes, verificationId }) {
+  const config = getEmailVerificationEmailConfig();
+  return sendAuthEmail({
+    to: [to],
+    subject: "Verify your Outrise email",
+    template: {
+      id: config.templateId,
+      variables: {
+        RECIPIENT_NAME: escapeText(recipientName || "there").slice(0, 2000),
+        VERIFICATION_CODE: String(code),
+        EXPIRES_IN_MINUTES: String(expiresInMinutes),
+      },
+    },
+  }, `email-verification/${verificationId}`, config);
 }

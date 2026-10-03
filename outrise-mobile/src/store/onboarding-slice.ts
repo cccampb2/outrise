@@ -1,6 +1,7 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 import type { Faction } from "@/api/factions";
+import { clearCurrentUser, setAccountRestriction } from "./auth-slice";
 
 type OnboardingState = {
   recommendedFaction: Faction | null;
@@ -23,8 +24,15 @@ const onboardingSlice = createSlice({
     setSelectedFaction(state, action: PayloadAction<Faction>) {
       state.selectedFaction = action.payload;
     },
+    resetOnboarding() {
+      return initialState;
+    },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(clearCurrentUser, () => initialState);
+    builder.addCase(setAccountRestriction, () => initialState);
   },
 });
 
-export const { setRecommendedFaction, setSelectedFaction } = onboardingSlice.actions;
+export const { setRecommendedFaction, setSelectedFaction, resetOnboarding } = onboardingSlice.actions;
 export default onboardingSlice.reducer;
