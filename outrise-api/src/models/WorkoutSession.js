@@ -189,6 +189,12 @@ const workoutSessionSchema = new Schema(
       type: Date,
       default: null,
     },
+    // Original results are saved with completion, so a lost response is safe to retry.
+    completionSummary: {
+      type: Schema.Types.Mixed,
+      default: null,
+      select: false,
+    },
     durationSeconds: {
       type: Number,
       min: 0,

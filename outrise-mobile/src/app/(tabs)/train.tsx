@@ -236,6 +236,9 @@ export default function TrainScreen() {
             <Text style={styles.systemMessageText}>
               {"// UNABLE_TO_LOAD_WEEKLY_CHALLENGE"}
             </Text>
+            <Pressable accessibilityRole="button" onPress={() => { void currentWorkoutOfTheWeekQuery.refetch(); }} style={{ minHeight: 44, justifyContent: "center" }}>
+              <Text style={styles.systemMessageText}>RETRY</Text>
+            </Pressable>
           </View>
         ) : (
           <View style={styles.systemMessage}>
@@ -323,6 +326,9 @@ export default function TrainScreen() {
             <Text style={styles.systemMessageText}>
               {"// UNABLE_TO_LOAD_ACTIVE_SESSION"}
             </Text>
+            <Pressable accessibilityRole="button" onPress={() => { void activeWorkoutQuery.refetch(); }} style={{ minHeight: 44, justifyContent: "center" }}>
+              <Text style={styles.systemMessageText}>RETRY</Text>
+            </Pressable>
           </View>
         ) : (
           <View style={styles.noActiveWorkout}>
@@ -335,7 +341,7 @@ export default function TrainScreen() {
             <Text style={styles.noActiveTitle}>No active workout</Text>
 
             <Text style={styles.noActiveDescription}>
-              You don't currently have a workout in progress.
+              You don&apos;t currently have a workout in progress.
             </Text>
           </View>
         )}

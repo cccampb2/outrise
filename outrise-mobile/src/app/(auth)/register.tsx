@@ -1,16 +1,29 @@
 import { BrandHeader } from "@/components/brand-header";
-import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
-import { useState } from "react";
+import {
+  AppText as Text,
+  AppTextInput as TextInput,
+} from "@/components/app-text";
+import { useRef, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import { useDispatch } from "react-redux";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { register } from "@/api/auth";
 import { ApiError } from "@/api/client";
 import { Screen } from "@/components/screen";
 import { Colors, Fonts } from "@/constants/theme";
+import { saveToken } from "@/storage/auth-storage";
+import { clearCurrentUser } from "@/store/auth-slice";
+import type { AppDispatch } from "@/store/store";
 
 export default function RegisterScreen() {
+  const dispatch = useDispatch<AppDispatch>();
+  const client = useQueryClient();
+  const inFlight = useRef(false);
+  const createdSession = useRef<{ token: string } | null>(null);
+  const [accountCreated, setAccountCreated] = useState(false);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,46 +37,62 @@ export default function RegisterScreen() {
   }
 
   async function handleRegister() {
+    if (inFlight.current) return;
     setError("");
 
-    if (!username.trim()) {
-      setError("Username is required");
-      return;
+    if (!createdSession.current) {
+      if (!username.trim()) {
+        setError("Username is required");
+        return;
+      }
+
+      if (!email.trim()) {
+        setError("Email is required");
+        return;
+      }
+
+      if (!password) {
+        setError("Password is required");
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        setError("Passwords do not match");
+        return;
+      }
     }
 
-    if (!email.trim()) {
-      setError("Email is required");
-      return;
-    }
-
-    if (!password) {
-      setError("Password is required");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
+    inFlight.current = true;
     setIsLoading(true);
 
     try {
-      await register({
-        username: username.trim(),
-        email: email.trim(),
-        password,
-      });
-
-      router.replace({
-        pathname: "/login",
-        params: {
+      if (!createdSession.current) {
+        const data = await register({
+          username: username.trim(),
           email: email.trim(),
-          registered: "true",
-        },
-      });
+          password,
+        });
+        // Preserve the session before local storage/cleanup. Continue can retry
+        // without registering the account again or sending another signup email.
+        createdSession.current = { token: data.token };
+        setAccountCreated(true);
+        setPassword("");
+        setConfirmPassword("");
+      }
+
+      await client.cancelQueries();
+      client.clear();
+      dispatch(clearCurrentUser());
+      await saveToken(createdSession.current.token);
+      // The existing entry screen loads /users/me and routes to verification.
+      // A temporary connection failure there keeps this token and offers retry.
+      router.replace("/");
     } catch (error) {
-      if (error instanceof ApiError) {
+      if (createdSession.current) {
+        setError(
+          "Your account was created, but we couldn’t open your session. Tap Continue to try again.",
+        );
+      } else if (error instanceof ApiError) {
         setError(error.getDisplayMessage());
       } else if (error instanceof Error) {
         setError(error.message);
@@ -71,6 +100,7 @@ export default function RegisterScreen() {
         setError("Unable to create account");
       }
     } finally {
+      inFlight.current = false;
       setIsLoading(false);
     }
   }
@@ -109,6 +139,7 @@ export default function RegisterScreen() {
             <TextInput
               style={styles.input}
               value={username}
+              editable={!isLoading && !accountCreated}
               onChangeText={setUsername}
               placeholder="Choose a username"
               placeholderTextColor={Colors.dark.textMuted}
@@ -123,6 +154,7 @@ export default function RegisterScreen() {
             <TextInput
               style={styles.input}
               value={email}
+              editable={!isLoading && !accountCreated}
               onChangeText={setEmail}
               placeholder="Enter your email"
               placeholderTextColor={Colors.dark.textMuted}
@@ -138,6 +170,7 @@ export default function RegisterScreen() {
               <TextInput
                 style={[styles.input, styles.passwordInput]}
                 value={password}
+                editable={!isLoading && !accountCreated}
                 onChangeText={setPassword}
                 placeholder="Create a password"
                 placeholderTextColor={Colors.dark.textMuted}
@@ -145,6 +178,7 @@ export default function RegisterScreen() {
               />
 
               <Pressable
+                disabled={isLoading || accountCreated}
                 onPress={handleShowPassword}
                 style={({ pressed }) => [
                   styles.passwordShow,
@@ -166,6 +200,7 @@ export default function RegisterScreen() {
             <TextInput
               style={[styles.input, styles.passwordInput]}
               value={confirmPassword}
+              editable={!isLoading && !accountCreated}
               onChangeText={setConfirmPassword}
               placeholder="Enter your password again"
               placeholderTextColor={Colors.dark.textMuted}
@@ -197,7 +232,13 @@ export default function RegisterScreen() {
             <View style={styles.buttonMarker} />
 
             <Text style={styles.createButtonText}>
-              {isLoading ? "CREATING_ACCOUNT..." : "CREATE_ACCOUNT"}
+              {isLoading
+                ? accountCreated
+                  ? "OPENING_ACCOUNT..."
+                  : "CREATING_ACCOUNT..."
+                : accountCreated
+                  ? "CONTINUE"
+                  : "CREATE_ACCOUNT"}
             </Text>
 
             <Text style={styles.buttonArrow}>→</Text>
@@ -213,6 +254,7 @@ export default function RegisterScreen() {
             <Text style={styles.loginText}>Already have an account?</Text>
 
             <Pressable
+              disabled={isLoading}
               onPress={() => router.back()}
               style={({ pressed }) => (pressed ? styles.linkPressed : null)}
             >

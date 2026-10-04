@@ -106,8 +106,8 @@ function getPerformanceLabel(verification: Verification) {
   switch (measurementType) {
     case "weight_reps": {
       if (
-        performance.weightLbs === undefined ||
-        performance.reps === undefined
+        performance.weightLbs == null ||
+        performance.reps == null
       ) {
         return "PERFORMANCE_UNAVAILABLE";
       }
@@ -116,7 +116,7 @@ function getPerformanceLabel(verification: Verification) {
     }
 
     case "reps": {
-      if (performance.reps === undefined) {
+      if (performance.reps == null) {
         return "PERFORMANCE_UNAVAILABLE";
       }
 
@@ -124,7 +124,7 @@ function getPerformanceLabel(verification: Verification) {
     }
 
     case "time": {
-      if (performance.timeSeconds === undefined) {
+      if (performance.timeSeconds == null) {
         return "PERFORMANCE_UNAVAILABLE";
       }
 
@@ -133,8 +133,8 @@ function getPerformanceLabel(verification: Verification) {
 
     case "distance_time": {
       if (
-        performance.distanceMiles === undefined ||
-        performance.timeSeconds === undefined
+        performance.distanceMiles == null ||
+        performance.timeSeconds == null
       ) {
         return "PERFORMANCE_UNAVAILABLE";
       }
@@ -145,7 +145,7 @@ function getPerformanceLabel(verification: Verification) {
     }
 
     case "duration": {
-      if (performance.timeSeconds === undefined) {
+      if (performance.timeSeconds == null) {
         return "PERFORMANCE_UNAVAILABLE";
       }
 

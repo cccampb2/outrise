@@ -2,6 +2,7 @@ import { createActivityEvent } from "./activity.service.js";
 import WorkoutOfTheWeek from "../models/WorkoutOfTheWeek.js";
 import WorkoutOfTheWeekOccurrence from "../models/WorkoutOfTheWeekOccurrence.js";
 import NotFoundError from "../errors/NotFoundError.js";
+import BadRequestError from "../errors/BadRequestError.js";
 import ConflictError from "../errors/ConflictError.js";
 import NoEligibleWorkoutOfTheWeekError from "../errors/NoEligibleWorkoutOfTheWeekError.js";
 import Exercise from "../models/Exercise.js";
@@ -14,8 +15,11 @@ import {
 import WorkoutSession from "../models/WorkoutSession.js";
 
 const validateWorkoutOfTheWeekExercises = async (exercises) => {
+  if (!exercises.length || exercises.some((entry) => !entry.exercise)) {
+    throw new NotFoundError("One or more exercises were not found");
+  }
   const exerciseIds = exercises.map(
-    (workoutExercise) => workoutExercise.exercise,
+    (workoutExercise) => workoutExercise.exercise._id ?? workoutExercise.exercise,
   );
 
   const uniqueExerciseIds = new Set(
@@ -38,11 +42,13 @@ const validateWorkoutOfTheWeekExercises = async (exercises) => {
   );
 
   exercises.forEach((workoutExercise) => {
-    const exercise = exerciseMap.get(workoutExercise.exercise.toString());
+    const exerciseId = workoutExercise.exercise._id ?? workoutExercise.exercise;
+    const exercise = exerciseMap.get(exerciseId.toString());
 
     validateWorkoutTarget({
       measurementType: exercise.measurementType,
-      target: workoutExercise.target,
+      target: typeof workoutExercise.target.toObject === "function"
+        ? workoutExercise.target.toObject() : workoutExercise.target,
       exerciseName: exercise.name,
     });
   });
@@ -121,13 +127,34 @@ const getRandomEligibleWorkoutOfTheWeek = async ({ weekStart, weekEnd }) => {
     excludedTemplateIds.push(nextOccurrence.workoutOfTheWeek);
   }
 
-  const eligibleTemplates = await WorkoutOfTheWeek.find({
+  const candidates = await WorkoutOfTheWeek.find({
     isActive: true,
     _id: {
       $nin: excludedTemplateIds,
     },
   });
 
+  const exerciseIds = candidates.flatMap((template) => template.exercises.map((entry) => entry.exercise));
+  const activeExercises = await Exercise.find({ _id: { $in: exerciseIds }, isActive: true });
+  const exerciseMap = new Map(activeExercises.map((exercise) => [String(exercise._id), exercise]));
+  const eligibleTemplates = candidates.filter((template) => {
+    if (!template.exercises.length) return false;
+    return template.exercises.every((entry) => {
+      const exercise = exerciseMap.get(String(entry.exercise));
+      if (!exercise) return false;
+      try {
+        validateWorkoutTarget({
+          measurementType: exercise.measurementType,
+          target: typeof entry.target.toObject === "function" ? entry.target.toObject() : entry.target,
+          exerciseName: exercise.name,
+        });
+        return true;
+      } catch (error) {
+        if (error.statusCode === 400) return false;
+        throw error;
+      }
+    });
+  });
   if (eligibleTemplates.length === 0) {
     throw new NoEligibleWorkoutOfTheWeekError();
   }
@@ -191,6 +218,9 @@ export const createWorkoutOfTheWeekOccurrence = async ({
   selectedBy = null,
 }) => {
   const { weekStart, weekEnd } = getWorkoutOfTheWeekWindow(startDate);
+  if (weekEnd <= new Date()) {
+    throw new BadRequestError("Choose the current week or a future week. Finished weeks cannot be scheduled.");
+  }
 
   const conflictingOccurrence = await WorkoutOfTheWeekOccurrence.findOne({
     startsAt: {
@@ -243,6 +273,7 @@ export const createWorkoutOfTheWeekOccurrence = async ({
     throw new NotFoundError("Workout of the Week not found");
   }
 
+  await validateWorkoutOfTheWeekExercises(workoutOfTheWeek.exercises);
   const occurrence = await createWorkoutOfTheWeekOccurrenceFromTemplate({
     workoutOfTheWeek,
     weekStart,
@@ -318,7 +349,7 @@ export const getWorkoutOfTheWeekById = async ({ workoutOfTheWeekId }) => {
   })
     .populate(
       "exercises.exercise",
-      "name slug description category muscleGroups equipment instructions videoUrl measurementType",
+      "name slug description category muscleGroups equipment instructions videoUrl measurementType isActive",
     )
     .populate("createdBy", "username");
 
@@ -612,5 +643,18 @@ export const getWorkoutOfTheWeekHistory = async ({
       totalOccurrences,
       totalPages,
     },
+  };
+};
+
+
+export const getWorkoutOfTheWeekOccurrences = async ({ page = 1, limit = 20, status = "all" }) => {
+  const filter = status === "all" ? {} : { status };
+  const [occurrences, totalOccurrences] = await Promise.all([
+    WorkoutOfTheWeekOccurrence.find(filter).sort({ startsAt: -1 }).skip((page - 1) * limit).limit(limit),
+    WorkoutOfTheWeekOccurrence.countDocuments(filter),
+  ]);
+  return {
+    occurrences,
+    pagination: { page, limit, totalOccurrences, totalPages: Math.ceil(totalOccurrences / limit) },
   };
 };

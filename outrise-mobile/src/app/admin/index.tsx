@@ -158,6 +158,9 @@ export default function AdminScreen() {
         </View>
 
         <View style={styles.options}>
+          {user?.role === "owner" && <AdminOption code="OWNER" title="SUGGESTIONS"
+            description="Read member suggestions in your private developer inbox." status="OWNER ONLY"
+            onPress={() => router.push("/admin/suggestions")} />}
           <AdminOption
             code="SUPPORT"
             title="ISSUE_REPORTS"
@@ -191,16 +194,16 @@ export default function AdminScreen() {
             code="EXERCISE"
             title="EXERCISE_LIBRARY"
             description="Create, update, archive, and manage exercises available throughout Outrise."
-            status="PLANNED"
-            disabled
+            status="ACTIVE"
+            onPress={() => router.push("/admin/exercises")}
           />
 
           <AdminOption
             code="WOTW"
             title="WORKOUT_OF_THE_WEEK"
             description="Manage weekly challenges, difficulty, scheduling, and workout configuration."
-            status="PLANNED"
-            disabled
+            status="ACTIVE"
+            onPress={() => router.push("/admin/wotw")}
           />
         </View>
 

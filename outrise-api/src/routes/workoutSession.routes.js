@@ -71,6 +71,14 @@ router.patch(
 );
 
 router.patch(
+  "/:id/complete",
+  authenticate,
+  requireFaction,
+  validate(workoutSessionIdSchema),
+  completeActiveWorkoutSessionController,
+);
+
+router.patch(
   "/active/exercises/:order/skip",
   authenticate,
   requireFaction,

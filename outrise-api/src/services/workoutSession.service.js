@@ -343,17 +343,44 @@ export const hasValidActualPerformance = (sessionExercise) => {
   return false;
 };
 
-export const completeActiveWorkoutSession = async ({ userId }) => {
+const completedSessionResponse = (workoutSession) => {
+  const session = typeof workoutSession.toObject === "function"
+    ? workoutSession.toObject()
+    : { ...workoutSession };
+  const summary = session.completionSummary;
+  delete session.completionSummary;
+
+  // Older completed sessions predate receipts. Show that they were saved without
+  // inventing an XP breakdown or awarding their rewards again.
+  return {
+    workoutSession: session,
+    ...(summary ?? {
+      newPersonalRecords: [],
+      unlockedAchievements: [],
+      echelonRewards: [],
+      xpEarned: null,
+      dailyXP: null,
+    }),
+  };
+};
+
+export const completeActiveWorkoutSession = async ({ userId, sessionId }) => {
   const mongoSession = await mongoose.startSession();
   try {
     return await mongoSession.withTransaction(async () => {
     const workoutSession = await WorkoutSession.findOne({
       user: userId,
-      status: "active",
-    }).session(mongoSession);
+      ...(sessionId ? { _id: sessionId } : { status: "active" }),
+    }).select("+completionSummary").session(mongoSession);
 
     if (!workoutSession) {
-      throw new NotFoundError("Active workout session not found");
+      throw new NotFoundError("Workout session not found");
+    }
+    if (workoutSession.status === "completed") {
+      return completedSessionResponse(workoutSession);
+    }
+    if (workoutSession.status !== "active") {
+      throw new ConflictError("A cancelled workout cannot be completed.");
     }
 
     const incompleteExercise = workoutSession.exercises.find(
@@ -607,8 +634,7 @@ export const completeActiveWorkoutSession = async ({ userId }) => {
     }
 
 
-    return {
-      workoutSession,
+    const completionSummary = {
       newPersonalRecords,
       unlockedAchievements: achievementUnlocks,
       echelonRewards,
@@ -628,6 +654,9 @@ export const completeActiveWorkoutSession = async ({ userId }) => {
         wasCapped: wasDailyXPCapped,
       },
     };
+    workoutSession.completionSummary = JSON.parse(JSON.stringify(completionSummary));
+    await workoutSession.save({ session: mongoSession });
+    return completedSessionResponse(workoutSession);
     });
   } finally {
     await mongoSession.endSession();

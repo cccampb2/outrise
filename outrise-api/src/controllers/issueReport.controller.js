@@ -12,6 +12,7 @@ export const createIssueReportController = async (req, res, next) => {
       email: req.body.email,
       subject: req.body.subject,
       message: req.body.message,
+      reportedUserId: req.body.reportedUserId,
     });
     res
       .status(201)

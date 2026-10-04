@@ -1,7 +1,8 @@
 import { BrandHeader } from "@/components/brand-header";
 import { AppText as Text } from "@/components/app-text";
 import { StyleSheet, View, ActivityIndicator, Pressable } from "react-native";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useDispatch } from "react-redux";
 
@@ -11,14 +12,21 @@ import {
   getFactionAssessment,
   submitFactionAssessment,
   getFactions,
-  type AssessmentQuestion,
 } from "@/api/factions";
 import type { AppDispatch } from "@/store/store";
 import { setRecommendedFaction } from "@/store/onboarding-slice";
 
 export default function AssessmentScreen() {
-  const [questions, setQuestions] = useState<AssessmentQuestion[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const assessmentQuery = useQuery({
+    queryKey: ["faction-assessment"],
+    queryFn: async () => {
+      const result = await getFactionAssessment();
+      if (!result.questions.length) throw new Error("The assessment is unavailable. Please try again.");
+      return result;
+    },
+  });
+  const questions = assessmentQuery.data?.questions ?? [];
+  const isLoading = assessmentQuery.isPending;
   const [error, setError] = useState("");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -34,7 +42,7 @@ export default function AssessmentScreen() {
   }
 
   async function handleContinue() {
-    if (!selectedOptionId) {
+    if (isSubmitting || !selectedOptionId) {
       return;
     }
 
@@ -80,26 +88,6 @@ export default function AssessmentScreen() {
     }
   }
 
-  useEffect(() => {
-    async function loadAssessment() {
-      try {
-        const data = await getFactionAssessment();
-
-        setQuestions(data.questions);
-      } catch (error) {
-        if (error instanceof Error) {
-          setError(error.message);
-        } else {
-          setError("Unable to load faction assessment");
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    loadAssessment();
-  }, []);
-
   if (isLoading) {
     return (
       <Screen>
@@ -114,13 +102,16 @@ export default function AssessmentScreen() {
     );
   }
 
-  if (error) {
+  if (!questions.length) {
     return (
       <Screen>
         <View style={styles.center}>
           <Text style={styles.errorLabel}>{"// ASSESSMENT_ERROR"}</Text>
 
-          <Text style={styles.errorText}>{error}</Text>
+          <Text style={styles.errorText}>{assessmentQuery.error?.message ?? "Unable to load faction assessment"}</Text>
+          <Pressable style={styles.continueButton} onPress={() => { void assessmentQuery.refetch(); }}>
+            <Text style={styles.continueButtonText}>RETRY</Text>
+          </Pressable>
         </View>
       </Screen>
     );
@@ -170,6 +161,8 @@ export default function AssessmentScreen() {
           </View>
         </View>
 
+        {error && <Text style={styles.errorText}>{error}</Text>}
+
         {/* QUESTION */}
 
         <View style={styles.questionArea}>
@@ -187,6 +180,7 @@ export default function AssessmentScreen() {
             return (
               <Pressable
                 key={option.id}
+                disabled={isSubmitting}
                 onPress={() =>
                   handleSelectAnswer(currentQuestion.id, option.id)
                 }

@@ -7,7 +7,7 @@ export function useNotificationCount(userId?: string) {
   const query = useQuery({ queryKey: ["notifications", userId, "count"], queryFn: getUnreadNotificationCount, enabled: Boolean(userId), refetchInterval: 30000 });
   const { refetch } = query;
   useFocusEffect(useCallback(() => { if (userId) void refetch(); }, [userId, refetch]));
-  return query.data?.unreadCount ?? 0;
+  return query;
 }
 
 export function useNotifications(userId?: string, unreadOnly = false) {

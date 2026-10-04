@@ -133,7 +133,7 @@ export const getWorkoutById = async ({ workoutId, ownerId }) => {
     owner: ownerId,
   }).populate(
     "exercises.exercise",
-    "name slug description category muscleGroups equipment instructions videoUrl measurementType",
+    "name slug description category muscleGroups equipment instructions videoUrl measurementType isActive",
   );
 
   if (!workout) {
@@ -166,7 +166,7 @@ export const updateWorkout = async ({ workoutId, ownerId, updates }) => {
 
   await workout.populate(
     "exercises.exercise",
-    "name slug description category muscleGroups equipment instructions videoUrl measurementType",
+    "name slug description category muscleGroups equipment instructions videoUrl measurementType isActive",
   );
   return workout;
 };
@@ -228,7 +228,7 @@ export const duplicateWorkout = async ({ workoutId, ownerId }) => {
 
   await duplicateWorkout.populate(
     "exercises.exercise",
-    "name slug description category muscleGroups equipment instructions videoUrl measurementType",
+    "name slug description category muscleGroups equipment instructions videoUrl measurementType isActive",
   );
 
   return duplicateWorkout;

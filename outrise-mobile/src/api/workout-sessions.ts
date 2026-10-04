@@ -143,7 +143,7 @@ export type CompleteWorkoutResponse = {
     workoutOfTheWeek: number;
     achievements: number;
     total: number;
-  };
+  } | null;
 
   dailyXP: {
     earned: number;
@@ -151,11 +151,11 @@ export type CompleteWorkoutResponse = {
     remaining: number;
     isCapped: boolean;
     wasCapped: boolean;
-  };
+  } | null;
 };
 
-export async function completeActiveWorkout(): Promise<CompleteWorkoutResponse> {
-  const response = await apiRequest("/workout-sessions/active/complete", {
+export async function completeActiveWorkout(sessionId: string): Promise<CompleteWorkoutResponse> {
+  const response = await apiRequest(`/workout-sessions/${sessionId}/complete`, {
     method: "PATCH",
   });
 

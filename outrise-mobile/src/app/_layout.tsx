@@ -31,6 +31,10 @@ function AuthenticatedStack() {
         <Stack.Screen name="exercises/index" />
         <Stack.Screen name="profile/edit" />
         <Stack.Screen name="notifications" />
+        <Stack.Screen name="suggest-feature" />
+        <Stack.Protected guard={user?.role === "owner"}>
+          <Stack.Screen name="admin/suggestions" />
+        </Stack.Protected>
         <Stack.Screen name="rankings/factions/[factionSlug]" />
         <Stack.Screen name="workout-session/active" />
         <Stack.Screen name="workout-session/[sessionId]" />
@@ -43,6 +47,13 @@ function AuthenticatedStack() {
         <Stack.Screen name="admin/achievements/[id]" />
         <Stack.Screen name="admin/achievements/create" />
         <Stack.Screen name="admin/achievements/index" />
+        <Stack.Screen name="admin/exercises/index" />
+        <Stack.Screen name="admin/exercises/create" />
+        <Stack.Screen name="admin/exercises/[id]" />
+        <Stack.Screen name="admin/wotw/index" />
+        <Stack.Screen name="admin/wotw/create" />
+        <Stack.Screen name="admin/wotw/[id]" />
+        <Stack.Screen name="admin/wotw/schedule" />
         <Stack.Screen name="admin/index" />
         <Stack.Screen name="verifications/submit" />
         <Stack.Screen name="verifications/[verification]" />

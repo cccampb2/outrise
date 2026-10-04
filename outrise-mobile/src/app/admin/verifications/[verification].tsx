@@ -144,7 +144,7 @@ function VerificationVideo({ url }: VerificationVideoProps) {
         style={styles.video}
         nativeControls
         contentFit="contain"
-        allowsFullscreen
+        fullscreenOptions={{ enable: true }}
       />
 
       <View style={styles.videoFooter}>

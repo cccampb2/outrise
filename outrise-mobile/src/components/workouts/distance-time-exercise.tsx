@@ -1,5 +1,5 @@
 import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import type { WorkoutSessionExercise } from "@/api/workout-sessions";
@@ -45,23 +45,14 @@ export function DistanceTimeExercise({
 
   const [isEditing, setIsEditing] = useState(!hasSavedPerformance);
 
-  useEffect(() => {
-    const serverDistance = exercise.actual.distanceMiles ?? null;
-    const serverTime = exercise.actual.timeSeconds ?? null;
-
-    if (serverDistance === null || serverTime === null) {
-      setDistance("");
-      setMinutes("");
-      setSeconds("");
-      setIsEditing(true);
-      return;
-    }
-
-    setDistance(String(serverDistance));
-    setMinutes(String(getMinutes(serverTime)));
-    setSeconds(String(getSeconds(serverTime)));
-    setIsEditing(false);
-  }, [exercise.actual.distanceMiles, exercise.actual.timeSeconds]);
+  const [previousPerformance, setPreviousPerformance] = useState({ distance: savedDistance, time: savedTime });
+  if (previousPerformance.distance !== savedDistance || previousPerformance.time !== savedTime) {
+    setPreviousPerformance({ distance: savedDistance, time: savedTime });
+    setDistance(savedDistance === null ? "" : String(savedDistance));
+    setMinutes(savedTime === null ? "" : String(getMinutes(savedTime)));
+    setSeconds(savedTime === null ? "" : String(getSeconds(savedTime)));
+    setIsEditing(!hasSavedPerformance);
+  }
 
   const distanceNumber = Number(distance);
   const minutesNumber = Number(minutes.trim() || "0");

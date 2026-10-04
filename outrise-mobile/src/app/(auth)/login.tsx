@@ -3,6 +3,7 @@ import { AppText as Text, AppTextInput as TextInput } from "@/components/app-tex
 import { useRef, useState } from "react";
 import { StyleSheet, View, Pressable } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import AntDesign from "@expo/vector-icons/AntDesign";
 import { useDispatch, useSelector } from "react-redux";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -30,11 +31,16 @@ export default function LoginScreen() {
 
   const [email, setEmail] = useState(params.email ?? "");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [errorTitle, setErrorTitle] = useState("ACCESS_ERROR");
   const displayedError = error || (accountNotice ? accountRestrictionMessage(accountNotice) : params.sessionExpired === "true" ? "Your session ended. Sign in again." : "");
   const displayedErrorTitle = error ? errorTitle : accountNotice?.accountStatus === "suspended" ? "ACCOUNT_SUSPENDED" : accountNotice ? "ACCOUNT_BANNED" : "SESSION_EXPIRED";
+
+  function handleShowPassword() {
+    setShowPassword((currentValue) => !currentValue);
+  }
 
   async function handleLogin() {
     if (inFlight.current) return;
@@ -157,15 +163,34 @@ export default function LoginScreen() {
           <View style={styles.field}>
             <Text style={styles.label}>PASSWORD</Text>
 
-            <TextInput
-              style={styles.input}
-              value={password}
-              editable={!isLoading}
-              onChangeText={setPassword}
-              placeholder="Enter your password"
-              placeholderTextColor={Colors.dark.textMuted}
-              secureTextEntry
-            />
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={[styles.input, styles.passwordInput]}
+                value={password}
+                editable={!isLoading}
+                onChangeText={setPassword}
+                placeholder="Enter your password"
+                placeholderTextColor={Colors.dark.textMuted}
+                secureTextEntry={!showPassword}
+              />
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={showPassword ? "Hide password" : "Show password"}
+                disabled={isLoading}
+                onPress={handleShowPassword}
+                style={({ pressed }) => [
+                  styles.passwordShow,
+                  pressed ? styles.iconPressed : null,
+                ]}
+              >
+                <AntDesign
+                  name={showPassword ? "eye" : "eye-invisible"}
+                  size={21}
+                  color={Colors.dark.textSecondary}
+                />
+              </Pressable>
+            </View>
           </View>
 
           <Pressable
@@ -382,6 +407,27 @@ const styles = StyleSheet.create({
     fontSize: 15,
     paddingHorizontal: 15,
     paddingVertical: 14,
+  },
+
+  passwordContainer: {
+    position: "relative",
+  },
+
+  passwordInput: {
+    paddingRight: 52,
+  },
+
+  passwordShow: {
+    position: "absolute",
+    right: 10,
+    top: 0,
+    bottom: 0,
+    justifyContent: "center",
+    paddingHorizontal: 6,
+  },
+
+  iconPressed: {
+    opacity: 0.5,
   },
 
   /* ERROR */

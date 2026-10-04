@@ -40,7 +40,9 @@ const createAuthentication = ({ allowUnverified = false } = {}) => async (req, r
       error.name === "JsonWebTokenError" ||
       error.name === "TokenExpiredError"
     ) {
-      return next(new UnauthorizedError("Invalid or expired token"));
+      const sessionError = new UnauthorizedError("Your session ended. Sign in again.");
+      sessionError.code = "SESSION_EXPIRED";
+      return next(sessionError);
     }
     next(error);
   }

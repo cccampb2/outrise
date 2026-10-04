@@ -3,13 +3,21 @@ import jwt from "jsonwebtoken";
 import { requestEmailVerification, verifyEmail } from "../services/emailVerification.service.js";
 import { requestPasswordReset, resetPassword } from "../services/passwordReset.service.js";
 
+const createSessionToken = (user) => jwt.sign(
+  { userId: user._id, role: user.role, tokenVersion: user.tokenVersion ?? 0 },
+  process.env.JWT_SECRET,
+  { expiresIn: process.env.JWT_EXPIRES_IN || "7d" },
+);
+
 export const register = async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
 
     const user = await registerUser({ username, email, password });
+    const token = createSessionToken(user);
 
     res.status(201).json({
+      token,
       user: {
         id: user._id,
         username: user.username,
@@ -30,13 +38,7 @@ export const login = async (req, res, next) => {
 
     const user = await loginUser({ email, password });
 
-    const token = jwt.sign(
-      { userId: user._id, role: user.role, tokenVersion: user.tokenVersion ?? 0 },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: process.env.JWT_EXPIRES_IN || "7d",
-      },
-    );
+    const token = createSessionToken(user);
 
     res.status(200).json({
       message: "Login successful",

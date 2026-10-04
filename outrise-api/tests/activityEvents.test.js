@@ -200,7 +200,7 @@ test("completion creates normal and qualifying WOTW events, including repeats, b
     captured.length = 0;
     xpSources.length = 0;
     deadline = new Date(Date.now() + (scenario === "late" ? -60000 : 60000));
-    workout = { _id: id(), user: actor, startedAt: new Date(Date.now() - 10000), workoutName: "Push", sourceType: scenario === "normal" ? "workout" : scenario === "original" ? "workout_of_the_week" : "repeat", workoutOfTheWeekOccurrence: scenario === "normal" ? null : sourceId, exercises: [{ exercise: exerciseId, exerciseName: "Pushup", measurementType: "reps", skipped: scenario === "skipped", actual: { sets: [{ reps: 5 }] } }], save: async () => {} };
+    workout = { _id: id(), user: actor, status: "active", startedAt: new Date(Date.now() - 10000), workoutName: "Push", sourceType: scenario === "normal" ? "workout" : scenario === "original" ? "workout_of_the_week" : "repeat", workoutOfTheWeekOccurrence: scenario === "normal" ? null : sourceId, exercises: [{ exercise: exerciseId, exerciseName: "Pushup", measurementType: "reps", skipped: scenario === "skipped", actual: { sets: [{ reps: 5 }] } }], save: async () => {} };
     await completeActiveWorkoutSession({ userId: actor });
     if (scenario === "normal") assert.equal(captured[0].type, "workout_completed");
     else if (["original", "repeat"].includes(scenario)) { assert.equal(captured[0].type, "wotw_completed"); assert.equal(captured[0].idempotencyKey, `user:${actor}:wotw:${sourceId}:completed`); }

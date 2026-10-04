@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import Verification from "../models/Verification.js";
 import { recordVerificationActivity } from "./verificationActivity.service.js";
 import Exercise from "../models/Exercise.js";
@@ -99,47 +100,75 @@ const validateVerificationPerformance = (measurementType, performance) => {
   throw new BadRequestError("Unsupported exercise measurement type");
 };
 
+const publicVerification = (verification) => {
+  const result = typeof verification.toObject === "function"
+    ? verification.toObject()
+    : { ...verification };
+  delete result.idempotencyKey;
+  delete result.submissionFingerprint;
+  return result;
+};
+
 export const createVerification = async ({
   userId,
   exerciseId,
   performance,
   proofFile,
+  idempotencyKey,
 }) => {
+  const submissionFingerprint = idempotencyKey
+    ? createHash("sha256").update(JSON.stringify({
+        exerciseId: String(exerciseId),
+        reps: performance.reps,
+        weightLbs: performance.weightLbs,
+        distanceMiles: performance.distanceMiles,
+        timeSeconds: performance.timeSeconds,
+        proof: createHash("sha256").update(proofFile.buffer).digest("hex"),
+      })).digest("hex")
+    : undefined;
+
+  const findPreviousSubmission = async () => {
+    const previous = await Verification.findOne({ user: userId, idempotencyKey })
+      .select("+submissionFingerprint");
+    if (previous && previous.submissionFingerprint !== submissionFingerprint) {
+      throw new ConflictError("This submission attempt was already used for different proof or performance. Start a new attempt.");
+    }
+    return previous;
+  };
+
+  if (idempotencyKey) {
+    const previous = await findPreviousSubmission();
+    if (previous) return publicVerification(previous);
+  }
+
   const exercise = await Exercise.findById(exerciseId);
-
-  if (!exercise) {
-    throw new NotFoundError("Exercise not found");
-  }
-
+  if (!exercise) throw new NotFoundError("Exercise not found");
   if (!exercise.isActive) {
-    throw new BadRequestError(
-      "Verification cannot be submitted for an inactive exercise",
-    );
+    throw new BadRequestError("Verification cannot be submitted for an inactive exercise");
   }
-
   validateVerificationPerformance(exercise.measurementType, performance);
 
   let uploadedProof = null;
-
   try {
     uploadedProof = await uploadVerificationVideo(proofFile.buffer);
-
     const verification = await Verification.create({
       user: userId,
       exercise: exercise._id,
       measurementType: exercise.measurementType,
       performance,
       proof: uploadedProof,
+      ...(idempotencyKey ? { idempotencyKey, submissionFingerprint } : {}),
     });
-
-    return verification;
+    return publicVerification(verification);
   } catch (error) {
     if (uploadedProof?.publicId) {
-      try {
-        await deleteVerificationVideo(uploadedProof.publicId);
-      } catch {}
+      try { await deleteVerificationVideo(uploadedProof.publicId); } catch {}
     }
-
+    // A concurrent retry may have inserted the same attempt during the upload.
+    if (idempotencyKey && error.code === 11000) {
+      const previous = await findPreviousSubmission();
+      if (previous) return publicVerification(previous);
+    }
     throw error;
   }
 };

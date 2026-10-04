@@ -27,7 +27,9 @@ export default function NotificationsScreen() {
   const userId = useSelector((state: RootState) => state.auth.user?.id);
   const [unreadOnly, setUnreadOnly] = useState(false);
   const { query, notifications: visible, mutation, markRead, dismiss } = useNotifications(userId, unreadOnly);
-  const unreadCount = useNotificationCount(userId);
+  const countQuery = useNotificationCount(userId);
+  const unreadCount = countQuery.data?.unreadCount;
+  const hasUnread = unreadCount === undefined ? visible.some((item) => !item.read) : unreadCount > 0;
   async function openNotification(item: Notification) {
     try {
       await markRead(item._id);
@@ -42,12 +44,13 @@ export default function NotificationsScreen() {
     <Pressable accessibilityRole="button" accessibilityLabel="Go back" onPress={() => router.back()} style={styles.back}><Ionicons name="arrow-back" size={20} color={Colors.dark.text} /><Text style={styles.backText}>BACK</Text></Pressable>
     <BrandHeader label="INBOX" />
     <View style={styles.header}><Text style={styles.title}>Notifications</Text><Ionicons name="notifications-outline" size={26} color={Colors.dark.accent} /></View>
-    <Text style={styles.subtitle}>{unreadCount ? `${unreadCount} unread notifications` : "You’re all caught up"}</Text>
+    <Text style={styles.subtitle}>{countQuery.isError ? "Unread count unavailable" : unreadCount === undefined ? "Checking notifications..." : unreadCount > 0 ? `${unreadCount} unread notifications` : "You’re all caught up"}</Text>
+    {countQuery.isError && <Pressable accessibilityRole="button" onPress={() => { void countQuery.refetch(); }} style={styles.back}><Text style={styles.action}>RETRY UNREAD COUNT</Text></Pressable>}
     <View style={styles.tools}>
       <View style={styles.filters}>{[false, true].map((unread) => <Pressable key={String(unread)} accessibilityRole="button" accessibilityState={{ selected: unreadOnly === unread }} onPress={() => setUnreadOnly(unread)} style={[styles.filter, unreadOnly === unread && styles.activeFilter]}><Text style={[styles.filterText, unreadOnly === unread && styles.activeText]}>{unread ? "UNREAD" : "ALL"}</Text></Pressable>)}</View>
-      <Pressable accessibilityRole="button" disabled={unreadCount === 0 || mutation.isPending} onPress={() => { void markRead().catch(() => {}); }} style={styles.markAll}><Text style={[styles.action, unreadCount === 0 && styles.muted]}>MARK ALL READ</Text></Pressable>
+      <Pressable accessibilityRole="button" disabled={!hasUnread || mutation.isPending} onPress={() => { void markRead().catch(() => {}); }} style={styles.markAll}><Text style={[styles.action, !hasUnread && styles.muted]}>MARK ALL READ</Text></Pressable>
     </View>
-    {(visible.length > 0 || unreadCount > 0) && <Pressable accessibilityRole="button" disabled={mutation.isPending} onPress={() => clearNotification()} style={styles.clearAll}><Text style={styles.action}>CLEAR ALL</Text></Pressable>}
+    {(visible.length > 0 || hasUnread) && <Pressable accessibilityRole="button" disabled={mutation.isPending} onPress={() => clearNotification()} style={styles.clearAll}><Text style={styles.action}>CLEAR ALL</Text></Pressable>}
     {query.isPending && <ActivityIndicator color={Colors.dark.accent} />}
     {query.isError && <Pressable onPress={() => { void query.refetch(); }} style={styles.back}><Text style={styles.error}>Unable to load notifications. Tap to retry.</Text></Pressable>}
     {mutation.isError && <Text style={styles.error}>{mutation.error instanceof ApiError ? mutation.error.getDisplayMessage() : "Unable to update notifications."}</Text>}

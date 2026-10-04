@@ -204,31 +204,19 @@ export default function WorkoutOfTheWeekScreen() {
    * The backend request is only sent when the countdown reaches 0.
    */
 
+  const { mutate: startChallenge } = startWorkoutOfTheWeekMutation;
   useEffect(() => {
-    if (startCountdown === null) {
-      return;
-    }
-
-    if (startCountdown === 0) {
-      setStartCountdown(null);
-      startWorkoutOfTheWeekMutation.mutate();
-      return;
-    }
-
+    if (startCountdown === null) return;
     const timeout = setTimeout(() => {
-      setStartCountdown((currentCountdown) => {
-        if (currentCountdown === null) {
-          return null;
-        }
-
-        return currentCountdown - 1;
-      });
-    }, 1000);
-
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, [startCountdown]);
+      if (startCountdown === 0) {
+        setStartCountdown(null);
+        startChallenge();
+      } else {
+        setStartCountdown((current) => current === null ? null : current - 1);
+      }
+    }, startCountdown === 0 ? 0 : 1000);
+    return () => clearTimeout(timeout);
+  }, [startCountdown, startChallenge]);
 
   function handleStartChallenge() {
     setStartCountdown(10);
@@ -585,13 +573,13 @@ export default function WorkoutOfTheWeekScreen() {
 
             {startWorkoutOfTheWeekMutation.isError && (
               <Text style={styles.challengeError}>
-                // UNABLE_TO_START_WEEKLY_CHALLENGE
+                {"// UNABLE_TO_START_WEEKLY_CHALLENGE"}
               </Text>
             )}
 
             {repeatWorkoutMutation.isError && (
               <Text style={styles.challengeError}>
-                // UNABLE_TO_REPEAT_WEEKLY_CHALLENGE
+                {"// UNABLE_TO_REPEAT_WEEKLY_CHALLENGE"}
               </Text>
             )}
           </View>

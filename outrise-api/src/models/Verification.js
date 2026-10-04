@@ -51,6 +51,8 @@ const performanceSchema = new Schema(
 
 const verificationSchema = new Schema(
   {
+    idempotencyKey: { type: String, trim: true, select: false },
+    submissionFingerprint: { type: String, select: false },
     user: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -98,6 +100,11 @@ const verificationSchema = new Schema(
   {
     timestamps: true,
   },
+);
+
+verificationSchema.index(
+  { user: 1, idempotencyKey: 1 },
+  { unique: true, partialFilterExpression: { idempotencyKey: { $type: "string" } } },
 );
 
 const Verification = model("Verification", verificationSchema);

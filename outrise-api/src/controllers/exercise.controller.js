@@ -139,6 +139,7 @@ export const restoreExerciseController = async (req, res, next) => {
 export const getExerciseByIdController = async (req, res) => {
   const exercise = await getExerciseById({
     exerciseId: req.params.id,
+    userRole: req.user.role,
   });
 
   res.status(200).json({

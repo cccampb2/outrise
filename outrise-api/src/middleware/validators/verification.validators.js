@@ -11,6 +11,8 @@ export const createVerificationSchema = {
   body: Joi.object({
     exercise: Joi.string().hex().length(24).required(),
     performance: performanceSchema,
+    idempotencyKey: Joi.string().trim().min(8).max(128)
+      .pattern(/^[a-zA-Z0-9:_-]+$/).optional(),
   }),
 };
 

@@ -56,7 +56,7 @@ export const confirmFaction = async ({ userId, factionSlug }) => {
     throw new NotFoundError("Faction not found");
   }
 
-  const user = await User.findByIdAndUpdate(
+  const user = await User.findOneAndUpdate(
     {
       _id: userId,
       faction: null,

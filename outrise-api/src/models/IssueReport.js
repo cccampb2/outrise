@@ -35,6 +35,7 @@ const issueReportSchema = new Schema(
       lowercase: true,
       maxlength: 254,
     },
+    reportedUser: { type: Schema.Types.ObjectId, ref: "User", default: null },
     subject: {
       type: String,
       required: true,

@@ -10,6 +10,7 @@ import {
   updateWorkoutOfTheWeekSchema,
   createWorkoutOfTheWeekOccurrenceSchema,
   getWorkoutOfTheWeekHistorySchema,
+  getWorkoutOfTheWeekOccurrencesSchema,
 } from "../middleware/validators/workoutOfTheWeek.validators.js";
 import {
   createWorkoutOfTheWeekController,
@@ -22,6 +23,7 @@ import {
   getActiveWorkoutOfTheWeekOccurrenceController,
   getCurrentWorkoutOfTheWeekForUserController,
   getWorkoutOfTheWeekHistoryController,
+  getWorkoutOfTheWeekOccurrencesController,
 } from "../controllers/workoutOfTheWeek.controller.js";
 
 const router = express.Router();
@@ -62,6 +64,14 @@ router.get(
   requireFaction,
   validate(getWorkoutOfTheWeekHistorySchema),
   getWorkoutOfTheWeekHistoryController,
+);
+
+router.get(
+  "/occurrences",
+  authenticate,
+  requireRole("admin"),
+  validate(getWorkoutOfTheWeekOccurrencesSchema),
+  getWorkoutOfTheWeekOccurrencesController,
 );
 
 router.post(

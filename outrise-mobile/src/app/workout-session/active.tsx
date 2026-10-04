@@ -225,30 +225,18 @@ export default function ActiveWorkout() {
     };
   }, [activeWorkout?.startedAt, activeWorkout?.status]);
 
-  if (activeWorkoutQuery.isPending) {
-    return (
-      <Screen>
-        <View style={styles.stateContainer}>
-          <Text style={styles.stateEyebrow}>ACTIVE_SESSION</Text>
-          <Text style={styles.message}>Loading workout...</Text>
-        </View>
-      </Screen>
-    );
-  }
-
-  if (activeWorkoutQuery.isError) {
-    return (
-      <Screen>
-        <View style={styles.stateContainer}>
-          <Text style={styles.errorEyebrow}>SYSTEM_ERROR</Text>
-          <Text style={styles.message}>Unable to load active workout.</Text>
-        </View>
-      </Screen>
-    );
-  }
-
   if (completionResult) {
     const completedWorkout = completionResult.workoutSession;
+    if (!completionResult.xpEarned || !completionResult.dailyXP) {
+      return <Screen><View style={styles.stateContainer}>
+        <Text style={styles.message}>{completedWorkout.workoutName} is already saved.</Text>
+        <Text style={styles.message}>The original reward breakdown is unavailable for this older workout.</Text>
+        <Pressable style={styles.doneButton} onPress={() => router.replace("/(tabs)/train")}>
+          <Text style={styles.doneButtonText}>RETURN TO TRAIN</Text>
+        </Pressable>
+      </View></Screen>;
+    }
+
 
     return (
       <Screen scroll bottomInSet={16}>
@@ -468,7 +456,59 @@ export default function ActiveWorkout() {
     );
   }
 
-  if (!activeWorkoutQuery.data.workoutSession) {
+  // Retain the attempted ID even if the active-session refetch now returns null.
+  if (completeWorkoutMutation.variables && (completeWorkoutMutation.isError || completeWorkoutMutation.isPending)) {
+    const completionError = completeWorkoutMutation.error;
+    const isRejected = completionError instanceof ApiError && [400, 401, 403, 404, 409, 422].includes(completionError.status);
+    return <Screen><View style={styles.stateContainer}>
+      <Text style={styles.stateEyebrow}>WORKOUT_COMPLETION</Text>
+      <Text style={styles.message}>{completeWorkoutMutation.isPending
+        ? "Confirming your saved workout..."
+        : isRejected ? completionError.getDisplayMessage()
+        : "Couldn't confirm completion. Your workout may already be saved. Retry when connected."}</Text>
+      {!completeWorkoutMutation.isPending && <>
+        {!isRejected && <Pressable style={styles.doneButton} onPress={() => {
+          const sessionId = completeWorkoutMutation.variables;
+          if (sessionId) completeWorkoutMutation.mutate(sessionId);
+        }}>
+          <Text style={styles.doneButtonText}>RETRY COMPLETION</Text>
+        </Pressable>}
+        {isRejected && <Pressable style={styles.doneButton} onPress={() => { completeWorkoutMutation.reset(); void activeWorkoutQuery.refetch(); }}>
+          <Text style={styles.doneButtonText}>BACK TO WORKOUT</Text>
+        </Pressable>}
+        <Pressable style={styles.backButton} onPress={() => router.replace("/(tabs)/train")}>
+          <Text style={styles.backText}>RETURN TO TRAIN</Text>
+        </Pressable>
+      </>}
+    </View></Screen>;
+  }
+
+  if (activeWorkoutQuery.isPending) {
+    return (
+      <Screen>
+        <View style={styles.stateContainer}>
+          <Text style={styles.stateEyebrow}>ACTIVE_SESSION</Text>
+          <Text style={styles.message}>Loading workout...</Text>
+        </View>
+      </Screen>
+    );
+  }
+
+  if (activeWorkoutQuery.isError) {
+    return (
+      <Screen>
+        <View style={styles.stateContainer}>
+          <Text style={styles.errorEyebrow}>SYSTEM_ERROR</Text>
+          <Text style={styles.message}>Unable to load active workout.</Text>
+          <Pressable style={styles.doneButton} onPress={() => { void activeWorkoutQuery.refetch(); }}>
+            <Text style={styles.doneButtonText}>RETRY</Text>
+          </Pressable>
+        </View>
+      </Screen>
+    );
+  }
+
+  if (!activeWorkoutQuery.data?.workoutSession) {
     return (
       <Screen>
         <View style={styles.stateContainer}>
@@ -481,6 +521,8 @@ export default function ActiveWorkout() {
 
   const workout = activeWorkoutQuery.data.workoutSession;
   const currentExercise = workout.exercises[currentExerciseIndex];
+
+  const isBusy = updateExerciseMutation.isPending || skipExerciseMutation.isPending || completeWorkoutMutation.isPending || cancelWorkoutMutation.isPending;
 
   const canCompleteWorkout = workout.exercises.every(hasLoggedPerformance);
 
@@ -651,8 +693,9 @@ export default function ActiveWorkout() {
 
         {currentExercise.measurementType === "weight_reps" && (
           <WeightRepsExercise
+            key={`${workout._id}:${currentExercise.order}`}
             exercise={currentExercise}
-            isSaving={updateExerciseMutation.isPending}
+            isSaving={isBusy}
             errorMessage={mutationError}
             onSave={async (sets) => {
               updateExerciseMutation.reset();
@@ -667,8 +710,9 @@ export default function ActiveWorkout() {
 
         {currentExercise.measurementType === "intervals" && (
           <IntervalExercise
+            key={`${workout._id}:${currentExercise.order}`}
             exercise={currentExercise}
-            isSaving={updateExerciseMutation.isPending}
+            isSaving={isBusy}
             errorMessage={mutationError}
             onSave={async (roundsCompleted) => {
               updateExerciseMutation.reset();
@@ -683,8 +727,9 @@ export default function ActiveWorkout() {
 
         {currentExercise.measurementType === "reps" && (
           <RepsExercise
+            key={`${workout._id}:${currentExercise.order}`}
             exercise={currentExercise}
-            isSaving={updateExerciseMutation.isPending}
+            isSaving={isBusy}
             errorMessage={mutationError ?? ""}
             onSave={async (sets) => {
               updateExerciseMutation.reset();
@@ -699,8 +744,9 @@ export default function ActiveWorkout() {
 
         {currentExercise.measurementType === "time" && (
           <TimeExercise
+            key={`${workout._id}:${currentExercise.order}`}
             exercise={currentExercise}
-            isSaving={updateExerciseMutation.isPending}
+            isSaving={isBusy}
             errorMessage={mutationError ?? ""}
             onSave={async (timeSeconds) => {
               updateExerciseMutation.reset();
@@ -715,8 +761,9 @@ export default function ActiveWorkout() {
 
         {currentExercise.measurementType === "duration" && (
           <DurationExercise
+            key={`${workout._id}:${currentExercise.order}`}
             exercise={currentExercise}
-            isSaving={updateExerciseMutation.isPending}
+            isSaving={isBusy}
             errorMessage={mutationError ?? ""}
             onSave={async (timeSeconds) => {
               updateExerciseMutation.reset();
@@ -731,8 +778,9 @@ export default function ActiveWorkout() {
 
         {currentExercise.measurementType === "distance_time" && (
           <DistanceTimeExercise
+            key={`${workout._id}:${currentExercise.order}`}
             exercise={currentExercise}
-            isSaving={updateExerciseMutation.isPending}
+            isSaving={isBusy}
             errorMessage={mutationError ?? ""}
             onSave={async (distanceMiles, timeSeconds) => {
               updateExerciseMutation.reset();
@@ -753,7 +801,7 @@ export default function ActiveWorkout() {
             styles.skipButton,
             pressed && styles.secondaryButtonPressed,
           ]}
-          disabled={skipExerciseMutation.isPending}
+          disabled={isBusy}
           onPress={handleSkipExercise}
         >
           <Text style={styles.skipButtonText}>
@@ -768,7 +816,7 @@ export default function ActiveWorkout() {
             styles.navigationButton,
             currentExerciseIndex === 0 && styles.navigationButtonDisabled,
           ]}
-          disabled={currentExerciseIndex === 0}
+          disabled={isBusy || currentExerciseIndex === 0}
           onPress={() => setCurrentExerciseIndex((current) => current - 1)}
         >
           <Text style={styles.navigationDirection}>←</Text>
@@ -781,7 +829,7 @@ export default function ActiveWorkout() {
             currentExerciseIndex === workout.exercises.length - 1 &&
               styles.navigationButtonDisabled,
           ]}
-          disabled={currentExerciseIndex === workout.exercises.length - 1}
+          disabled={isBusy || currentExerciseIndex === workout.exercises.length - 1}
           onPress={() => setCurrentExerciseIndex((current) => current + 1)}
         >
           <Text style={styles.navigationButtonText}>NEXT</Text>
@@ -792,15 +840,15 @@ export default function ActiveWorkout() {
       <Pressable
         style={({ pressed }) => [
           styles.completeButton,
-          (!canCompleteWorkout || completeWorkoutMutation.isPending) &&
+          (!canCompleteWorkout || isBusy) &&
             styles.completeButtonDisabled,
           pressed &&
             canCompleteWorkout &&
             !completeWorkoutMutation.isPending &&
             styles.primaryButtonPressed,
         ]}
-        disabled={!canCompleteWorkout || completeWorkoutMutation.isPending}
-        onPress={() => completeWorkoutMutation.mutate()}
+        disabled={!canCompleteWorkout || isBusy}
+        onPress={() => completeWorkoutMutation.mutate(workout._id)}
       >
         <Text style={styles.completeButtonText}>
           {completeWorkoutMutation.isPending
@@ -813,7 +861,7 @@ export default function ActiveWorkout() {
           styles.cancelWorkoutButton,
           pressed && styles.cancelWorkoutButtonPressed,
         ]}
-        disabled={cancelWorkoutMutation.isPending}
+        disabled={isBusy}
         onPress={handleCancelWorkout}
       >
         <Text style={styles.cancelWorkoutButtonText}>
@@ -823,7 +871,7 @@ export default function ActiveWorkout() {
 
       {cancelWorkoutMutation.isError && (
         <Text style={styles.cancelWorkoutError}>
-          // UNABLE_TO_CANCEL_WORKOUT
+          {"// UNABLE_TO_CANCEL_WORKOUT"}
         </Text>
       )}
     </Screen>

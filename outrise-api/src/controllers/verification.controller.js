@@ -19,6 +19,7 @@ export const createVerificationController = async (req, res, next) => {
       exerciseId: req.body.exercise,
       performance: req.body.performance,
       proofFile: req.file,
+      idempotencyKey: req.body.idempotencyKey,
     });
 
     return res.status(201).json({ verification });

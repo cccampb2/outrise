@@ -150,7 +150,7 @@ export default function CommunityScreen() {
               <Text style={styles.searchLabel}>USER_SEARCH</Text>
 
               <View style={styles.searchInputContainer}>
-                <Text style={styles.searchPrefix}>//</Text>
+                <Text style={styles.searchPrefix}>{"//"}</Text>
 
                 <TextInput
                   value={searchText}
@@ -197,7 +197,7 @@ export default function CommunityScreen() {
             {searchQuery.length === 0 ? (
               <View style={styles.initialState}>
                 <View style={styles.initialMarker}>
-                  <Text style={styles.initialMarkerText}>//</Text>
+                  <Text style={styles.initialMarkerText}>{"//"}</Text>
                 </View>
 
                 <Text style={styles.initialTitle}>SEARCH THE NETWORK</Text>
@@ -245,7 +245,7 @@ export default function CommunityScreen() {
               <Text style={styles.emptyTitle}>NO_USERS_FOUND</Text>
 
               <Text style={styles.emptyDescription}>
-                No active users matched "{searchQuery}".
+                No active users matched &quot;{searchQuery}&quot;.
               </Text>
             </View>
           ) : null

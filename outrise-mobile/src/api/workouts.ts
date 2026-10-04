@@ -57,6 +57,7 @@ export type WorkoutExerciseDetail = {
     equipment: string[];
     instructions: string[];
     videoUrl: string | null;
+    isActive: boolean;
     measurementType: MeasurementType;
   };
   order: number;

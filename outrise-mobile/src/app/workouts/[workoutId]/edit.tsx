@@ -1,6 +1,6 @@
 import { BrandHeader } from "@/components/brand-header";
 import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import {
@@ -83,11 +83,7 @@ export default function EditWorkoutScreen() {
   const exercises =
     exercisesQuery.data?.pages.flatMap((page) => page.exercises) ?? [];
 
-  useEffect(() => {
-    if (!workoutQuery.data || formInitialized) {
-      return;
-    }
-
+  if (workoutQuery.data && !formInitialized) {
     const workout = workoutQuery.data.workout;
 
     setName(workout.name);
@@ -104,7 +100,7 @@ export default function EditWorkoutScreen() {
     );
 
     setFormInitialized(true);
-  }, [workoutQuery.data, formInitialized]);
+  }
 
   const updateWorkoutMutation = useMutation({
     mutationFn: (input: UpdateWorkoutInput) => updateWorkout(workoutId, input),
@@ -494,7 +490,7 @@ export default function EditWorkoutScreen() {
                     </Text>
 
                     <Text style={styles.exerciseResultMetadata}>
-                      {exercise.category.toUpperCase()} //{" "}
+                      {exercise.category.toUpperCase()}{" // "}
                       {exercise.measurementType
                         .replaceAll("_", " ")
                         .toUpperCase()}

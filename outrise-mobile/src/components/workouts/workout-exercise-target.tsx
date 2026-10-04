@@ -1,5 +1,5 @@
 import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { Colors } from "@/constants/theme";
@@ -32,19 +32,21 @@ function TargetInput({
   onChange,
   decimal = false,
 }: TargetInputProps) {
-  function handleChange(text: string) {
-    if (text === "") {
-      onChange(undefined);
-      return;
+  const [text, setText] = useState(value === undefined ? "" : String(value));
+  const [previousValue, setPreviousValue] = useState(value);
+
+  if (previousValue !== value) {
+    setPreviousValue(value);
+    // Keep an unfinished decimal (such as "1.") during normal typing.
+    if ((text === "" || text === "." ? undefined : Number(text)) !== value) {
+      setText(value === undefined ? "" : String(value));
     }
+  }
 
-    const number = Number(text);
-
-    if (Number.isNaN(number)) {
-      return;
-    }
-
-    onChange(number);
+  function handleChange(nextText: string) {
+    if (!(decimal ? /^\d*(?:\.\d*)?$/ : /^\d*$/).test(nextText)) return;
+    setText(nextText);
+    onChange(nextText === "" || nextText === "." ? undefined : Number(nextText));
   }
 
   return (
@@ -52,7 +54,7 @@ function TargetInput({
       <Text style={styles.targetInputLabel}>{label}</Text>
 
       <TextInput
-        value={value !== undefined ? String(value) : ""}
+        value={text}
         onChangeText={handleChange}
         keyboardType={decimal ? "decimal-pad" : "number-pad"}
         placeholder="0"
@@ -74,15 +76,16 @@ function TimeTargetInput({ value, onChange }: TimeTargetInputProps) {
     String(initialTotalSeconds % 60),
   );
 
-  useEffect(() => {
+  const [previousValue, setPreviousValue] = useState(value);
+  if (previousValue !== value) {
+    setPreviousValue(value);
     const totalSeconds = value ?? 0;
-
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-
-    setMinutesText(String(minutes));
-    setSecondsText(String(seconds));
-  }, [value]);
+    // Parent updates caused by this input should not overwrite its drafts.
+    if (Number(minutesText || "0") * 60 + Number(secondsText || "0") !== totalSeconds) {
+      setMinutesText(String(Math.floor(totalSeconds / 60)));
+      setSecondsText(String(totalSeconds % 60));
+    }
+  }
 
   function updateTotalSeconds(
     nextMinutesText: string,

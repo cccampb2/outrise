@@ -82,6 +82,7 @@ export type VerificationVideo = {
 };
 
 export type CreateVerificationInput = {
+  idempotencyKey: string;
   exerciseId: string;
   performance: VerificationPerformance;
   video: VerificationVideo;
@@ -102,6 +103,7 @@ export async function createVerification(
   const formData = new FormData();
 
   formData.append("exercise", input.exerciseId);
+  formData.append("idempotencyKey", input.idempotencyKey);
 
   formData.append("performance", JSON.stringify(input.performance));
 

@@ -42,10 +42,10 @@ export default function RevealScreen() {
   const faction = selectedFaction ?? recommendedFaction;
 
   const textAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: textOpacity.value,
+    opacity: textOpacity.get(),
     transform: [
       {
-        translateY: textTranslateY.value,
+        translateY: textTranslateY.get(),
       },
     ],
   }));
@@ -53,16 +53,16 @@ export default function RevealScreen() {
   const shakeAnimatedStyle = useAnimatedStyle(() => ({
     transform: [
       {
-        translateX: shakeX.value,
+        translateX: shakeX.get(),
       },
     ],
   }));
 
   const emblemAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: emblemOpacity.value,
+    opacity: emblemOpacity.get(),
     transform: [
       {
-        scale: emblemScale.value,
+        scale: emblemScale.get(),
       },
     ],
   }));
@@ -72,11 +72,11 @@ export default function RevealScreen() {
   }
 
   useEffect(() => {
-    emblemOpacity.value = withTiming(1, {
+    emblemOpacity.set(withTiming(1, {
       duration: 100,
-    });
+    }));
 
-    emblemScale.value = withSequence(
+    emblemScale.set(withSequence(
       withTiming(
         0.9,
         {
@@ -87,7 +87,7 @@ export default function RevealScreen() {
           if (finished) {
             scheduleOnRN(triggerImpact);
 
-            shakeX.value = withSequence(
+            shakeX.set(withSequence(
               withTiming(-8, {
                 duration: 25,
               }),
@@ -103,7 +103,7 @@ export default function RevealScreen() {
               withTiming(0, {
                 duration: 30,
               }),
-            );
+            ));
           }
         },
       ),
@@ -119,18 +119,18 @@ export default function RevealScreen() {
         },
         (finished) => {
           if (finished) {
-            textOpacity.value = withTiming(1, {
+            textOpacity.set(withTiming(1, {
               duration: 350,
-            });
+            }));
 
-            textTranslateY.value = withTiming(0, {
+            textTranslateY.set(withTiming(0, {
               duration: 350,
               easing: Easing.out(Easing.cubic),
-            });
+            }));
           }
         },
       ),
-    );
+    ));
   }, [emblemOpacity, emblemScale, shakeX, textOpacity, textTranslateY]);
 
   if (!faction) {
@@ -151,9 +151,11 @@ export default function RevealScreen() {
     setError("");
 
     try {
-      await confirmFaction(faction.slug);
-
-      const user = await getCurrentUser();
+      let user = await getCurrentUser();
+      if (!user.faction) {
+        await confirmFaction(faction.slug);
+        user = await getCurrentUser();
+      }
 
       dispatch(setCurrentUser(user));
 

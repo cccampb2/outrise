@@ -50,18 +50,21 @@ export function AdminField({
   onChange,
   numeric = false,
   multiline = false,
+  disabled = false,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   numeric?: boolean;
   multiline?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <View>
       <Text style={adminAchievementStyles.label}>{label}</Text>
       <TextInput
         accessibilityLabel={label}
+        editable={!disabled}
         style={adminAchievementStyles.input}
         value={value}
         onChangeText={onChange}
@@ -76,8 +79,10 @@ export function AdminChoices<T extends string>({
   options,
   value,
   onChange,
+  disabled = false,
 }: {
   label: string;
+  disabled?: boolean;
   options: readonly T[];
   value: string;
   onChange: (value: T) => void;
@@ -90,6 +95,7 @@ export function AdminChoices<T extends string>({
           <Pressable
             key={option}
             accessibilityRole="button"
+            disabled={disabled}
             accessibilityState={{ selected: option === value }}
             onPress={() => onChange(option)}
             style={[

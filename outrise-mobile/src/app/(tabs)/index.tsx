@@ -307,6 +307,9 @@ export default function HomeScreen() {
             <Text style={styles.wotwSystemMessageText}>
               {"// UNABLE_TO_LOAD_WEEKLY_CHALLENGE"}
             </Text>
+            <Pressable accessibilityRole="button" onPress={() => { void currentWorkoutOfTheWeekQuery.refetch(); }} style={{ minHeight: 44, justifyContent: "center" }}>
+              <Text style={styles.wotwSystemMessageText}>RETRY</Text>
+            </Pressable>
           </View>
         ) : workoutOfTheWeekOccurrence ? (
           <View style={styles.wotwCard}>

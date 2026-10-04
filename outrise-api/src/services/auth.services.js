@@ -29,8 +29,8 @@ export const registerUser = async ({ username, email, password }) => {
   try {
     await requestEmailVerification({ userId: user._id });
   } catch (error) {
-    // The account already exists. Let the user sign in and request another code
-    // instead of reporting registration failure and encouraging duplicate signup.
+    // The account already exists. Continue into the verification screen with a
+    // session so the user can request another code without repeating signup.
     logger.warn("Initial verification email delivery could not be confirmed.",
       error.deliveryFailure || { reason: "EMAIL_CONFIGURATION" });
   }

@@ -19,6 +19,7 @@ export type Exercise = {
   videoUrl: string | null;
   measurementType: MeasurementType;
   isActive: boolean;
+  baseXP?: number;
 };
 
 export type ExercisePagination = {
@@ -41,6 +42,7 @@ export type GetExercisesParams = {
   category?: ExerciseCategory;
   muscleGroup?: string;
   search?: string;
+  status?: "active" | "archived" | "all";
 };
 
 export async function getExercises(
@@ -67,6 +69,8 @@ export async function getExercises(
   if (params.search !== undefined) {
     searchParams.set("search", params.search);
   }
+
+  if (params.status !== undefined) searchParams.set("status", params.status);
 
   const queryString = searchParams.toString();
 
@@ -97,4 +101,20 @@ export async function getExerciseMuscleGroups(): Promise<GetExerciseMuscleGroups
   const response = await apiRequest("/exercises/meta/muscle-groups");
 
   return await response.json();
+}
+
+
+export type ExerciseInput = Omit<Exercise, "_id" | "isActive" | "baseXP"> & { baseXP: number };
+
+export async function createExercise(input: ExerciseInput): Promise<{ exercise: Exercise }> {
+  const response = await apiRequest("/exercises", { method: "POST", body: JSON.stringify(input) });
+  return response.json();
+}
+export async function updateExercise(id: string, input: ExerciseInput): Promise<{ exercise: Exercise }> {
+  const response = await apiRequest(`/exercises/${id}`, { method: "PATCH", body: JSON.stringify(input) });
+  return response.json();
+}
+export async function setExerciseArchived(id: string, archived: boolean): Promise<{ exercise: Exercise }> {
+  const response = await apiRequest(`/exercises/${id}/${archived ? "archive" : "restore"}`, { method: "PATCH" });
+  return response.json();
 }

@@ -4,6 +4,8 @@ import { AppText as Text } from "@/components/app-text";
 import { ProfileRecords } from "@/components/profile-records";
 import { Pressable, StyleSheet, View, Image } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/store/store";
 import { useQuery } from "@tanstack/react-query";
 
 import { getPublicUser, type PublicUser } from "@/api/users";
@@ -126,6 +128,7 @@ function ProgressPanel({ user }: ProgressPanelProps) {
 }
 
 export default function PublicUserProfileScreen() {
+  const currentUserId = useSelector((state: RootState) => state.auth.user?.id);
   const params = useLocalSearchParams<{
     userId?: string | string[];
   }>();
@@ -488,6 +491,18 @@ export default function PublicUserProfileScreen() {
           </View>
         </View>
 
+        {currentUserId && currentUserId !== user.id && <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Report ${user.username}`}
+          onPress={() => router.push({
+            pathname: "/report-issue",
+            params: { reportedUserId: user.id, reportedUsername: user.username },
+          })}
+          style={({ pressed }) => [styles.reportButton, pressed && styles.backButtonPressed]}
+        >
+          <Text style={styles.backButtonText}>REPORT USER</Text>
+        </Pressable>}
+
         {/* FOOTER */}
 
         <View style={styles.footer}>
@@ -503,6 +518,7 @@ export default function PublicUserProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+  reportButton: { minHeight: 44, paddingHorizontal: 16, justifyContent: "center", alignSelf: "flex-start", borderWidth: 1, borderColor: Colors.dark.borderStrong, marginTop: 20 },
   page: {
     paddingBottom: 40,
   },

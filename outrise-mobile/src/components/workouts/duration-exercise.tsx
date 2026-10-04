@@ -1,5 +1,5 @@
 import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import type { WorkoutSessionExercise } from "@/api/workout-sessions";
@@ -38,20 +38,13 @@ export function DurationExercise({
 
   const [isEditing, setIsEditing] = useState(savedDuration === null);
 
-  useEffect(() => {
-    const serverDuration = exercise.actual.timeSeconds ?? null;
-
-    if (serverDuration === null) {
-      setMinutes("");
-      setSeconds("");
-      setIsEditing(true);
-      return;
-    }
-
-    setMinutes(String(getMinutes(serverDuration)));
-    setSeconds(String(getSeconds(serverDuration)));
-    setIsEditing(false);
-  }, [exercise.actual.timeSeconds]);
+  const [previousTime, setPreviousTime] = useState(savedDuration);
+  if (previousTime !== savedDuration) {
+    setPreviousTime(savedDuration);
+    setMinutes(savedDuration === null ? "" : String(getMinutes(savedDuration)));
+    setSeconds(savedDuration === null ? "" : String(getSeconds(savedDuration)));
+    setIsEditing(savedDuration === null);
+  }
 
   const minutesNumber = Number(minutes.trim() || "0");
   const secondsNumber = Number(seconds.trim() || "0");

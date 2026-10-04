@@ -891,6 +891,27 @@ export default function ProfileScreen() {
 
               <Text style={styles.accountMeta}>{"[PRIVATE]"}</Text>
             </View>
+            <View style={styles.accountDivider} />
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.push("/report-issue")}
+              style={({ pressed }) => [styles.accountActionRow, pressed && styles.accountActionRowPressed]}
+            >
+              <View style={styles.accountText}>
+                <Text style={styles.dataLabel}>SUPPORT</Text>
+                <Text style={styles.accountActionValue}>Report an issue</Text>
+              </View>
+              <Text style={styles.accountActionArrow}>→</Text>
+            </Pressable>
+            <View style={styles.accountDivider} />
+            <Pressable accessibilityRole="button" onPress={() => router.push("/suggest-feature")}
+              style={({ pressed }) => [styles.accountActionRow, pressed && styles.accountActionRowPressed]}>
+              <View style={styles.accountText}>
+                <Text style={styles.dataLabel}>YOUR IDEAS</Text>
+                <Text style={styles.accountActionValue}>Suggest a feature</Text>
+              </View>
+              <Text style={styles.accountActionArrow}>→</Text>
+            </Pressable>
           </View>
 
           {/* SIGN OUT */}

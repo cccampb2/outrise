@@ -1,9 +1,9 @@
 import { BrandHeader } from "@/components/brand-header";
 import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
 import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from "react-native";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { router } from "expo-router";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
 
 import { Screen } from "@/components/screen";
@@ -64,6 +64,8 @@ function getVideoMimeType(asset: ImagePicker.ImagePickerAsset) {
 }
 
 export default function SubmitVerificationScreen() {
+  const queryClient = useQueryClient();
+  const submissionAttempt = useRef<{ fingerprint: string; key: string } | null>(null);
   const [search, setSearch] = useState("");
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
     null,
@@ -98,7 +100,11 @@ export default function SubmitVerificationScreen() {
   const createVerificationMutation = useMutation({
     mutationFn: createVerification,
 
-    onSuccess: () => {
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["verifications"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin-verifications"] }),
+      ]);
       Alert.alert(
         "Verification Submitted",
         "Your performance was submitted for review.",
@@ -111,17 +117,18 @@ export default function SubmitVerificationScreen() {
       );
     },
     onError: (error) => {
-      if (error instanceof ApiError) {
+      if (error instanceof ApiError && error.status < 500) {
         Alert.alert("Submission Failed", error.getDisplayMessage());
 
         return;
       }
       console.error("VERIFICATION SUBMISSION ERROR:", error);
-      Alert.alert("Submission Failed", "Unable to submit verification.");
+      Alert.alert("Submission Not Confirmed", "Your submission may already be saved. Retry with the same details when connected.");
     },
   });
 
   function selectExercise(exercise: Exercise) {
+    if (createVerificationMutation.isPending) return;
     setSelectedExercise(exercise);
 
     setReps("");
@@ -131,6 +138,7 @@ export default function SubmitVerificationScreen() {
   }
 
   async function chooseVideo() {
+    if (createVerificationMutation.isPending) return;
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (!permission.granted) {
@@ -166,6 +174,7 @@ export default function SubmitVerificationScreen() {
   }
 
   async function recordVideo() {
+    if (createVerificationMutation.isPending) return;
     const permission = await ImagePicker.requestCameraPermissionsAsync();
 
     if (!permission.granted) {
@@ -276,6 +285,7 @@ export default function SubmitVerificationScreen() {
   }
 
   function submitVerification() {
+    if (createVerificationMutation.isPending) return;
     if (!selectedExercise) {
       Alert.alert("Exercise Required", "Select an exercise to verify.");
 
@@ -299,7 +309,15 @@ export default function SubmitVerificationScreen() {
       return;
     }
 
+    const fingerprint = JSON.stringify({ exerciseId: selectedExercise._id, performance, video: video.uri });
+    if (submissionAttempt.current?.fingerprint !== fingerprint) {
+      submissionAttempt.current = {
+        fingerprint,
+        key: `verification:${Date.now()}:${Math.random().toString(36).slice(2)}:${Math.random().toString(36).slice(2)}`,
+      };
+    }
     createVerificationMutation.mutate({
+      idempotencyKey: submissionAttempt.current.key,
       exerciseId: selectedExercise._id,
       performance,
       video,
@@ -353,6 +371,7 @@ export default function SubmitVerificationScreen() {
             </View>
 
             <Pressable
+              disabled={createVerificationMutation.isPending}
               onPress={() => setSelectedExercise(null)}
               style={({ pressed }) => [
                 styles.changeButton,
@@ -437,6 +456,7 @@ export default function SubmitVerificationScreen() {
               {measurementType === "weight_reps" ? (
                 <>
                   <PerformanceInput
+                    editable={!createVerificationMutation.isPending}
                     label="WEIGHT_LBS"
                     value={weightLbs}
                     onChangeText={setWeightLbs}
@@ -445,6 +465,7 @@ export default function SubmitVerificationScreen() {
                   />
 
                   <PerformanceInput
+                    editable={!createVerificationMutation.isPending}
                     label="REPS"
                     value={reps}
                     onChangeText={setReps}
@@ -455,6 +476,7 @@ export default function SubmitVerificationScreen() {
 
               {measurementType === "reps" ? (
                 <PerformanceInput
+                    editable={!createVerificationMutation.isPending}
                   label="REPS"
                   value={reps}
                   onChangeText={setReps}
@@ -464,6 +486,7 @@ export default function SubmitVerificationScreen() {
 
               {measurementType === "time" || measurementType === "duration" ? (
                 <PerformanceInput
+                    editable={!createVerificationMutation.isPending}
                   label="TIME_SECONDS"
                   value={timeSeconds}
                   onChangeText={setTimeSeconds}
@@ -475,6 +498,7 @@ export default function SubmitVerificationScreen() {
               {measurementType === "distance_time" ? (
                 <>
                   <PerformanceInput
+                    editable={!createVerificationMutation.isPending}
                     label="DISTANCE_MILES"
                     value={distanceMiles}
                     onChangeText={setDistanceMiles}
@@ -483,6 +507,7 @@ export default function SubmitVerificationScreen() {
                   />
 
                   <PerformanceInput
+                    editable={!createVerificationMutation.isPending}
                     label="TIME_SECONDS"
                     value={timeSeconds}
                     onChangeText={setTimeSeconds}
@@ -518,7 +543,7 @@ export default function SubmitVerificationScreen() {
                     </Text>
                   </View>
 
-                  <Pressable onPress={() => setVideo(null)}>
+                  <Pressable disabled={createVerificationMutation.isPending} onPress={() => setVideo(null)}>
                     <Text style={styles.removeVideoText}>REMOVE</Text>
                   </Pressable>
                 </View>
@@ -531,6 +556,7 @@ export default function SubmitVerificationScreen() {
 
               <View style={styles.videoActions}>
                 <Pressable
+                  disabled={createVerificationMutation.isPending}
                   onPress={recordVideo}
                   style={({ pressed }) => [
                     styles.videoButton,
@@ -541,6 +567,7 @@ export default function SubmitVerificationScreen() {
                 </Pressable>
 
                 <Pressable
+                  disabled={createVerificationMutation.isPending}
                   onPress={chooseVideo}
                   style={({ pressed }) => [
                     styles.videoButton,
@@ -589,6 +616,7 @@ export default function SubmitVerificationScreen() {
 }
 
 type PerformanceInputProps = {
+  editable?: boolean;
   label: string;
   value: string;
   onChangeText: (value: string) => void;
@@ -597,6 +625,7 @@ type PerformanceInputProps = {
 };
 
 function PerformanceInput({
+  editable = true,
   label,
   value,
   onChangeText,
@@ -608,6 +637,7 @@ function PerformanceInput({
       <Text style={styles.inputLabel}>{label}</Text>
 
       <TextInput
+        editable={editable}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}

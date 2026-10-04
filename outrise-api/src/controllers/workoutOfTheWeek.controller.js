@@ -9,6 +9,7 @@ import {
   getActiveWorkoutOfTheWeekOccurrence,
   getCurrentWorkoutOfTheWeekForUser,
   getWorkoutOfTheWeekHistory,
+  getWorkoutOfTheWeekOccurrences,
 } from "../services/workoutOfTheWeek.service.js";
 
 export const createWorkoutOfTheWeekController = async (req, res, next) => {
@@ -182,4 +183,12 @@ export const getWorkoutOfTheWeekHistoryController = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+};
+
+
+export const getWorkoutOfTheWeekOccurrencesController = async (req, res, next) => {
+  try {
+    const result = await getWorkoutOfTheWeekOccurrences(req.query);
+    res.status(200).json(result);
+  } catch (error) { next(error); }
 };

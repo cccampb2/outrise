@@ -9,11 +9,12 @@ import type { RootState } from "@/store/store";
 
 export function NotificationBell({ userId }: { userId?: string }) {
   const signedInUserId = useSelector((state: RootState) => state.auth.user?.id);
-  const unreadCount = useNotificationCount(userId ?? signedInUserId);
+  const countQuery = useNotificationCount(userId ?? signedInUserId);
+  const unreadCount = countQuery.data?.unreadCount;
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Notifications, ${unreadCount} unread`}
+      accessibilityLabel={countQuery.isError ? "Notifications, unread count unavailable" : unreadCount === undefined ? "Notifications, checking unread count" : `Notifications, ${unreadCount} unread`}
       onPress={() => router.push("/notifications")}
       style={({ pressed }) => [styles.button, pressed && { opacity: 0.65 }]}
     >
@@ -22,7 +23,7 @@ export function NotificationBell({ userId }: { userId?: string }) {
         size={23}
         color={Colors.dark.text}
       />
-      {unreadCount > 0 && (
+      {unreadCount !== undefined && unreadCount > 0 && (
         <View style={styles.badge}>
           <Text style={styles.count}>
             {unreadCount > 99 ? "99+" : unreadCount}

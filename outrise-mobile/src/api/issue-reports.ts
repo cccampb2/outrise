@@ -19,6 +19,7 @@ export type IssueReportReplyInput = { subject: string; message: string; expected
 export type IssueReport = {
   _id: string;
   email: string;
+  reportedUser?: string | null;
   subject: string;
   message: string;
   status: IssueReportStatus;
@@ -35,10 +36,11 @@ export type IssueReportDetail = {
     history: { _id: string; admin: ReportAdmin; previousStatus: IssueReportStatus; status: IssueReportStatus; note: string; createdAt: string }[];
   };
   account: { _id: string; username: string; accountStatus: AccountStatus; suspendedUntil: string | null } | null;
+  reportedAccount?: { _id: string; username: string; accountStatus: AccountStatus; suspendedUntil: string | null } | null;
 };
 export type IssueReportUpdate = { status: IssueReportStatus; expectedRevision: number; note?: string };
 
-export async function submitIssueReport(data: { email: string; subject: string; message: string }): Promise<{ message: string }> {
+export async function submitIssueReport(data: { email: string; subject: string; message: string; reportedUserId?: string }): Promise<{ message: string }> {
   const response = await apiRequest("/issue-reports", { method: "POST", body: JSON.stringify(data) });
   return response.json();
 }

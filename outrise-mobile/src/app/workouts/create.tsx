@@ -411,7 +411,7 @@ export default function CreateWorkoutScreen() {
                     </Text>
 
                     <Text style={styles.exerciseResultMetadata}>
-                      {exercise.category.toUpperCase()} //{" "}
+                      {exercise.category.toUpperCase()}{" // "}
                       {exercise.measurementType
                         .replaceAll("_", " ")
                         .toUpperCase()}

@@ -176,7 +176,7 @@ export default function FactionRankingsScreen() {
                     },
                   ]}
                 >
-                  {faction.name.toUpperCase()} // ACTIVE
+                  {faction.name.toUpperCase()}{" // ACTIVE"}
                 </Text>
               </View>
             </View>

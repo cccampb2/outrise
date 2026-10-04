@@ -28,7 +28,7 @@ type RegisterCredentials = {
 };
 
 type RegisterResponse = {
-  message: string;
+  token: string;
   user: AuthUser;
 };
 

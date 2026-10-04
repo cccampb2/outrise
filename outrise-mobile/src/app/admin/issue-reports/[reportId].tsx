@@ -63,12 +63,21 @@ export default function IssueReportScreen() {
             </View>
             <View style={styles.card}>
               <Text style={styles.cardTitle}>Account with this email</Text>
-              <Text style={styles.text}>The reporter supplied this email without signing in. Account ownership has not been verified.</Text>
+              <Text style={styles.text}>This is the contact email supplied with the report. A matching account does not prove account ownership.</Text>
               {query.data?.account ? <>
                 <Text style={styles.text}>{query.data.account.username} · {query.data.account.accountStatus.toUpperCase()}</Text>
                 <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: "/admin/users/[userId]", params: { userId: query.data!.account!._id } })} style={styles.button}><Text style={styles.action}>REVIEW ACCOUNT →</Text></Pressable>
               </> : <Text style={styles.text}>No OUTRISE account currently matches this email.</Text>}
             </View>
+            {report.reportedUser && <View style={styles.card}>
+              <Text style={styles.cardTitle}>Reported user</Text>
+              {query.data?.reportedAccount ? <>
+                <Text style={styles.text}>{query.data.reportedAccount.username} · {query.data.reportedAccount.accountStatus.toUpperCase()}</Text>
+                <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: "/admin/users/[userId]", params: { userId: query.data!.reportedAccount!._id } })} style={styles.button}>
+                  <Text style={styles.action}>REVIEW REPORTED USER →</Text>
+                </Pressable>
+              </> : <Text style={styles.text}>This account is no longer available. Recorded user ID: {report.reportedUser}</Text>}
+            </View>}
             <View style={styles.card}>
               <Text style={styles.cardTitle}>Admin actions</Text>
               <Text style={styles.text}>Internal notes are visible to all admins.</Text>

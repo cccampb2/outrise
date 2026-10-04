@@ -7,6 +7,7 @@ export const createIssueReportSchema = {
     email: Joi.string().trim().lowercase().email({ tlds: { allow: false } }).max(254).required(),
     subject: Joi.string().trim().min(3).max(120).required(),
     message: Joi.string().trim().min(10).max(3000).required(),
+    reportedUserId: Joi.string().hex().length(24).optional(),
   }),
 };
 export const issueReportListSchema = {

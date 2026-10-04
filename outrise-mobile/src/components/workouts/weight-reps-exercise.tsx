@@ -1,6 +1,6 @@
 import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
 import { Pressable, StyleSheet, View } from "react-native";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 import type {
   ActualSetInput,
@@ -66,9 +66,11 @@ export function WeightRepsExercise({
     createEditableSets(exercise),
   );
 
-  useEffect(() => {
+  const [previousSets, setPreviousSets] = useState(exercise.actual.sets);
+  if (previousSets !== exercise.actual.sets) {
+    setPreviousSets(exercise.actual.sets);
     setSets(createEditableSets(exercise));
-  }, [exercise.actual.sets]);
+  }
 
   const hasUnsavedSet = sets.some((set) => !set.isSaved);
 

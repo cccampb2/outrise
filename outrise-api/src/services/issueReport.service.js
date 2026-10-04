@@ -10,9 +10,12 @@ function populateAdmins(query) {
     .populate("history.admin replies.admin", "username");
 }
 
-export async function createIssueReport({ email, subject, message }) {
+export async function createIssueReport({ email, subject, message, reportedUserId }) {
   // Public submissions cannot set status, reviewers, or internal notes.
-  const report = await IssueReport.create({ email, subject, message });
+  const report = await IssueReport.create({
+    email, subject, message,
+    ...(reportedUserId ? { reportedUser: reportedUserId } : {}),
+  });
   return report;
 }
 
@@ -54,7 +57,12 @@ export async function getIssueReport(reportId) {
   const account = await User.findOne({ email: report.email })
     .select("username accountStatus suspendedUntil")
     .lean();
-  return { report, account };
+  const reportedAccount = report.reportedUser
+    ? await User.findById(report.reportedUser)
+      .select("username accountStatus suspendedUntil")
+      .lean()
+    : null;
+  return { report, account, reportedAccount };
 }
 
 export async function updateIssueReport({

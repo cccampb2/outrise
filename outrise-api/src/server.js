@@ -15,6 +15,7 @@ import { startAccountSuspensionJob } from "./jobs/accountSuspension.job.js";
 import AccountModeration from "./models/AccountModeration.js";
 import IssueReport from "./models/IssueReport.js";
 import UserRoleChange from "./models/UserRoleChange.js";
+import Verification from "./models/Verification.js";
 const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
@@ -23,6 +24,7 @@ const startServer = async () => {
     await AccountModeration.init();
     await IssueReport.init();
     await UserRoleChange.init();
+    await Verification.init();
     await restoreExpiredSuspensions();
     await Season.init();
     await WorkoutOfTheWeekOccurrence.init();

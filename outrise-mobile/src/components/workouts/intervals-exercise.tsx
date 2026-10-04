@@ -1,5 +1,5 @@
 import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import type { WorkoutSessionExercise } from "@/api/workout-sessions";
@@ -26,18 +26,12 @@ export function IntervalExercise({
 
   const [isEditing, setIsEditing] = useState(savedRounds === null);
 
-  useEffect(() => {
-    const serverRounds = exercise.actual.roundsCompleted ?? null;
-
-    if (serverRounds === null) {
-      setRoundsCompleted("");
-      setIsEditing(true);
-      return;
-    }
-
-    setRoundsCompleted(String(serverRounds));
-    setIsEditing(false);
-  }, [exercise.actual.roundsCompleted]);
+  const [previousRounds, setPreviousRounds] = useState(savedRounds);
+  if (previousRounds !== savedRounds) {
+    setPreviousRounds(savedRounds);
+    setRoundsCompleted(savedRounds === null ? "" : String(savedRounds));
+    setIsEditing(savedRounds === null);
+  }
 
   const roundsNumber = Number(roundsCompleted);
 

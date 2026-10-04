@@ -161,3 +161,63 @@ test("public report limiter limits repeated submissions and permits retry after 
   request();
   assert.equal(accepted, 3);
 });
+
+test("user reports validate and store a separate target ID without allowing admin fields", async (t) => {
+  const targetId = id().toString();
+  const data = { email: "reporter@example.com", subject: "Report user: Target", message: "Their username appears to be inappropriate.", reportedUserId: targetId };
+  assert.equal(createIssueReportSchema.body.validate(data).error, undefined);
+  for (const reportedUserId of ["invalid", { $ne: null }, [targetId]]) {
+    assert.ok(createIssueReportSchema.body.validate({ ...data, reportedUserId }).error);
+  }
+  assert.ok(createIssueReportSchema.body.validate({ ...data, reportedUser: targetId }).error);
+  t.mock.method(IssueReport, "create", async (document) => {
+    assert.deepEqual(document, { email: data.email, subject: data.subject, message: data.message, reportedUser: targetId });
+    const report = new IssueReport(document);
+    await report.validate();
+    assert.equal(String(report.reportedUser), targetId);
+    assert.equal(report.status, "open");
+    return report;
+  });
+  await createIssueReport({ ...data, status: "resolved", reviewer: firstAdmin });
+  let payload;
+  await createIssueReportController({ body: data }, {
+    status(code) { assert.equal(code, 201); return this; },
+    json(value) { payload = value; },
+  }, (error) => { throw error; });
+  assert.deepEqual(Object.keys(payload), ["message"]);
+  assert.ok(!JSON.stringify(payload).includes(targetId));
+});
+
+test("admins can review the reported user independently of the reporter's contact email", async (t) => {
+  const reporterId = id(), targetId = id();
+  t.mock.method(IssueReport, "findById", () => query({ _id: reportId, email: "reporter@example.com", reportedUser: targetId }));
+  t.mock.method(User, "findOne", (filter) => {
+    assert.deepEqual(filter, { email: "reporter@example.com" });
+    return query({ _id: reporterId, username: "Reporter", accountStatus: "active" });
+  });
+  t.mock.method(User, "findById", (value) => {
+    assert.equal(value, targetId);
+    const result = query({ _id: targetId, username: "TargetRenamed", accountStatus: "flagged" });
+    result.select = (fields) => {
+      assert.equal(fields, "username accountStatus suspendedUntil");
+      return result;
+    };
+    return result;
+  });
+  const result = await getIssueReport(reportId);
+  assert.equal(result.account._id, reporterId);
+  assert.equal(result.reportedAccount._id, targetId);
+  assert.equal(result.reportedAccount.username, "TargetRenamed");
+  assert.equal(result.report.reportedUser, targetId);
+});
+
+test("a deleted reported account leaves its reference available in the admin report", async (t) => {
+  const targetId = id();
+  t.mock.method(IssueReport, "findById", () => query({ _id: reportId, email: "reporter@example.com", reportedUser: targetId }));
+  t.mock.method(User, "findOne", () => query(null));
+  t.mock.method(User, "findById", () => query(null));
+  const result = await getIssueReport(reportId);
+  assert.equal(result.account, null);
+  assert.equal(result.reportedAccount, null);
+  assert.equal(result.report.reportedUser, targetId);
+});

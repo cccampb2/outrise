@@ -81,7 +81,8 @@ export const completeActiveWorkoutSessionController = async (
   try {
     const userId = req.user.userId;
 
-    const result = await completeActiveWorkoutSession({ userId });
+    const sessionId = req.params.id;
+    const result = await completeActiveWorkoutSession({ userId, sessionId });
 
     return res.status(200).json(result);
   } catch (error) {
