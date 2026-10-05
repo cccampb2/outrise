@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
     height: "100%",
     minHeight: 60,
-    borderRadius: 4,
+
   },
 
   module: {
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
 
     borderWidth: 1,
     borderColor: "transparent",
-    borderRadius: 4,
+
 
     paddingTop: 9,
     paddingBottom: 5,
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     top: 5,
     width: 16,
     height: 2,
-    borderRadius: 1,
+
     backgroundColor: "#FFFFFF",
   },
 

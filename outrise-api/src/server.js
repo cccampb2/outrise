@@ -16,11 +16,68 @@ import AccountModeration from "./models/AccountModeration.js";
 import IssueReport from "./models/IssueReport.js";
 import UserRoleChange from "./models/UserRoleChange.js";
 import Verification from "./models/Verification.js";
+import Conversation from "./models/Conversation.js";
+import Message from "./models/Message.js";
+import { createServer } from "node:http";
+import { Server } from "socket.io";
+import { socketAuth } from "./middleware/socketAuth.js";
+
 const PORT = process.env.PORT || 3000;
+const httpServer = createServer(app);
+const io = new Server(httpServer);
+io.use(socketAuth);
+app.set("io", io);
+
+io.on("connection", (socket) => {
+  const userId = socket.data.userId;
+
+  socket.join(`user:${userId}`);
+
+  logger.info("Socket connected", {
+    userId,
+    socketId: socket.id,
+  });
+
+  let checkingAccess = false;
+
+  const accessInterval = setInterval(async () => {
+    if (!socket.connected || checkingAccess) {
+      return;
+    }
+
+    checkingAccess = true;
+
+    try {
+      await socketAuth(socket, (error) => {
+        if (error && socket.connected) {
+          logger.info("Socket access check failed", {
+            userId,
+            socketId: socket.id,
+          });
+
+          socket.disconnect(true);
+        }
+      });
+    } finally {
+      checkingAccess = false;
+    }
+  }, 30000);
+
+  socket.on("disconnect", (reason) => {
+    clearInterval(accessInterval);
+    logger.info("Socket disconnected", {
+      userId,
+      socketId: socket.id,
+      reason,
+    });
+  });
+});
 
 const startServer = async () => {
   try {
     await connectDB();
+    await Conversation.init();
+    await Message.init();
     await AccountModeration.init();
     await IssueReport.init();
     await UserRoleChange.init();
@@ -44,7 +101,7 @@ const startServer = async () => {
     startSeasonJob();
     startAccountSuspensionJob();
     startWorkoutOfTheWeekJob();
-    app.listen(PORT, () => {
+    httpServer.listen(PORT, () => {
       logger.info(`Outrise API is running on port ${PORT}`);
     });
   } catch (error) {

@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#25313D",
     borderTopColor: "#394550",
-    borderRadius: 8,
+
   },
 
   hiddenTabList: {

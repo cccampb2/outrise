@@ -6,6 +6,7 @@ const activityEventSchema = new Schema(
     type: {
       type: String,
       enum: [
+        "message_received",
         "friend_request_received",
         "friend_request_accepted",
         "personal_record_set",
@@ -30,11 +31,12 @@ const activityEventSchema = new Schema(
     },
     sourceType: {
       type: String,
-      enum: ["friendship", "personal_record", "xp_transaction", "workout_of_the_week_occurrence", "achievement", "verification", "workout_session", "season"],
+      enum: ["message", "friendship", "personal_record", "xp_transaction", "workout_of_the_week_occurrence", "achievement", "verification", "workout_session", "season"],
       required: true,
     },
     sourceId: { type: Schema.Types.ObjectId, required: true },
     details: {
+      conversationId: { type: Schema.Types.ObjectId, ref: "Conversation", required: function () { return this.type === "message_received"; } },
       factionName: { type: String },
       previousRank: { type: Number, min: 1 },
       rank: { type: Number, min: 1 },
@@ -111,6 +113,7 @@ activityEventSchema.index({ audience: 1, occurredAt: -1, _id: -1 });
 activityEventSchema.pre("validate", function () {
   const isPR = this.type === "personal_record_set";
   const rules = {
+    message_received: ["personal", "message"],
     friend_request_received: ["personal", "friendship"], friend_request_accepted: ["personal", "friendship"],
     personal_record_set: ["friends", "personal_record"], echelon_reached: ["friends", "xp_transaction"],
     wotw_completed: ["friends", "workout_of_the_week_occurrence"], achievement_unlocked: ["personal", "achievement"],

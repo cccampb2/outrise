@@ -912,6 +912,13 @@ export default function ProfileScreen() {
               </View>
               <Text style={styles.accountActionArrow}>→</Text>
             </Pressable>
+            <View style={styles.accountDivider} />
+            <Pressable accessibilityRole="button" onPress={() => router.push("/about")}
+              style={({ pressed }) => [styles.accountActionRow, pressed && styles.accountActionRowPressed]}>
+              <View style={styles.accountText}><Text style={styles.dataLabel}>BEHIND OUTRISE</Text>
+                <Text style={styles.accountActionValue}>About Outrise</Text></View>
+              <Text style={styles.accountActionArrow}>→</Text>
+            </Pressable>
           </View>
 
           {/* SIGN OUT */}

@@ -21,6 +21,7 @@ import issueReportRoutes from "./routes/issueReport.routes.js";
 import adminIssueReportRoutes from "./routes/adminIssueReport.routes.js";
 import suggestionRoutes from "./routes/suggestion.routes.js";
 import ownerSuggestionRoutes from "./routes/ownerSuggestion.routes.js";
+import messageRoutes from "./routes/message.routes.js";
 const app = express();
 
 app.use(cors());
@@ -46,6 +47,7 @@ app.use("/issue-reports", issueReportRoutes);
 app.use("/admin/issue-reports", adminIssueReportRoutes);
 app.use("/suggestions", suggestionRoutes);
 app.use("/owner/suggestions", ownerSuggestionRoutes);
+app.use("/conversations", messageRoutes);
 app.use(errorHandler);
 
 export default app;

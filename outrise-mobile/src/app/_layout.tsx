@@ -7,6 +7,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { AppFonts } from "@/constants/fonts";
 import { AccountSessionGuard } from "@/components/account-session-guard";
+import { SocketSession } from "@/components/socket-session";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -22,8 +23,11 @@ function AuthenticatedStack() {
         <Stack.Screen name="(onboarding)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="friends/index" />
+        <Stack.Screen name="messages/index" />
+        <Stack.Screen name="messages/[conversationId]" />
         <Stack.Screen name="how-it-works" />
         <Stack.Screen name="community-rules" />
+        <Stack.Screen name="about" />
         <Stack.Screen name="workout-of-the-week/index" />
         <Stack.Screen name="users/[userId]" />
         <Stack.Screen name="users/achievements" />
@@ -81,6 +85,7 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider value={DarkTheme}>
           <AccountSessionGuard />
+          <SocketSession />
           <AuthenticatedStack />
         </ThemeProvider>
       </QueryClientProvider>

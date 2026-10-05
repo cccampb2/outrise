@@ -5,6 +5,7 @@ import User from "../models/User.js";
 import NotFoundError from "../errors/NotFoundError.js";
 
 export const NOTIFICATION_TYPES = [
+  "message_received",
   "friend_request_received",
   "friend_request_accepted",
   "verification_approved",

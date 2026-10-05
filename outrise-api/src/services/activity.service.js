@@ -34,7 +34,7 @@ async function getActivityVisibility(userId) {
   ];
   if (canAccessAccount(user?.accountStatus) && user.faction)
     audiences.push({ audience: "faction", faction: user.faction });
-  return { $or: audiences };
+  return { type: { $ne: "message_received" }, $or: audiences };
 }
 
 export const dismissActivityEvents = async ({ userId, eventIds }) => {

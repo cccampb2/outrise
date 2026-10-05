@@ -14,6 +14,7 @@ import type { RootState } from "@/store/store";
 
 function presentation(item: Notification) {
   switch (item.type) {
+    case "message_received": return { title: "New message", message: `${item.details.actorUsername} sent you a message.`, icon: "chatbubble-outline" as const };
     case "friend_request_received": return { title: "New friend request", message: `${item.details.actorUsername} wants to join your friends list.`, icon: "person-add-outline" as const };
     case "friend_request_accepted": return { title: "Friend request accepted", message: `${item.details.actorUsername} accepted your friend request.`, icon: "people-outline" as const };
     case "verification_approved": return { title: "Performance approved", message: `Your ${item.details.exerciseName} performance has been verified.`, icon: "checkmark-circle-outline" as const };
@@ -33,7 +34,8 @@ export default function NotificationsScreen() {
   async function openNotification(item: Notification) {
     try {
       await markRead(item._id);
-      if (item.type === "friend_request_received" || item.type === "friend_request_accepted") router.push("/friends");
+      if (item.type === "message_received") router.push({ pathname: "/messages/[conversationId]", params: { conversationId: item.details.conversationId, username: item.details.actorUsername } });
+      else if (item.type === "friend_request_received" || item.type === "friend_request_accepted") router.push("/friends");
       else if (item.type === "verification_approved" || item.type === "verification_rejected") router.push({ pathname: "/verifications/[verification]", params: { verification: item.sourceId } });
       else if (item.type === "wotw_launched") router.push("/workout-of-the-week");
       else router.push("/(tabs)/rankings");

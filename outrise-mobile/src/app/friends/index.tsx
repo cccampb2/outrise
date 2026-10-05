@@ -1,3 +1,4 @@
+import { StartChatButton } from "@/components/start-chat-button";
 import { BrandHeader } from "@/components/brand-header";
 import { UserRoleName } from "@/components/user-role-badge";
 import { AppText as Text } from "@/components/app-text";
@@ -94,7 +95,7 @@ export default function FriendsScreen() {
               </View>
             </Pressable>
             <View style={styles.actions}>
-              {section === "friends" && actionButton("REMOVE FRIEND", "remove", item)}
+              {section === "friends" && <><StartChatButton userId={item.user.id} username={item.user.username} disabled={action.isPending} />{actionButton("REMOVE FRIEND", "remove", item)}</>}
               {section === "incoming" && <>{actionButton("ACCEPT", "accept", item)}{actionButton("DECLINE", "decline", item)}</>}
               {section === "outgoing" && actionButton("CANCEL REQUEST", "cancel", item)}
             </View>
