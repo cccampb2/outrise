@@ -19,10 +19,13 @@ import {
 } from "@/components/messaging-ui";
 import { Colors } from "@/constants/theme";
 import type { RootState } from "@/store/store";
+import { useSystemMessageSummary } from "@/hooks/use-system-messages";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 export default function MessagesScreen() {
   const userId = useSelector((state: RootState) => state.auth.user?.id);
   const query = useConversations();
+  const announcements = useSystemMessageSummary();
   const { refetch } = query;
   useFocusEffect(
     useCallback(() => {
@@ -64,8 +67,63 @@ export default function MessagesScreen() {
         showsVerticalScrollIndicator={false}
         refreshing={query.isRefetching && !query.isFetchingNextPage}
         onRefresh={() => {
-          void query.refetch();
+          void Promise.all([query.refetch(), announcements.refetch()]);
         }}
+        ListHeaderComponent={
+          <View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Outrise announcements${announcements.data?.unreadCount ? `, ${announcements.data.unreadCount} unread` : ""}`}
+              onPress={() => router.push("/messages/announcements")}
+              style={({ pressed }) => [styles.row, pressed && { opacity: 0.6 }]}
+            >
+              <View style={styles.avatar}>
+                <Ionicons
+                  name="megaphone-outline"
+                  size={23}
+                  color={Colors.dark.accent}
+                />
+              </View>
+              <View style={styles.rowBody}>
+                <Text style={styles.name}>OUTRISE</Text>
+                <Text style={styles.meta} numberOfLines={2}>
+                  {announcements.isError
+                    ? "Updates unavailable"
+                    : announcements.isPending
+                      ? "Checking announcements…"
+                      : (announcements.data?.latest?.title ??
+                        "Official announcements")}
+                </Text>
+              </View>
+              {announcements.data && announcements.data.unreadCount > 0 && (
+                <View
+                  accessibilityLabel={`${announcements.data.unreadCount} unread announcements`}
+                  style={styles.unreadBadge}
+                >
+                  <Text style={styles.unreadCount}>
+                    {announcements.data.unreadCount > 99
+                      ? "99+"
+                      : announcements.data.unreadCount}
+                  </Text>
+                </View>
+              )}
+              <Text style={styles.subtitle}>→</Text>
+            </Pressable>
+            {announcements.isError && (
+              <View style={styles.state}>
+                <Text accessibilityRole="alert" style={styles.error}>
+                  {messagingError(announcements.error)}
+                </Text>
+                <MessageButton
+                  label="RETRY ANNOUNCEMENTS"
+                  onPress={() => {
+                    void announcements.refetch();
+                  }}
+                />
+              </View>
+            )}
+          </View>
+        }
         renderItem={({ item }) => {
           const other =
             item.userLow?._id === userId ? item.userHigh : item.userLow;
@@ -132,7 +190,7 @@ export default function MessagesScreen() {
             ) : (
               !query.isError && (
                 <>
-                  <Text style={styles.name}>No conversations yet</Text>
+                  <Text style={styles.name}>No friend conversations yet</Text>
                   <Text style={styles.subtitle}>
                     Choose an accepted friend to start a chat.
                   </Text>

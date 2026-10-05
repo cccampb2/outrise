@@ -24,6 +24,7 @@ function AuthenticatedStack() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="friends/index" />
         <Stack.Screen name="messages/index" />
+        <Stack.Screen name="messages/announcements" />
         <Stack.Screen name="messages/[conversationId]" />
         <Stack.Screen name="how-it-works" />
         <Stack.Screen name="community-rules" />
@@ -38,6 +39,7 @@ function AuthenticatedStack() {
         <Stack.Screen name="suggest-feature" />
         <Stack.Protected guard={user?.role === "owner"}>
           <Stack.Screen name="admin/suggestions" />
+          <Stack.Screen name="admin/announcements" />
         </Stack.Protected>
         <Stack.Screen name="rankings/factions/[factionSlug]" />
         <Stack.Screen name="workout-session/active" />

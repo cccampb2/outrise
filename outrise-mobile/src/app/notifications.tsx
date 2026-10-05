@@ -17,6 +17,12 @@ import type { RootState } from "@/store/store";
 
 function presentation(item: Notification) {
   switch (item.type) {
+    case "system_announcement":
+      return {
+        title: "Outrise announcement",
+        message: item.details.announcementTitle,
+        icon: "megaphone-outline" as const,
+      };
     case "message_received":
       return {
         title: "New message",
@@ -101,6 +107,11 @@ export default function NotificationsScreen() {
         router.push({
           pathname: "/verifications/[verification]",
           params: { verification: item.sourceId },
+        });
+      else if (item.type === "system_announcement")
+        router.push({
+          pathname: "/messages/announcements",
+          params: { messageId: item.sourceId },
         });
       else if (item.type === "wotw_launched")
         router.push("/workout-of-the-week");

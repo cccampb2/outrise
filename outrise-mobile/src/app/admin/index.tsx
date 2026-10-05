@@ -161,6 +161,15 @@ export default function AdminScreen() {
           {user?.role === "owner" && (
             <AdminOption
               code="OWNER"
+              title="ANNOUNCEMENTS"
+              description="Publish official Outrise updates to all current members."
+              status="OWNER ONLY"
+              onPress={() => router.push("/admin/announcements")}
+            />
+          )}
+          {user?.role === "owner" && (
+            <AdminOption
+              code="OWNER"
               title="SUGGESTIONS"
               description="Read member suggestions in your private developer inbox."
               status="OWNER ONLY"

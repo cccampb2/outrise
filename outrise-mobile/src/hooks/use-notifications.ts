@@ -51,7 +51,11 @@ export function useNotifications(userId?: string, unreadOnly = false) {
     mutationFn: ({ action, id }: { action: "read" | "dismiss"; id?: string }) =>
       updateNotifications(action, id),
     onSettled: async () => {
-      await client.invalidateQueries({ queryKey: ["notifications", userId] });
+      await Promise.all([
+        client.invalidateQueries({ queryKey: ["notifications", userId] }),
+        client.invalidateQueries({ queryKey: ["system-messages", userId] }),
+        client.invalidateQueries({ queryKey: ["conversations", userId] }),
+      ]);
     },
   });
   return {

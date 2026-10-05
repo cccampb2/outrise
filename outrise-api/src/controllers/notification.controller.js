@@ -28,6 +28,10 @@ export const getUnreadCountController = async (req, res, next) => {
 export const markNotificationsReadController = async (req, res, next) => {
   try {
     await updateNotificationState({ userId: req.user.userId, ...req.body });
+    req.app
+      .get("io")
+      ?.to(`user:${req.user.userId}`)
+      .emit("notifications:updated");
     res.status(204).send();
   } catch (error) {
     next(error);
@@ -41,6 +45,10 @@ export const dismissNotificationsController = async (req, res, next) => {
       ...req.body,
       dismiss: true,
     });
+    req.app
+      .get("io")
+      ?.to(`user:${req.user.userId}`)
+      .emit("notifications:updated");
     res.status(204).send();
   } catch (error) {
     next(error);

@@ -5,6 +5,7 @@ import User from "../models/User.js";
 import NotFoundError from "../errors/NotFoundError.js";
 
 export const NOTIFICATION_TYPES = [
+  "system_announcement",
   "message_received",
   "friend_request_received",
   "friend_request_accepted",
@@ -95,11 +96,13 @@ export const updateNotificationState = async ({
   eventIds,
   all = false,
   dismiss = false,
+  type,
 }) => {
   const visibility = await getNotificationVisibility(userId);
   const now = new Date();
   const events = await ActivityEvent.find({
     ...visibility,
+    ...(type ? { type } : {}),
     ...(all ? { occurredAt: { $lte: now } } : { _id: { $in: eventIds } }),
   })
     .select("_id")

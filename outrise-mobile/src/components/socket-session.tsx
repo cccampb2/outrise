@@ -4,12 +4,17 @@ import { socket } from "@/api/socket";
 import { getToken } from "@/storage/auth-storage";
 import type { RootState } from "@/store/store";
 import type { Message } from "@/api/messages";
+import { getSystemMessage, type SystemMessage } from "@/api/system-messages";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppState, Pressable, StyleSheet, View } from "react-native";
-import { router, usePathname } from "expo-router";
+import { router, usePathname, useGlobalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText as Text } from "@/components/app-text";
 import { Colors } from "@/constants/theme";
+
+type Notice =
+  | (Message & { kind: "message"; recipientUserId: string })
+  | (SystemMessage & { kind: "announcement"; recipientUserId: string });
 
 export function SocketSession() {
   const userId = useSelector((state: RootState) => state.auth.user?.id);
@@ -20,14 +25,17 @@ export function SocketSession() {
 
   const client = useQueryClient();
   const pathname = usePathname();
+  const params = useGlobalSearchParams<{ messageId?: string }>();
+  const announcementId =
+    typeof params.messageId === "string" ? params.messageId : "";
   const insets = useSafeAreaInsets();
   const currentPath = useRef(pathname);
+  const currentAnnouncementId = useRef(announcementId);
   useEffect(() => {
     currentPath.current = pathname;
-  }, [pathname]);
-  const [notice, setNotice] = useState<
-    (Message & { recipientUserId: string }) | null
-  >(null);
+    currentAnnouncementId.current = announcementId;
+  }, [pathname, announcementId]);
+  const [notice, setNotice] = useState<Notice | null>(null);
   const seenMessages = useRef(new Set<string>());
   useEffect(() => {
     if (!notice) return;
@@ -45,6 +53,7 @@ export function SocketSession() {
 
     const onConnect = () => {
       console.log("Socket connected:", socket.id);
+      void client.invalidateQueries({ queryKey: ["system-messages", userId] });
       void client.invalidateQueries({ queryKey: ["notifications", userId] });
 
       void client.invalidateQueries({
@@ -77,7 +86,7 @@ export function SocketSession() {
           AppState.currentState === "active" &&
           currentPath.current !== `/messages/${message.conversation}`
         )
-          setNotice({ ...message, recipientUserId: userId });
+          setNotice({ ...message, kind: "message", recipientUserId: userId });
       }
 
       void client.invalidateQueries({
@@ -92,6 +101,52 @@ export function SocketSession() {
       void client.invalidateQueries({ queryKey: ["conversations", userId] });
       void client.invalidateQueries({ queryKey: ["notifications", userId] });
     };
+    const refreshAnnouncements = () => {
+      void client.invalidateQueries({ queryKey: ["system-messages", userId] });
+      void client.invalidateQueries({ queryKey: ["notifications", userId] });
+      void client.invalidateQueries({ queryKey: ["conversations", userId] });
+    };
+    const isViewingAnnouncement = (messageId: string) =>
+      currentPath.current === "/messages/announcements" &&
+      (!currentAnnouncementId.current ||
+        currentAnnouncementId.current === messageId);
+    const onNewAnnouncement = async ({ messageId }: { messageId: string }) => {
+      refreshAnnouncements();
+      if (typeof messageId !== "string" || !/^[a-f\d]{24}$/i.test(messageId))
+        return;
+      const key = `announcement:${messageId}`;
+      if (seenMessages.current.has(key)) return;
+      seenMessages.current.add(key);
+      if (seenMessages.current.size > 500)
+        seenMessages.current.delete(
+          seenMessages.current.values().next().value!,
+        );
+      if (
+        AppState.currentState !== "active" ||
+        isViewingAnnouncement(messageId)
+      )
+        return;
+      try {
+        const { systemMessage } = await getSystemMessage(messageId);
+        if (
+          !cancelled &&
+          !systemMessage.read &&
+          AppState.currentState === "active" &&
+          !isViewingAnnouncement(messageId)
+        ) {
+          setNotice({
+            ...systemMessage,
+            kind: "announcement",
+            recipientUserId: userId,
+          });
+        }
+      } catch {
+        // The saved announcement remains available if its live preview cannot load.
+      }
+    };
+    socket.on("announcement:new", onNewAnnouncement);
+    socket.on("announcements:read", refreshAnnouncements);
+    socket.on("notifications:updated", refreshAnnouncements);
     socket.on("messages:read", onMessagesRead);
     socket.on("message:new", onNewMessage);
     socket.on("connect", onConnect);
@@ -134,6 +189,9 @@ export function SocketSession() {
       socket.off("connect_error", onConnectError);
       socket.off("message:new", onNewMessage);
       socket.off("messages:read", onMessagesRead);
+      socket.off("announcement:new", onNewAnnouncement);
+      socket.off("announcements:read", refreshAnnouncements);
+      socket.off("notifications:updated", refreshAnnouncements);
       socket.disconnect();
       socket.auth = {};
     };
@@ -144,32 +202,51 @@ export function SocketSession() {
     notice.recipientUserId !== userId ||
     !userId ||
     !emailVerified ||
-    pathname === `/messages/${notice.conversation}`
+    (notice.kind === "message"
+      ? pathname === `/messages/${notice.conversation}`
+      : pathname === "/messages/announcements" &&
+        (!announcementId || announcementId === notice._id))
   )
     return null;
   return (
     <View style={[styles.notice, { top: insets.top + 8 }]}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="New message. Open conversation."
+        accessibilityLabel={
+          notice.kind === "message"
+            ? "New message. Open conversation."
+            : "New Outrise announcement. Open announcement."
+        }
         onPress={() => {
-          const conversationId = notice.conversation;
+          const destination =
+            notice.kind === "message"
+              ? {
+                  pathname: "/messages/[conversationId]" as const,
+                  params: { conversationId: notice.conversation },
+                }
+              : {
+                  pathname: "/messages/announcements" as const,
+                  params: { messageId: notice._id },
+                };
           setNotice(null);
-          router.push({
-            pathname: "/messages/[conversationId]",
-            params: { conversationId },
-          });
+          router.push(destination);
         }}
         style={styles.openButton}
       >
-        <Text style={styles.title}>NEW MESSAGE</Text>
+        <Text style={styles.title}>
+          {notice.kind === "message" ? "NEW MESSAGE" : "OUTRISE ANNOUNCEMENT"}
+        </Text>
         <Text style={styles.preview} numberOfLines={1}>
-          {notice.text}
+          {notice.kind === "message" ? notice.text : notice.title}
         </Text>
       </Pressable>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Dismiss message alert"
+        accessibilityLabel={
+          notice.kind === "message"
+            ? "Dismiss message alert"
+            : "Dismiss announcement alert"
+        }
         onPress={() => setNotice(null)}
         style={styles.dismissButton}
       >

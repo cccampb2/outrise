@@ -18,6 +18,7 @@ import UserRoleChange from "./models/UserRoleChange.js";
 import Verification from "./models/Verification.js";
 import Conversation from "./models/Conversation.js";
 import Message from "./models/Message.js";
+import SystemMessage from "./models/SystemMessage.js";
 import { createServer } from "node:http";
 import { Server } from "socket.io";
 import { socketAuth } from "./middleware/socketAuth.js";
@@ -78,6 +79,7 @@ const startServer = async () => {
     await connectDB();
     await Conversation.init();
     await Message.init();
+    await SystemMessage.init();
     await AccountModeration.init();
     await IssueReport.init();
     await UserRoleChange.init();

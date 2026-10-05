@@ -6,6 +6,7 @@ const activityEventSchema = new Schema(
     type: {
       type: String,
       enum: [
+        "system_announcement",
         "message_received",
         "friend_request_received",
         "friend_request_accepted",
@@ -56,6 +57,7 @@ const activityEventSchema = new Schema(
     sourceType: {
       type: String,
       enum: [
+        "system_message",
         "message",
         "friendship",
         "personal_record",
@@ -70,6 +72,14 @@ const activityEventSchema = new Schema(
     },
     sourceId: { type: Schema.Types.ObjectId, required: true },
     details: {
+      announcementTitle: {
+        type: String,
+        trim: true,
+        maxLength: 120,
+        required: function () {
+          return this.type === "system_announcement";
+        },
+      },
       conversationId: {
         type: Schema.Types.ObjectId,
         ref: "Conversation",
@@ -176,6 +186,7 @@ activityEventSchema.index({ audience: 1, occurredAt: -1, _id: -1 });
 activityEventSchema.pre("validate", function () {
   const isPR = this.type === "personal_record_set";
   const rules = {
+    system_announcement: ["global", "system_message"],
     message_received: ["personal", "message"],
     friend_request_received: ["personal", "friendship"],
     friend_request_accepted: ["personal", "friendship"],

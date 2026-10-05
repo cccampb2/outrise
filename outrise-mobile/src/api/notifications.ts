@@ -20,6 +20,15 @@ type NotificationEvent =
       >,
       "type"
     > & { type: "faction_season_won" });
+type SystemAnnouncementNotification = {
+  _id: string;
+  type: "system_announcement";
+  actor: null;
+  sourceType: "system_message";
+  sourceId: string;
+  occurredAt: string;
+  details: { announcementTitle: string };
+};
 type MessageNotification = {
   _id: string;
   type: "message_received";
@@ -29,7 +38,11 @@ type MessageNotification = {
   occurredAt: string;
   details: { actorUsername: string; conversationId: string };
 };
-export type Notification = (NotificationEvent | MessageNotification) & {
+export type Notification = (
+  | NotificationEvent
+  | MessageNotification
+  | SystemAnnouncementNotification
+) & {
   read: boolean;
 };
 
