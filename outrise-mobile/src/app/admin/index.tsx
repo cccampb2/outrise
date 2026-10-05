@@ -158,9 +158,15 @@ export default function AdminScreen() {
         </View>
 
         <View style={styles.options}>
-          {user?.role === "owner" && <AdminOption code="OWNER" title="SUGGESTIONS"
-            description="Read member suggestions in your private developer inbox." status="OWNER ONLY"
-            onPress={() => router.push("/admin/suggestions")} />}
+          {user?.role === "owner" && (
+            <AdminOption
+              code="OWNER"
+              title="SUGGESTIONS"
+              description="Read member suggestions in your private developer inbox."
+              status="OWNER ONLY"
+              onPress={() => router.push("/admin/suggestions")}
+            />
+          )}
           <AdminOption
             code="SUPPORT"
             title="ISSUE_REPORTS"

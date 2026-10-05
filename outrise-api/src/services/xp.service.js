@@ -121,18 +121,26 @@ export const awardXP = async ({
   }
 
   // Compare the XP immediately before and after this award, not unclaimed rewards.
-  const previousEchelon = getProgressFromXP(updatedUser.lifetimeXP - awardedAmount).echelon ?? 0;
+  const previousEchelon =
+    getProgressFromXP(updatedUser.lifetimeXP - awardedAmount).echelon ?? 0;
   const currentEchelon = getProgressFromXP(updatedUser.lifetimeXP).echelon ?? 0;
-  for (let echelon = previousEchelon + 1; echelon <= currentEchelon; echelon += 1) {
-    await createActivityEvent({
-      type: "echelon_reached",
-      actor: userId,
-      audience: "friends",
-      sourceType: "xp_transaction",
-      sourceId: xpTransaction._id,
-      details: { actorUsername: updatedUser.username, echelon },
-      idempotencyKey: `user:${userId}:echelon:${echelon}`,
-    }, { mongoSession });
+  for (
+    let echelon = previousEchelon + 1;
+    echelon <= currentEchelon;
+    echelon += 1
+  ) {
+    await createActivityEvent(
+      {
+        type: "echelon_reached",
+        actor: userId,
+        audience: "friends",
+        sourceType: "xp_transaction",
+        sourceId: xpTransaction._id,
+        details: { actorUsername: updatedUser.username, echelon },
+        idempotencyKey: `user:${userId}:echelon:${echelon}`,
+      },
+      { mongoSession },
+    );
   }
 
   const countsTowardSeason = SEASON_ELIGIBLE_XP_SOURCES.has(sourceType);

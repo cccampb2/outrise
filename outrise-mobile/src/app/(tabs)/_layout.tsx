@@ -32,6 +32,7 @@ function CustomTabBar() {
         <TabTrigger name="home" asChild>
           <TabButton
             label="HOME"
+            edge="left"
             icon={(color) => (
               <Ionicons name="home-outline" size={ICON_SIZE} color={color} />
             )}
@@ -80,6 +81,7 @@ function CustomTabBar() {
         <TabTrigger name="profile" asChild>
           <TabButton
             label="PROFILE"
+            edge="right"
             icon={(color) => (
               <MaterialCommunityIcons
                 name="account-outline"
@@ -100,7 +102,13 @@ export default function TabLayout() {
     <TabBarProvider>
       <Tabs>
         <TabSlot />
-        <View pointerEvents="box-none" style={[styles.notificationBar, { paddingTop: insets.top + 16, paddingRight: insets.right + 24 }]}>
+        <View
+          pointerEvents="box-none"
+          style={[
+            styles.notificationBar,
+            { paddingTop: insets.top + 16, paddingRight: insets.right + 24 },
+          ]}
+        >
           <NotificationBell />
         </View>
 
@@ -120,8 +128,12 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   notificationBar: {
-    position: "absolute", top: 0, left: 0, right: 0,
-    paddingBottom: 12, alignItems: "flex-end",
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingBottom: 12,
+    alignItems: "flex-end",
     backgroundColor: Colors.dark.background,
   },
   tabBarWrapper: {
@@ -145,7 +157,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#25313D",
     borderTopColor: "#394550",
-
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    overflow: "hidden",
   },
 
   hiddenTabList: {

@@ -14,41 +14,86 @@ import { completeActiveWorkoutSessionController } from "../src/controllers/worko
 import { workoutSessionIdSchema } from "../src/middleware/validators/workoutSession.validators.js";
 
 const id = () => new mongoose.Types.ObjectId();
-const query = (value) => ({ select() { return this; }, sort() { return this; }, session: async () => value });
+const query = (value) => ({
+  select() {
+    return this;
+  },
+  sort() {
+    return this;
+  },
+  session: async () => value,
+});
 
 function fixture(t, { status = "active", valid = true } = {}) {
-  const userId = id(), sessionId = id(), exerciseId = id();
-  const session = { withTransaction: async (callback) => callback(), endSession: async () => {} };
+  const userId = id(),
+    sessionId = id(),
+    exerciseId = id();
+  const session = {
+    withTransaction: async (callback) => callback(),
+    endSession: async () => {},
+  };
   t.mock.method(mongoose, "startSession", async () => session);
   const workout = {
-    _id: sessionId, user: userId, status, startedAt: new Date(Date.now() - 10000),
-    workoutName: "Push", sourceType: "workout", workoutOfTheWeekOccurrence: null,
-    exercises: [{ exercise: exerciseId, exerciseName: "Pushup", measurementType: "reps", skipped: false, actual: { sets: valid ? [{ reps: 5 }] : null } }],
-    save: async (options) => { assert.equal(options.session, session); },
+    _id: sessionId,
+    user: userId,
+    status,
+    startedAt: new Date(Date.now() - 10000),
+    workoutName: "Push",
+    sourceType: "workout",
+    workoutOfTheWeekOccurrence: null,
+    exercises: [
+      {
+        exercise: exerciseId,
+        exerciseName: "Pushup",
+        measurementType: "reps",
+        skipped: false,
+        actual: { sets: valid ? [{ reps: 5 }] : null },
+      },
+    ],
+    save: async (options) => {
+      assert.equal(options.session, session);
+    },
   };
-  const queries = [], counters = { workoutCount: 0, xpAwards: 0, events: 0 };
+  const queries = [],
+    counters = { workoutCount: 0, xpAwards: 0, events: 0 };
   t.mock.method(WorkoutSession, "findOne", (filter) => {
     queries.push(filter);
-    return query(String(filter.user) === String(userId) && (!filter._id || String(filter._id) === String(sessionId)) ? workout : null);
+    return query(
+      String(filter.user) === String(userId) &&
+        (!filter._id || String(filter._id) === String(sessionId))
+        ? workout
+        : null,
+    );
   });
   t.mock.method(WorkoutSession, "find", () => query([]));
   t.mock.method(WorkoutSession, "countDocuments", () => query(1));
-  t.mock.method(User, "findById", () => query({ username: "Caleb", lifetimeXP: 0, totalWorkouts: 1 }));
+  t.mock.method(User, "findById", () =>
+    query({ username: "Caleb", lifetimeXP: 0, totalWorkouts: 1 }),
+  );
   t.mock.method(User, "findByIdAndUpdate", async (filter, update) => {
     counters.workoutCount += update.$inc.totalWorkouts ?? 0;
     return { username: "Caleb", lifetimeXP: 5 };
   });
   t.mock.method(PersonalRecord, "findOne", () => query({ value: 100 }));
-  t.mock.method(Exercise, "find", () => query([{ _id: exerciseId, baseXP: 5 }]));
+  t.mock.method(Exercise, "find", () =>
+    query([{ _id: exerciseId, baseXP: 5 }]),
+  );
   t.mock.method(Achievement, "find", () => query([]));
   t.mock.method(XPTransaction, "aggregate", () => query([]));
-  t.mock.method(XPTransaction.prototype, "save", async function () { counters.xpAwards++; return this; });
-  t.mock.method(Season, "findOne", () => query(null));
-  t.mock.method(ActivityEvent, "findOneAndUpdate", async (filter, update, options) => {
-    assert.equal(options.session, session);
-    counters.events++;
-    return update.$setOnInsert;
+  t.mock.method(XPTransaction.prototype, "save", async function () {
+    counters.xpAwards++;
+    return this;
   });
+  t.mock.method(Season, "findOne", () => query(null));
+  t.mock.method(
+    ActivityEvent,
+    "findOneAndUpdate",
+    async (filter, update, options) => {
+      assert.equal(options.session, session);
+      counters.events++;
+      return update.$setOnInsert;
+    },
+  );
   return { userId, sessionId, workout, queries, counters };
 }
 
@@ -64,13 +109,26 @@ test("a lost completion response can be retried by ID with identical results and
   const second = await completeActiveWorkoutSession(f);
   assert.deepEqual(JSON.parse(JSON.stringify(second)), serializedFirst);
   assert.deepEqual(f.counters, { workoutCount: 1, xpAwards: 1, events: 1 });
-  assert.ok(f.queries.every((filter) => filter._id === f.sessionId && filter.user === f.userId && !filter.status));
+  assert.ok(
+    f.queries.every(
+      (filter) =>
+        filter._id === f.sessionId &&
+        filter.user === f.userId &&
+        !filter.status,
+    ),
+  );
 });
 
 test("foreign and missing sessions cannot be completed or replayed", async (t) => {
   const f = fixture(t);
-  await assert.rejects(() => completeActiveWorkoutSession({ ...f, userId: id() }), /not found/);
-  await assert.rejects(() => completeActiveWorkoutSession({ ...f, sessionId: id() }), /not found/);
+  await assert.rejects(
+    () => completeActiveWorkoutSession({ ...f, userId: id() }),
+    /not found/,
+  );
+  await assert.rejects(
+    () => completeActiveWorkoutSession({ ...f, sessionId: id() }),
+    /not found/,
+  );
   assert.deepEqual(f.counters, { workoutCount: 0, xpAwards: 0, events: 0 });
 });
 
@@ -78,7 +136,10 @@ test("a cancelled session is rejected and incomplete performance remains editabl
   const f = fixture(t, { status: "cancelled", valid: false });
   await assert.rejects(() => completeActiveWorkoutSession(f), /cancelled/);
   f.workout.status = "active";
-  await assert.rejects(() => completeActiveWorkoutSession(f), /must be completed or skipped/);
+  await assert.rejects(
+    () => completeActiveWorkoutSession(f),
+    /must be completed or skipped/,
+  );
   assert.equal(f.workout.status, "active");
   assert.deepEqual(f.counters, { workoutCount: 0, xpAwards: 0, events: 0 });
 });
@@ -97,11 +158,24 @@ test("legacy completion without a body still works, while new route IDs are vali
   let result;
   await completeActiveWorkoutSessionController(
     { user: { userId: f.userId }, params: {} },
-    { status(code) { assert.equal(code, 200); return this; }, json(value) { result = value; } },
-    (error) => { throw error; },
+    {
+      status(code) {
+        assert.equal(code, 200);
+        return this;
+      },
+      json(value) {
+        result = value;
+      },
+    },
+    (error) => {
+      throw error;
+    },
   );
   assert.equal(result.workoutSession.status, "completed");
   assert.equal(f.queries[0].status, "active");
   assert.ok(workoutSessionIdSchema.params.validate({ id: "invalid" }).error);
-  assert.equal(workoutSessionIdSchema.params.validate({ id: String(f.sessionId) }).error, undefined);
+  assert.equal(
+    workoutSessionIdSchema.params.validate({ id: String(f.sessionId) }).error,
+    undefined,
+  );
 });

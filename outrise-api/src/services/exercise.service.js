@@ -96,11 +96,10 @@ export const getExercises = async ({
 
   const skip = (page - 1) * limit;
 
-  const query = Exercise.find(filter)
-    .sort({ name: 1 })
-    .skip(skip)
-    .limit(limit);
-  if (hasAdminAccess(userRole)) query.select("+baseXP");
+  const query = Exercise.find(filter).sort({ name: 1 }).skip(skip).limit(limit);
+  if (hasAdminAccess(userRole)) {
+    query.select("+baseXP");
+  }
   const exercises = await query;
 
   const totalExercises = await Exercise.countDocuments(filter);
@@ -202,7 +201,9 @@ export const restoreExercise = async (exerciseId) => {
 
 export const getExerciseById = async ({ exerciseId, userRole }) => {
   const query = Exercise.findOne({ _id: exerciseId, isActive: true });
-  if (hasAdminAccess(userRole)) query.select("+baseXP");
+  if (hasAdminAccess(userRole)) {
+    query.select("+baseXP");
+  }
   const exercise = await query;
 
   if (!exercise) {

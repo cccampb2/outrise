@@ -3,7 +3,14 @@ import { UserRoleName } from "@/components/user-role-badge";
 import { AppText as Text } from "@/components/app-text";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
-import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  Image,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
 
 import {
   getFactionLeaderboard,
@@ -166,7 +173,10 @@ export default function FactionRankingsScreen() {
               </View>
 
               <View style={styles.bannerFooter}>
-                <BrandHeader label="FACTION" accentColor={faction.colors.primary} />
+                <BrandHeader
+                  label="FACTION"
+                  accentColor={faction.colors.primary}
+                />
 
                 <Text
                   style={[
@@ -176,7 +186,8 @@ export default function FactionRankingsScreen() {
                     },
                   ]}
                 >
-                  {faction.name.toUpperCase()}{" // ACTIVE"}
+                  {faction.name.toUpperCase()}
+                  {" // ACTIVE"}
                 </Text>
               </View>
             </View>
@@ -312,7 +323,11 @@ export default function FactionRankingsScreen() {
                   </View>
 
                   <View style={styles.currentUserDetails}>
-                    <UserRoleName username={currentUser.username} role={currentUser.role} style={styles.currentUsername} />
+                    <UserRoleName
+                      username={currentUser.username}
+                      role={currentUser.role}
+                      style={styles.currentUsername}
+                    />
 
                     <Text style={styles.currentUserContribution}>
                       {formatXP(currentUser.seasonXP)} SEASON XP
@@ -420,7 +435,11 @@ function FactionMemberRow({
       </View>
 
       <View style={styles.memberIdentity}>
-        <UserRoleName username={user.username} role={user.role} style={styles.memberUsername} />
+        <UserRoleName
+          username={user.username}
+          role={user.role}
+          style={styles.memberUsername}
+        />
 
         <Text style={styles.memberContributionLabel}>SEASON CONTRIBUTION</Text>
       </View>

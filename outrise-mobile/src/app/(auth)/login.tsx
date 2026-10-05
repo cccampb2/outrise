@@ -1,5 +1,8 @@
 import { BrandHeader } from "@/components/brand-header";
-import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
+import {
+  AppText as Text,
+  AppTextInput as TextInput,
+} from "@/components/app-text";
 import { useRef, useState } from "react";
 import { StyleSheet, View, Pressable } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
@@ -12,7 +15,11 @@ import { Colors, Fonts } from "@/constants/theme";
 import { login } from "@/api/auth";
 import { saveToken, deleteToken } from "@/storage/auth-storage";
 import { getCurrentUser } from "@/api/users";
-import { setCurrentUser, clearAccountNotice, clearCurrentUser } from "@/store/auth-slice";
+import {
+  setCurrentUser,
+  clearAccountNotice,
+  clearCurrentUser,
+} from "@/store/auth-slice";
 import type { AppDispatch, RootState } from "@/store/store";
 import { ApiError, accountRestrictionMessage } from "@/api/client";
 
@@ -20,7 +27,9 @@ export default function LoginScreen() {
   const dispatch = useDispatch<AppDispatch>();
   const client = useQueryClient();
   const inFlight = useRef(false);
-  const accountNotice = useSelector((state: RootState) => state.auth.accountNotice);
+  const accountNotice = useSelector(
+    (state: RootState) => state.auth.accountNotice,
+  );
 
   const params = useLocalSearchParams<{
     email?: string;
@@ -35,8 +44,20 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [errorTitle, setErrorTitle] = useState("ACCESS_ERROR");
-  const displayedError = error || (accountNotice ? accountRestrictionMessage(accountNotice) : params.sessionExpired === "true" ? "Your session ended. Sign in again." : "");
-  const displayedErrorTitle = error ? errorTitle : accountNotice?.accountStatus === "suspended" ? "ACCOUNT_SUSPENDED" : accountNotice ? "ACCOUNT_BANNED" : "SESSION_EXPIRED";
+  const displayedError =
+    error ||
+    (accountNotice
+      ? accountRestrictionMessage(accountNotice)
+      : params.sessionExpired === "true"
+        ? "Your session ended. Sign in again."
+        : "");
+  const displayedErrorTitle = error
+    ? errorTitle
+    : accountNotice?.accountStatus === "suspended"
+      ? "ACCOUNT_SUSPENDED"
+      : accountNotice
+        ? "ACCOUNT_BANNED"
+        : "SESSION_EXPIRED";
 
   function handleShowPassword() {
     setShowPassword((currentValue) => !currentValue);
@@ -133,11 +154,17 @@ export default function LoginScreen() {
             <View style={styles.successTop}>
               <View style={styles.successDot} />
 
-              <Text style={styles.successLabel}>{params.passwordReset === "true" ? "PASSWORD_UPDATED" : "ACCOUNT_CREATED"}</Text>
+              <Text style={styles.successLabel}>
+                {params.passwordReset === "true"
+                  ? "PASSWORD_UPDATED"
+                  : "ACCOUNT_CREATED"}
+              </Text>
             </View>
 
             <Text style={styles.successText}>
-              {params.passwordReset === "true" ? "Your password has been reset. Sign in with your new password." : "Your account is ready. Check your email for a verification code, then sign in to continue."}
+              {params.passwordReset === "true"
+                ? "Your password has been reset. Sign in with your new password."
+                : "Your account is ready. Check your email for a verification code, then sign in to continue."}
             </Text>
           </View>
         ) : null}
@@ -176,7 +203,9 @@ export default function LoginScreen() {
 
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={showPassword ? "Hide password" : "Show password"}
+                accessibilityLabel={
+                  showPassword ? "Hide password" : "Show password"
+                }
                 disabled={isLoading}
                 onPress={handleShowPassword}
                 style={({ pressed }) => [
@@ -196,8 +225,16 @@ export default function LoginScreen() {
           <Pressable
             accessibilityRole="button"
             disabled={isLoading}
-            onPress={() => router.push({ pathname: "/forgot-password", params: { email: email.trim() } })}
-            style={({ pressed }) => [styles.reportButton, pressed && styles.linkPressed]}
+            onPress={() =>
+              router.push({
+                pathname: "/forgot-password",
+                params: { email: email.trim() },
+              })
+            }
+            style={({ pressed }) => [
+              styles.reportButton,
+              pressed && styles.linkPressed,
+            ]}
           >
             <Text style={styles.reportText}>FORGOT PASSWORD? →</Text>
           </Pressable>
@@ -236,8 +273,16 @@ export default function LoginScreen() {
         <Pressable
           accessibilityRole="button"
           disabled={isLoading}
-          onPress={() => router.push({ pathname: "/report-issue", params: { email: email.trim() } })}
-          style={({ pressed }) => [styles.reportButton, pressed && styles.linkPressed]}
+          onPress={() =>
+            router.push({
+              pathname: "/report-issue",
+              params: { email: email.trim() },
+            })
+          }
+          style={({ pressed }) => [
+            styles.reportButton,
+            pressed && styles.linkPressed,
+          ]}
         >
           <Text style={styles.reportText}>REPORT AN ISSUE →</Text>
         </Pressable>
@@ -279,8 +324,18 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
 
-  reportButton: { minHeight: 44, justifyContent: "center", alignItems: "center", marginTop: 14 },
-  reportText: { color: Colors.dark.textSecondary, fontSize: 11, fontWeight: "700", letterSpacing: 1 },
+  reportButton: {
+    minHeight: 44,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 14,
+  },
+  reportText: {
+    color: Colors.dark.textSecondary,
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 1,
+  },
   container: {
     flexGrow: 1,
     paddingTop: 54,

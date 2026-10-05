@@ -6,7 +6,8 @@ export const requireRole = (...allowedRoles) => {
     try {
       const userRole = req.user.role;
 
-      const hasPermission = allowedRoles.includes(userRole) ||
+      const hasPermission =
+        allowedRoles.includes(userRole) ||
         (allowedRoles.includes("admin") && hasAdminAccess(userRole));
 
       if (!hasPermission) {

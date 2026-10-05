@@ -1,5 +1,8 @@
 import { BrandHeader } from "@/components/brand-header";
-import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
+import {
+  AppText as Text,
+  AppTextInput as TextInput,
+} from "@/components/app-text";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
@@ -490,7 +493,8 @@ export default function EditWorkoutScreen() {
                     </Text>
 
                     <Text style={styles.exerciseResultMetadata}>
-                      {exercise.category.toUpperCase()}{" // "}
+                      {exercise.category.toUpperCase()}
+                      {" // "}
                       {exercise.measurementType
                         .replaceAll("_", " ")
                         .toUpperCase()}

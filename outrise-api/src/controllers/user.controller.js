@@ -9,6 +9,7 @@ import {
   deleteProfileImage,
   uploadProfileImageBuffer,
 } from "../services/media.service.js";
+
 export const getCurrentUser = async (req, res, next) => {
   try {
     const userId = req.user.userId;
@@ -316,10 +317,7 @@ export const updateProfileImage = async (req, res, next) => {
       ranking,
     });
   } catch (error) {
-    /*
-     * If Cloudinary succeeded but saving the User failed,
-     * don't leave the newly uploaded image orphaned.
-     */
+    // Remove the upload if saving the account failed.
     if (uploadedImage?.public_id && !imageSaved) {
       try {
         await deleteProfileImage(uploadedImage.public_id);

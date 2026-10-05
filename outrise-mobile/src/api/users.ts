@@ -104,7 +104,9 @@ export type SearchUsersParams = {
   limit?: number;
 };
 
-export async function getCurrentUser(signal?: AbortSignal): Promise<CurrentUser> {
+export async function getCurrentUser(
+  signal?: AbortSignal,
+): Promise<CurrentUser> {
   const response = await apiRequest("/users/me", { signal });
 
   return await response.json();

@@ -5,7 +5,7 @@ import { getToken } from "@/storage/auth-storage";
 import type { RootState } from "@/store/store";
 import type { Message } from "@/api/messages";
 import { useQueryClient } from "@tanstack/react-query";
-import { AppState, Pressable, View } from "react-native";
+import { AppState, Pressable, StyleSheet, View } from "react-native";
 import { router, usePathname } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText as Text } from "@/components/app-text";
@@ -22,15 +22,18 @@ export function SocketSession() {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const currentPath = useRef(pathname);
-  useEffect(() => { currentPath.current = pathname; }, [pathname]);
-  const [notice, setNotice] = useState<(Message & { recipientUserId: string }) | null>(null);
+  useEffect(() => {
+    currentPath.current = pathname;
+  }, [pathname]);
+  const [notice, setNotice] = useState<
+    (Message & { recipientUserId: string }) | null
+  >(null);
   const seenMessages = useRef(new Set<string>());
   useEffect(() => {
     if (!notice) return;
     const timeout = setTimeout(() => setNotice(null), 5000);
     return () => clearTimeout(timeout);
   }, [notice]);
-
 
   useEffect(() => {
     if (!userId || !emailVerified) {
@@ -66,8 +69,15 @@ export function SocketSession() {
       void client.invalidateQueries({ queryKey: ["notifications", userId] });
       if (message.sender !== userId && !seenMessages.current.has(message._id)) {
         seenMessages.current.add(message._id);
-        if (seenMessages.current.size > 500) seenMessages.current.delete(seenMessages.current.values().next().value!);
-        if (AppState.currentState === "active" && currentPath.current !== `/messages/${message.conversation}`) setNotice({ ...message, recipientUserId: userId });
+        if (seenMessages.current.size > 500)
+          seenMessages.current.delete(
+            seenMessages.current.values().next().value!,
+          );
+        if (
+          AppState.currentState === "active" &&
+          currentPath.current !== `/messages/${message.conversation}`
+        )
+          setNotice({ ...message, recipientUserId: userId });
       }
 
       void client.invalidateQueries({
@@ -129,16 +139,66 @@ export function SocketSession() {
     };
   }, [userId, emailVerified, client]);
 
-  if (!notice || notice.recipientUserId !== userId || !userId || !emailVerified || pathname === `/messages/${notice.conversation}`) return null;
-  return <View style={{ position: "absolute", top: insets.top + 8, left: 16, right: 16, zIndex: 1000, elevation: 20,
-    backgroundColor: Colors.dark.backgroundSelected, borderWidth: 1, borderColor: Colors.dark.borderStrong, flexDirection: "row" }}>
-    <Pressable accessibilityRole="button" accessibilityLabel="New message. Open conversation." onPress={() => {
-      const conversationId = notice.conversation; setNotice(null); router.push({ pathname: "/messages/[conversationId]", params: { conversationId } });
-    }} style={{ flex: 1, padding: 14, minHeight: 56 }}>
-      <Text style={{ color: Colors.dark.text, fontWeight: "800", fontSize: 14 }}>NEW MESSAGE</Text>
-      <Text style={{ color: Colors.dark.textSecondary, fontSize: 12, marginTop: 4 }} numberOfLines={1}>{notice.text}</Text>
-    </Pressable>
-    <Pressable accessibilityRole="button" accessibilityLabel="Dismiss message alert" onPress={() => setNotice(null)}
-      style={{ width: 44, minHeight: 44, justifyContent: "center", alignItems: "center" }}><Text style={{ color: Colors.dark.text }}>×</Text></Pressable>
-  </View>;
+  if (
+    !notice ||
+    notice.recipientUserId !== userId ||
+    !userId ||
+    !emailVerified ||
+    pathname === `/messages/${notice.conversation}`
+  )
+    return null;
+  return (
+    <View style={[styles.notice, { top: insets.top + 8 }]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="New message. Open conversation."
+        onPress={() => {
+          const conversationId = notice.conversation;
+          setNotice(null);
+          router.push({
+            pathname: "/messages/[conversationId]",
+            params: { conversationId },
+          });
+        }}
+        style={styles.openButton}
+      >
+        <Text style={styles.title}>NEW MESSAGE</Text>
+        <Text style={styles.preview} numberOfLines={1}>
+          {notice.text}
+        </Text>
+      </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Dismiss message alert"
+        onPress={() => setNotice(null)}
+        style={styles.dismissButton}
+      >
+        <Text style={styles.dismissText}>×</Text>
+      </Pressable>
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  notice: {
+    position: "absolute",
+    left: 16,
+    right: 16,
+    zIndex: 1000,
+    elevation: 20,
+    backgroundColor: Colors.dark.backgroundSelected,
+    borderWidth: 1,
+    borderColor: Colors.dark.borderStrong,
+    flexDirection: "row",
+  },
+  openButton: { flex: 1, padding: 14, minHeight: 56 },
+  title: { color: Colors.dark.text, fontWeight: "800", fontSize: 14 },
+  preview: { color: Colors.dark.textSecondary, fontSize: 12, marginTop: 4 },
+  dismissButton: {
+    width: 44,
+    minHeight: 44,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dismissText: { color: Colors.dark.text },
+});

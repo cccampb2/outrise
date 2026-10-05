@@ -344,9 +344,10 @@ export const hasValidActualPerformance = (sessionExercise) => {
 };
 
 const completedSessionResponse = (workoutSession) => {
-  const session = typeof workoutSession.toObject === "function"
-    ? workoutSession.toObject()
-    : { ...workoutSession };
+  const session =
+    typeof workoutSession.toObject === "function"
+      ? workoutSession.toObject()
+      : { ...workoutSession };
   const summary = session.completionSummary;
   delete session.completionSummary;
 
@@ -368,295 +369,325 @@ export const completeActiveWorkoutSession = async ({ userId, sessionId }) => {
   const mongoSession = await mongoose.startSession();
   try {
     return await mongoSession.withTransaction(async () => {
-    const workoutSession = await WorkoutSession.findOne({
-      user: userId,
-      ...(sessionId ? { _id: sessionId } : { status: "active" }),
-    }).select("+completionSummary").session(mongoSession);
+      const workoutSession = await WorkoutSession.findOne({
+        user: userId,
+        ...(sessionId ? { _id: sessionId } : { status: "active" }),
+      })
+        .select("+completionSummary")
+        .session(mongoSession);
 
-    if (!workoutSession) {
-      throw new NotFoundError("Workout session not found");
-    }
-    if (workoutSession.status === "completed") {
-      return completedSessionResponse(workoutSession);
-    }
-    if (workoutSession.status !== "active") {
-      throw new ConflictError("A cancelled workout cannot be completed.");
-    }
-
-    const incompleteExercise = workoutSession.exercises.find(
-      (sessionExercise) => {
-        if (sessionExercise.skipped) {
-          return false;
-        }
-        const hasValidPerformance = hasValidActualPerformance(sessionExercise);
-
-        return !hasValidPerformance;
-      },
-    );
-
-    if (incompleteExercise) {
-      throw new BadRequestError(
-        `${incompleteExercise.exerciseName} must be completed or skipped before finishing the workout`,
-      );
-    }
-
-    const completedAt = new Date();
-
-    const durationMilliseconds =
-      completedAt.getTime() - workoutSession.startedAt.getTime();
-
-    const durationSeconds = Math.floor(durationMilliseconds / 1000);
-
-    workoutSession.status = "completed";
-
-    workoutSession.completedAt = completedAt;
-
-    workoutSession.durationSeconds = durationSeconds;
-
-    await workoutSession.save({ session: mongoSession });
-
-    await User.findByIdAndUpdate(
-      workoutSession.user,
-      { $inc: { totalWorkouts: 1 } },
-      { session: mongoSession, runValidators: true },
-    );
-
-    const newPersonalRecords = await processWorkoutSessionPRs({
-      workoutSession,
-      mongoSession,
-    });
-
-    const workoutXP = await calculateWorkoutXP({
-      workoutSession,
-      mongoSession,
-    });
-
-    const personalRecordXP = calculatePersonalRecordXP(newPersonalRecords);
-
-    let workoutOfTheWeekXP = 0;
-
-    if (workoutSession.workoutOfTheWeekOccurrence) {
-      const occurrence = await WorkoutOfTheWeekOccurrence.findById(
-        workoutSession.workoutOfTheWeekOccurrence,
-      ).session(mongoSession);
-
-      if (!occurrence) {
-        throw new NotFoundError("Workout of the Week occurrence not found");
+      if (!workoutSession) {
+        throw new NotFoundError("Workout session not found");
+      }
+      if (workoutSession.status === "completed") {
+        return completedSessionResponse(workoutSession);
+      }
+      if (workoutSession.status !== "active") {
+        throw new ConflictError("A cancelled workout cannot be completed.");
       }
 
-      const completedBeforeDeadline = completedAt < occurrence.endsAt;
+      const incompleteExercise = workoutSession.exercises.find(
+        (sessionExercise) => {
+          if (sessionExercise.skipped) {
+            return false;
+          }
+          const hasValidPerformance =
+            hasValidActualPerformance(sessionExercise);
 
-      const completedAllExercises = workoutSession.exercises.every(
-        (sessionExercise) =>
-          !sessionExercise.skipped &&
-          hasValidActualPerformance(sessionExercise),
+          return !hasValidPerformance;
+        },
       );
 
-      if (completedBeforeDeadline && completedAllExercises) {
-        if (workoutSession.sourceType === "workout_of_the_week") {
-          workoutOfTheWeekXP = occurrence.bonusXP;
-        }
-        const actor = await User.findById(userId).select("username").session(mongoSession);
-        if (!actor) throw new NotFoundError("User not found");
-        await createActivityEvent({
-          type: "wotw_completed",
-          actor: userId,
-          audience: "friends",
-          sourceType: "workout_of_the_week_occurrence",
-          sourceId: occurrence._id,
-          details: { actorUsername: actor.username, workoutName: occurrence.name },
-          occurredAt: completedAt,
-          idempotencyKey: `user:${userId}:wotw:${occurrence._id}:completed`,
-        }, { mongoSession });
+      if (incompleteExercise) {
+        throw new BadRequestError(
+          `${incompleteExercise.exerciseName} must be completed or skipped before finishing the workout`,
+        );
       }
-    }
 
-    let workoutXPResult = null;
-    let personalRecordXPResult = null;
-    let workoutOfTheWeekXPResult = null;
+      const completedAt = new Date();
 
-    if (workoutXP > 0) {
-      workoutXPResult = await awardXP({
-        userId: workoutSession.user,
-        amount: workoutXP,
-        sourceType: "workout_completion",
-        sourceId: workoutSession._id,
-        reason: "Completed Workout",
-        mongoSession,
-        idempotencyKey: `workout:${workoutSession._id}:completion`,
-      });
-    }
+      const durationMilliseconds =
+        completedAt.getTime() - workoutSession.startedAt.getTime();
 
-    if (personalRecordXP > 0) {
-      personalRecordXPResult = await awardXP({
-        userId: workoutSession.user,
-        amount: personalRecordXP,
-        sourceType: "personal_record",
-        sourceId: workoutSession._id,
-        reason: "Earned new personal record bonus",
-        mongoSession,
-        idempotencyKey: `workout:${workoutSession._id}:pr-bonus`,
-      });
-    }
+      const durationSeconds = Math.floor(durationMilliseconds / 1000);
 
-    if (workoutOfTheWeekXP > 0) {
-      workoutOfTheWeekXPResult = await awardXP({
-        userId,
-        amount: workoutOfTheWeekXP,
-        sourceType: "workout_of_the_week",
-        sourceId: workoutSession.workoutOfTheWeekOccurrence,
-        reason: "Workout of the Week bonus",
-        idempotencyKey: `wotw:${userId}:${workoutSession.workoutOfTheWeekOccurrence}:bonus`,
+      workoutSession.status = "completed";
+
+      workoutSession.completedAt = completedAt;
+
+      workoutSession.durationSeconds = durationSeconds;
+
+      await workoutSession.save({ session: mongoSession });
+
+      await User.findByIdAndUpdate(
+        workoutSession.user,
+        { $inc: { totalWorkouts: 1 } },
+        { session: mongoSession, runValidators: true },
+      );
+
+      const newPersonalRecords = await processWorkoutSessionPRs({
+        workoutSession,
         mongoSession,
       });
-    }
 
-    const workoutCountAchievements = await checkWorkoutCountAchievements({
-      userId: workoutSession.user,
-      workoutSessionId: workoutSession._id,
-      mongoSession,
-    });
+      const workoutXP = await calculateWorkoutXP({
+        workoutSession,
+        mongoSession,
+      });
 
-    let workoutOfTheWeekCountAchievements = [];
-    if (workoutSession.sourceType === "workout_of_the_week") {
-      workoutOfTheWeekCountAchievements =
-        await checkWorkoutOfTheWeekCountAchievements({
+      const personalRecordXP = calculatePersonalRecordXP(newPersonalRecords);
+
+      let workoutOfTheWeekXP = 0;
+
+      if (workoutSession.workoutOfTheWeekOccurrence) {
+        const occurrence = await WorkoutOfTheWeekOccurrence.findById(
+          workoutSession.workoutOfTheWeekOccurrence,
+        ).session(mongoSession);
+
+        if (!occurrence) {
+          throw new NotFoundError("Workout of the Week occurrence not found");
+        }
+
+        const completedBeforeDeadline = completedAt < occurrence.endsAt;
+
+        const completedAllExercises = workoutSession.exercises.every(
+          (sessionExercise) =>
+            !sessionExercise.skipped &&
+            hasValidActualPerformance(sessionExercise),
+        );
+
+        if (completedBeforeDeadline && completedAllExercises) {
+          if (workoutSession.sourceType === "workout_of_the_week") {
+            workoutOfTheWeekXP = occurrence.bonusXP;
+          }
+          const actor = await User.findById(userId)
+            .select("username")
+            .session(mongoSession);
+          if (!actor) {
+            throw new NotFoundError("User not found");
+          }
+          await createActivityEvent(
+            {
+              type: "wotw_completed",
+              actor: userId,
+              audience: "friends",
+              sourceType: "workout_of_the_week_occurrence",
+              sourceId: occurrence._id,
+              details: {
+                actorUsername: actor.username,
+                workoutName: occurrence.name,
+              },
+              occurredAt: completedAt,
+              idempotencyKey: `user:${userId}:wotw:${occurrence._id}:completed`,
+            },
+            { mongoSession },
+          );
+        }
+      }
+
+      let workoutXPResult = null;
+      let personalRecordXPResult = null;
+      let workoutOfTheWeekXPResult = null;
+
+      if (workoutXP > 0) {
+        workoutXPResult = await awardXP({
           userId: workoutSession.user,
-          workoutSessionId: workoutSession._id,
+          amount: workoutXP,
+          sourceType: "workout_completion",
+          sourceId: workoutSession._id,
+          reason: "Completed Workout",
+          mongoSession,
+          idempotencyKey: `workout:${workoutSession._id}:completion`,
+        });
+      }
+
+      if (personalRecordXP > 0) {
+        personalRecordXPResult = await awardXP({
+          userId: workoutSession.user,
+          amount: personalRecordXP,
+          sourceType: "personal_record",
+          sourceId: workoutSession._id,
+          reason: "Earned new personal record bonus",
+          mongoSession,
+          idempotencyKey: `workout:${workoutSession._id}:pr-bonus`,
+        });
+      }
+
+      if (workoutOfTheWeekXP > 0) {
+        workoutOfTheWeekXPResult = await awardXP({
+          userId,
+          amount: workoutOfTheWeekXP,
+          sourceType: "workout_of_the_week",
+          sourceId: workoutSession.workoutOfTheWeekOccurrence,
+          reason: "Workout of the Week bonus",
+          idempotencyKey: `wotw:${userId}:${workoutSession.workoutOfTheWeekOccurrence}:bonus`,
           mongoSession,
         });
-    }
-    const workoutStreakAchievements = await checkWorkoutStreakAchievements({
-      userId: workoutSession.user,
-      workoutSessionId: workoutSession._id,
-      mongoSession,
-    });
+      }
 
-    const workoutTotalRepsAchievements = await checkWorkoutTotalRepsAchievement(
-      {
-        workoutSession,
-        mongoSession,
-      },
-    );
-
-    const workoutTimeOfTheDayAchievements =
-      await checkWorkoutTimeOfDayAchievements({
-        workoutSession,
-        mongoSession,
-      });
-
-    let personalRecordAchievements = [];
-
-    if (newPersonalRecords.length > 0) {
-      const triggeringPersonalRecord =
-        newPersonalRecords[newPersonalRecords.length - 1];
-
-      personalRecordAchievements = await checkPersonalRecordCountAchievements({
+      const workoutCountAchievements = await checkWorkoutCountAchievements({
         userId: workoutSession.user,
-        personalRecordId: triggeringPersonalRecord._id,
+        workoutSessionId: workoutSession._id,
         mongoSession,
       });
-    }
 
-    const activityAchievements = [
-      ...personalRecordAchievements,
-      ...workoutCountAchievements,
-      ...workoutOfTheWeekCountAchievements,
-      ...workoutStreakAchievements,
-      ...workoutTotalRepsAchievements,
-      ...workoutTimeOfTheDayAchievements,
-    ];
+      let workoutOfTheWeekCountAchievements = [];
+      if (workoutSession.sourceType === "workout_of_the_week") {
+        workoutOfTheWeekCountAchievements =
+          await checkWorkoutOfTheWeekCountAchievements({
+            userId: workoutSession.user,
+            workoutSessionId: workoutSession._id,
+            mongoSession,
+          });
+      }
+      const workoutStreakAchievements = await checkWorkoutStreakAchievements({
+        userId: workoutSession.user,
+        workoutSessionId: workoutSession._id,
+        mongoSession,
+      });
 
-    const progressionResult = await processProgressionAchievements({
-      userId: workoutSession.user,
-      mongoSession,
-    });
+      const workoutTotalRepsAchievements =
+        await checkWorkoutTotalRepsAchievement({
+          workoutSession,
+          mongoSession,
+        });
 
-    const progressionAchievements = progressionResult.unlockedAchievements;
+      const workoutTimeOfTheDayAchievements =
+        await checkWorkoutTimeOfDayAchievements({
+          workoutSession,
+          mongoSession,
+        });
 
-    const echelonRewards = progressionResult.echelonRewards;
+      let personalRecordAchievements = [];
 
-    const unlockedAchievements = [
-      ...activityAchievements,
-      ...progressionAchievements,
-    ];
+      if (newPersonalRecords.length > 0) {
+        const triggeringPersonalRecord =
+          newPersonalRecords[newPersonalRecords.length - 1];
 
-    const echelonXP = echelonRewards.reduce(
-      (total, reward) => total + reward.xp,
-      0,
-    );
+        personalRecordAchievements = await checkPersonalRecordCountAchievements(
+          {
+            userId: workoutSession.user,
+            personalRecordId: triggeringPersonalRecord._id,
+            mongoSession,
+          },
+        );
+      }
 
-    const awardedWorkoutXP = workoutXPResult?.awardedAmount ?? 0;
-    const awardedPersonalRecordXP = personalRecordXPResult?.awardedAmount ?? 0;
-    const awardedWorkoutOfTheWeekXP =
-      workoutOfTheWeekXPResult?.awardedAmount ?? 0;
+      const activityAchievements = [
+        ...personalRecordAchievements,
+        ...workoutCountAchievements,
+        ...workoutOfTheWeekCountAchievements,
+        ...workoutStreakAchievements,
+        ...workoutTotalRepsAchievements,
+        ...workoutTimeOfTheDayAchievements,
+      ];
 
-    const awardedAchievementXP = unlockedAchievements.reduce(
-      (total, unlock) => total + (unlock.xpResult?.awardedAmount ?? 0),
-      0,
-    );
+      const progressionResult = await processProgressionAchievements({
+        userId: workoutSession.user,
+        mongoSession,
+      });
 
-    const achievementUnlocks = unlockedAchievements.map((unlock) => ({
-      id: unlock.achievement._id,
-      name: unlock.achievement.name,
-      description: unlock.achievement.description,
-      category: unlock.achievement.category,
-      badgeKey: unlock.achievement.badgeKey,
-      xpAwarded: unlock.xpResult?.awardedAmount ?? 0,
-      unlockedAt: unlock.userAchievement.unlockedAt,
-    }));
+      const progressionAchievements = progressionResult.unlockedAchievements;
 
-    const totalAwardedXP =
-      awardedWorkoutXP +
-      awardedPersonalRecordXP +
-      awardedWorkoutOfTheWeekXP +
-      echelonXP +
-      awardedAchievementXP;
+      const echelonRewards = progressionResult.echelonRewards;
 
-    const dailyXPStatus = await getDailyXPStatus({
-      userId: workoutSession.user,
-      mongoSession,
-    });
+      const unlockedAchievements = [
+        ...activityAchievements,
+        ...progressionAchievements,
+      ];
 
-    const wasDailyXPCapped =
-      (workoutXPResult?.wasCapped ?? false) ||
-      (personalRecordXPResult?.wasCapped ?? false);
+      const echelonXP = echelonRewards.reduce(
+        (total, reward) => total + reward.xp,
+        0,
+      );
 
-    if (!workoutSession.workoutOfTheWeekOccurrence) {
-      const actor = await User.findById(userId).select("username").session(mongoSession);
-      if (!actor) throw new NotFoundError("User not found");
-      await createActivityEvent({
-        type: "workout_completed", actor: userId, audience: "friends",
-        sourceType: "workout_session", sourceId: workoutSession._id,
-        details: { actorUsername: actor.username, workoutName: workoutSession.workoutName },
-        occurredAt: completedAt, idempotencyKey: `workout:${workoutSession._id}:completed`,
-      }, { mongoSession });
-    }
+      const awardedWorkoutXP = workoutXPResult?.awardedAmount ?? 0;
+      const awardedPersonalRecordXP =
+        personalRecordXPResult?.awardedAmount ?? 0;
+      const awardedWorkoutOfTheWeekXP =
+        workoutOfTheWeekXPResult?.awardedAmount ?? 0;
 
+      const awardedAchievementXP = unlockedAchievements.reduce(
+        (total, unlock) => total + (unlock.xpResult?.awardedAmount ?? 0),
+        0,
+      );
 
-    const completionSummary = {
-      newPersonalRecords,
-      unlockedAchievements: achievementUnlocks,
-      echelonRewards,
-      xpEarned: {
-        workout: awardedWorkoutXP,
-        personalRecords: awardedPersonalRecordXP,
-        echelons: echelonXP,
-        workoutOfTheWeek: awardedWorkoutOfTheWeekXP,
-        achievements: awardedAchievementXP,
-        total: totalAwardedXP,
-      },
-      dailyXP: {
-        earned: dailyXPStatus.earned,
-        cap: dailyXPStatus.cap,
-        remaining: dailyXPStatus.remaining,
-        isCapped: dailyXPStatus.isCapped,
-        wasCapped: wasDailyXPCapped,
-      },
-    };
-    workoutSession.completionSummary = JSON.parse(JSON.stringify(completionSummary));
-    await workoutSession.save({ session: mongoSession });
-    return completedSessionResponse(workoutSession);
+      const achievementUnlocks = unlockedAchievements.map((unlock) => ({
+        id: unlock.achievement._id,
+        name: unlock.achievement.name,
+        description: unlock.achievement.description,
+        category: unlock.achievement.category,
+        badgeKey: unlock.achievement.badgeKey,
+        xpAwarded: unlock.xpResult?.awardedAmount ?? 0,
+        unlockedAt: unlock.userAchievement.unlockedAt,
+      }));
+
+      const totalAwardedXP =
+        awardedWorkoutXP +
+        awardedPersonalRecordXP +
+        awardedWorkoutOfTheWeekXP +
+        echelonXP +
+        awardedAchievementXP;
+
+      const dailyXPStatus = await getDailyXPStatus({
+        userId: workoutSession.user,
+        mongoSession,
+      });
+
+      const wasDailyXPCapped =
+        (workoutXPResult?.wasCapped ?? false) ||
+        (personalRecordXPResult?.wasCapped ?? false);
+
+      if (!workoutSession.workoutOfTheWeekOccurrence) {
+        const actor = await User.findById(userId)
+          .select("username")
+          .session(mongoSession);
+        if (!actor) {
+          throw new NotFoundError("User not found");
+        }
+        await createActivityEvent(
+          {
+            type: "workout_completed",
+            actor: userId,
+            audience: "friends",
+            sourceType: "workout_session",
+            sourceId: workoutSession._id,
+            details: {
+              actorUsername: actor.username,
+              workoutName: workoutSession.workoutName,
+            },
+            occurredAt: completedAt,
+            idempotencyKey: `workout:${workoutSession._id}:completed`,
+          },
+          { mongoSession },
+        );
+      }
+
+      const completionSummary = {
+        newPersonalRecords,
+        unlockedAchievements: achievementUnlocks,
+        echelonRewards,
+        xpEarned: {
+          workout: awardedWorkoutXP,
+          personalRecords: awardedPersonalRecordXP,
+          echelons: echelonXP,
+          workoutOfTheWeek: awardedWorkoutOfTheWeekXP,
+          achievements: awardedAchievementXP,
+          total: totalAwardedXP,
+        },
+        dailyXP: {
+          earned: dailyXPStatus.earned,
+          cap: dailyXPStatus.cap,
+          remaining: dailyXPStatus.remaining,
+          isCapped: dailyXPStatus.isCapped,
+          wasCapped: wasDailyXPCapped,
+        },
+      };
+      workoutSession.completionSummary = JSON.parse(
+        JSON.stringify(completionSummary),
+      );
+      await workoutSession.save({ session: mongoSession });
+      return completedSessionResponse(workoutSession);
     });
   } finally {
     await mongoSession.endSession();

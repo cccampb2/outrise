@@ -1,4 +1,7 @@
-import { ACCESSIBLE_ACCOUNT_STATUSES, canAccessAccount } from "../constants/accountStatus.js";
+import {
+  ACCESSIBLE_ACCOUNT_STATUSES,
+  canAccessAccount,
+} from "../constants/accountStatus.js";
 import ActivityEvent from "../models/ActivityEvent.js";
 import ActivityDismissal from "../models/ActivityDismissal.js";
 import NotFoundError from "../errors/NotFoundError.js";
@@ -32,15 +35,16 @@ async function getActivityVisibility(userId) {
     { actor: { $in: activeIds }, audience: "friends" },
     { audience: "global" },
   ];
-  if (canAccessAccount(user?.accountStatus) && user.faction)
+  if (canAccessAccount(user?.accountStatus) && user.faction) {
     audiences.push({ audience: "faction", faction: user.faction });
+  }
   return { type: { $ne: "message_received" }, $or: audiences };
 }
 
 export const dismissActivityEvents = async ({ userId, eventIds }) => {
-  // Only events visible to this user may be dismissed.
+  const visibility = await getActivityVisibility(userId);
   const events = await ActivityEvent.find({
-    ...(await getActivityVisibility(userId)),
+    ...visibility,
     _id: { $in: eventIds },
   })
     .select("_id")
@@ -65,8 +69,9 @@ export const dismissAllActivityEvents = async ({ userId }) => {
   const dismissedIds = await ActivityDismissal.find({ user: userId }).distinct(
     "event",
   );
+  const visibility = await getActivityVisibility(userId);
   const events = ActivityEvent.find({
-    ...(await getActivityVisibility(userId)),
+    ...visibility,
     _id: { $nin: dismissedIds },
     // Preserve events created after this clear-all request began.
     createdAt: { $lte: dismissedAt },
@@ -91,7 +96,9 @@ export const dismissAllActivityEvents = async ({ userId }) => {
       operations = [];
     }
   }
-  if (operations.length > 0) await ActivityDismissal.bulkWrite(operations);
+  if (operations.length > 0) {
+    await ActivityDismissal.bulkWrite(operations);
+  }
 };
 
 export const createActivityEvent = async (event, { mongoSession } = {}) => {
@@ -100,7 +107,12 @@ export const createActivityEvent = async (event, { mongoSession } = {}) => {
   return ActivityEvent.findOneAndUpdate(
     { idempotencyKey: event.idempotencyKey },
     { $setOnInsert: event },
-    { upsert: true, returnDocument: "after", runValidators: true, session: mongoSession },
+    {
+      upsert: true,
+      returnDocument: "after",
+      runValidators: true,
+      session: mongoSession,
+    },
   );
 };
 
@@ -108,8 +120,9 @@ export const getActivityFeed = async ({ userId, page = 1, limit = 25 }) => {
   const dismissedIds = await ActivityDismissal.find({ user: userId }).distinct(
     "event",
   );
+  const visibility = await getActivityVisibility(userId);
   const filter = {
-    ...(await getActivityVisibility(userId)),
+    ...visibility,
     _id: { $nin: dismissedIds },
   };
   const [events, totalEvents] = await Promise.all([

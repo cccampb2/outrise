@@ -104,7 +104,10 @@ const verificationSchema = new Schema(
 
 verificationSchema.index(
   { user: 1, idempotencyKey: 1 },
-  { unique: true, partialFilterExpression: { idempotencyKey: { $type: "string" } } },
+  {
+    unique: true,
+    partialFilterExpression: { idempotencyKey: { $type: "string" } },
+  },
 );
 
 const Verification = model("Verification", verificationSchema);

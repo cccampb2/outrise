@@ -4,38 +4,73 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User from "../src/models/User.js";
-import { register, login, verifyEmailController } from "../src/controllers/auth.controllers.js";
-import { authenticate, authenticateUnverified } from "../src/middleware/auth.js";
+import {
+  register,
+  login,
+  verifyEmailController,
+} from "../src/controllers/auth.controllers.js";
+import {
+  authenticate,
+  authenticateUnverified,
+} from "../src/middleware/auth.js";
 import logger from "../src/utils/logger.js";
 
 const userId = new mongoose.Types.ObjectId();
 const password = "signup password 123";
 const passwordHash = "test-hash-never-expose";
 const query = (value) => ({
-  select() { return this; },
-  then(resolve, reject) { return Promise.resolve(value).then(resolve, reject); },
+  select() {
+    return this;
+  },
+  then(resolve, reject) {
+    return Promise.resolve(value).then(resolve, reject);
+  },
 });
 const response = () => ({
-  statusCode: undefined, body: undefined,
-  status(value) { this.statusCode = value; return this; },
-  json(value) { this.body = value; return this; },
+  statusCode: undefined,
+  body: undefined,
+  status(value) {
+    this.statusCode = value;
+    return this;
+  },
+  json(value) {
+    this.body = value;
+    return this;
+  },
 });
 
 function setup(t, { expiresIn, tokenVersion = 0, deliveryFails = false } = {}) {
-  const keys = ["JWT_SECRET", "JWT_EXPIRES_IN", "RESEND_API_KEY", "RESEND_EMAIL_VERIFICATION_TEMPLATE", "EMAIL_FROM"];
+  const keys = [
+    "JWT_SECRET",
+    "JWT_EXPIRES_IN",
+    "RESEND_API_KEY",
+    "RESEND_EMAIL_VERIFICATION_TEMPLATE",
+    "EMAIL_FROM",
+  ];
   const before = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
   process.env.JWT_SECRET = "signup-session-tests-only";
   process.env.RESEND_API_KEY = "test-key-never-sent";
-  if (expiresIn) process.env.JWT_EXPIRES_IN = expiresIn; else delete process.env.JWT_EXPIRES_IN;
+  if (expiresIn) process.env.JWT_EXPIRES_IN = expiresIn;
+  else delete process.env.JWT_EXPIRES_IN;
   delete process.env.RESEND_EMAIL_VERIFICATION_TEMPLATE;
   delete process.env.EMAIL_FROM;
-  t.after(() => keys.forEach((key) => {
-    if (before[key] === undefined) delete process.env[key]; else process.env[key] = before[key];
-  }));
+  t.after(() =>
+    keys.forEach((key) => {
+      if (before[key] === undefined) delete process.env[key];
+      else process.env[key] = before[key];
+    }),
+  );
 
   const user = {
-    _id: userId, username: "NewMember", email: "new-member@example.com", password: passwordHash,
-    role: "user", accountStatus: "active", emailVerified: false, faction: null, tokenVersion,
+    _id: userId,
+    username: "NewMember",
+    email: "new-member@example.com",
+    password: passwordHash,
+    role: "user",
+    accountStatus: "active",
+    emailVerified: false,
+    faction: null,
+    tokenVersion,
   };
   let created = false;
   const verificationWrites = [];
@@ -49,7 +84,11 @@ function setup(t, { expiresIn, tokenVersion = 0, deliveryFails = false } = {}) {
     return query(created && filter.email === user.email ? user : null);
   });
   t.mock.method(User, "create", async (input) => {
-    assert.deepEqual(input, { username: user.username, email: user.email, password: passwordHash });
+    assert.deepEqual(input, {
+      username: user.username,
+      email: user.email,
+      password: passwordHash,
+    });
     created = true;
     return user;
   });
@@ -64,7 +103,10 @@ function setup(t, { expiresIn, tokenVersion = 0, deliveryFails = false } = {}) {
     } else {
       assert.equal(update.$set?.emailVerified, true);
       assert.equal(filter["emailVerification.id"], user.emailVerification.id);
-      assert.equal(filter["emailVerification.codeHash"], user.emailVerification.codeHash);
+      assert.equal(
+        filter["emailVerification.codeHash"],
+        user.emailVerification.codeHash,
+      );
     }
     Object.assign(user, update.$set);
     for (const key of Object.keys(update.$unset || {})) delete user[key];
@@ -85,18 +127,36 @@ function setup(t, { expiresIn, tokenVersion = 0, deliveryFails = false } = {}) {
     assert.equal(url, "https://api.resend.com/emails");
     deliveries.push(JSON.parse(options.body));
     if (deliveryFails) {
-      const error = new Error("private-provider@example.com 000123 private-api-key");
+      const error = new Error(
+        "private-provider@example.com 000123 private-api-key",
+      );
       error.name = "TimeoutError";
       throw error;
     }
-    return { ok: true, status: 200, json: async () => ({ id: "mock-signup-verification-email" }) };
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ id: "mock-signup-verification-email" }),
+    };
   });
   return { user, deliveries, verificationWrites, warnings };
 }
 
 async function signup(fixture) {
   const res = response();
-  await register({ body: { username: fixture.user.username, email: fixture.user.email, password } }, res, (error) => { throw error; });
+  await register(
+    {
+      body: {
+        username: fixture.user.username,
+        email: fixture.user.email,
+        password,
+      },
+    },
+    res,
+    (error) => {
+      throw error;
+    },
+  );
   assert.equal(res.statusCode, 201);
   return res.body;
 }
@@ -105,7 +165,10 @@ async function authenticateToken(middleware, token) {
   const req = { headers: { authorization: `Bearer ${token}` } };
   let calls = 0;
   let error;
-  await middleware(req, {}, (result) => { calls++; error = result; });
+  await middleware(req, {}, (result) => {
+    calls++;
+    error = result;
+  });
   assert.equal(calls, 1);
   return { req, error };
 }
@@ -117,14 +180,30 @@ function assertSession(payload, fixture, expirySeconds) {
   assert.equal(claims.role, fixture.user.role);
   assert.equal(claims.tokenVersion, fixture.user.tokenVersion);
   assert.equal(claims.exp - claims.iat, expirySeconds);
-  assert.deepEqual(Object.keys(claims).sort(), ["exp", "iat", "role", "tokenVersion", "userId"]);
+  assert.deepEqual(Object.keys(claims).sort(), [
+    "exp",
+    "iat",
+    "role",
+    "tokenVersion",
+    "userId",
+  ]);
   assert.deepEqual(Object.keys(payload).sort(), ["token", "user"]);
   assert.deepEqual(payload.user, {
-    id: fixture.user._id, username: fixture.user.username, email: fixture.user.email,
-    emailVerified: fixture.user.emailVerified, role: fixture.user.role, faction: fixture.user.faction,
+    id: fixture.user._id,
+    username: fixture.user.username,
+    email: fixture.user.email,
+    emailVerified: fixture.user.emailVerified,
+    role: fixture.user.role,
+    faction: fixture.user.faction,
   });
   const serialized = JSON.stringify(payload);
-  for (const hidden of [password, passwordHash, "codeHash", "emailVerificationRequestedAt", "VERIFICATION_CODE"]) {
+  for (const hidden of [
+    password,
+    passwordHash,
+    "codeHash",
+    "emailVerificationRequestedAt",
+    "VERIFICATION_CODE",
+  ]) {
     assert.ok(!serialized.includes(hidden));
   }
   assert.equal(payload.user.emailVerification, undefined);
@@ -146,7 +225,10 @@ test("signup returns a default seven-day JWT for immediate verification and send
   assert.match(code, /^\d{6}$/);
   assert.ok(!JSON.stringify(payload).includes(`"${code}"`));
 
-  const identity = await authenticateToken(authenticateUnverified, payload.token);
+  const identity = await authenticateToken(
+    authenticateUnverified,
+    payload.token,
+  );
   assert.equal(identity.error, undefined);
   assert.equal(identity.req.user.userId, userId.toString());
   assert.equal(identity.req.user.emailVerified, false);
@@ -155,11 +237,20 @@ test("signup returns a default seven-day JWT for immediate verification and send
   assert.equal(gated.error.code, "EMAIL_VERIFICATION_REQUIRED");
 
   const verified = response();
-  await verifyEmailController({ user: identity.req.user, body: { code } }, verified, (error) => { throw error; });
+  await verifyEmailController(
+    { user: identity.req.user, body: { code } },
+    verified,
+    (error) => {
+      throw error;
+    },
+  );
   assert.equal(verified.statusCode, 200);
   assert.equal(verified.body.emailVerified, true);
   assert.equal(fixture.user.emailVerification, undefined);
-  assert.equal((await authenticateToken(authenticate, payload.token)).error, undefined);
+  assert.equal(
+    (await authenticateToken(authenticate, payload.token)).error,
+    undefined,
+  );
   assert.equal(fixture.deliveries.length, 1);
 });
 
@@ -168,14 +259,28 @@ test("signup and login share configured token lifetime and the current token ver
   const signupPayload = await signup(fixture);
   const signupClaims = assertSession(signupPayload, fixture, 45 * 60);
   const res = response();
-  await login({ body: { email: fixture.user.email, password } }, res, (error) => { throw error; });
+  await login(
+    { body: { email: fixture.user.email, password } },
+    res,
+    (error) => {
+      throw error;
+    },
+  );
   assert.equal(res.statusCode, 200);
   const loginClaims = jwt.verify(res.body.token, process.env.JWT_SECRET);
-  for (const field of ["userId", "role", "tokenVersion"]) assert.equal(loginClaims[field], signupClaims[field]);
-  assert.equal(loginClaims.exp - loginClaims.iat, signupClaims.exp - signupClaims.iat);
+  for (const field of ["userId", "role", "tokenVersion"])
+    assert.equal(loginClaims[field], signupClaims[field]);
+  assert.equal(
+    loginClaims.exp - loginClaims.iat,
+    signupClaims.exp - signupClaims.iat,
+  );
   assert.equal(res.body.user.tokenVersion, undefined);
   assert.equal(res.body.user.password, undefined);
-  assert.equal((await authenticateToken(authenticateUnverified, signupPayload.token)).error, undefined);
+  assert.equal(
+    (await authenticateToken(authenticateUnverified, signupPayload.token))
+      .error,
+    undefined,
+  );
   assert.equal(fixture.deliveries.length, 1);
 });
 
@@ -189,9 +294,22 @@ test("an ambiguous initial-email failure still creates one account and returns a
   assert.equal(fixture.warnings.length, 1);
   assert.equal(fixture.warnings[0][1].reason, "NETWORK_TIMEOUT");
   assert.ok(fixture.user.emailVerification.expiresAt > new Date());
-  assert.equal((await authenticateToken(authenticateUnverified, payload.token)).error, undefined);
-  assert.equal((await authenticateToken(authenticate, payload.token)).error.code, "EMAIL_VERIFICATION_REQUIRED");
-  for (const secret of ["private-provider@example.com", "000123", "private-api-key", passwordHash]) {
-    assert.ok(!JSON.stringify({ payload, warnings: fixture.warnings }).includes(secret));
+  assert.equal(
+    (await authenticateToken(authenticateUnverified, payload.token)).error,
+    undefined,
+  );
+  assert.equal(
+    (await authenticateToken(authenticate, payload.token)).error.code,
+    "EMAIL_VERIFICATION_REQUIRED",
+  );
+  for (const secret of [
+    "private-provider@example.com",
+    "000123",
+    "private-api-key",
+    passwordHash,
+  ]) {
+    assert.ok(
+      !JSON.stringify({ payload, warnings: fixture.warnings }).includes(secret),
+    );
   }
 });

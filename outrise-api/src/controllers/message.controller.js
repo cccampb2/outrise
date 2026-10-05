@@ -78,13 +78,27 @@ export const getConversationsController = async (req, res, next) => {
 };
 
 export const getUnreadMessageCountController = async (req, res, next) => {
-  try { const result = await getUnreadMessageCount(req.user.userId); res.status(200).json(result); }
-  catch (error) { next(error); }
+  try {
+    const result = await getUnreadMessageCount(req.user.userId);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
 };
+
 export const markConversationReadController = async (req, res, next) => {
   try {
-    await markConversationRead({ userId: req.user.userId, conversationId: req.params.conversationId, throughMessageId: req.body.throughMessageId });
-    req.app.get("io")?.to(`user:${req.user.userId}`).emit("messages:read", { conversationId: req.params.conversationId });
+    await markConversationRead({
+      userId: req.user.userId,
+      conversationId: req.params.conversationId,
+      throughMessageId: req.body.throughMessageId,
+    });
+    req.app
+      .get("io")
+      ?.to(`user:${req.user.userId}`)
+      .emit("messages:read", { conversationId: req.params.conversationId });
     res.status(204).send();
-  } catch (error) { next(error); }
+  } catch (error) {
+    next(error);
+  }
 };

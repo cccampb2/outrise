@@ -1,10 +1,12 @@
 import mongoose from "mongoose";
 
-const schema = new mongoose.Schema(
+const { Schema, model } = mongoose;
+
+const notificationStateSchema = new Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    user: { type: Schema.Types.ObjectId, ref: "User", required: true },
     event: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "ActivityEvent",
       required: true,
     },
@@ -13,5 +15,7 @@ const schema = new mongoose.Schema(
   },
   { timestamps: true },
 );
-schema.index({ user: 1, event: 1 }, { unique: true });
-export default mongoose.model("NotificationState", schema);
+notificationStateSchema.index({ user: 1, event: 1 }, { unique: true });
+const NotificationState = model("NotificationState", notificationStateSchema);
+
+export default NotificationState;

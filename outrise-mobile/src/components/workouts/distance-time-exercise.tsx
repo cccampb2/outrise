@@ -1,4 +1,7 @@
-import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
+import {
+  AppText as Text,
+  AppTextInput as TextInput,
+} from "@/components/app-text";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
@@ -45,8 +48,14 @@ export function DistanceTimeExercise({
 
   const [isEditing, setIsEditing] = useState(!hasSavedPerformance);
 
-  const [previousPerformance, setPreviousPerformance] = useState({ distance: savedDistance, time: savedTime });
-  if (previousPerformance.distance !== savedDistance || previousPerformance.time !== savedTime) {
+  const [previousPerformance, setPreviousPerformance] = useState({
+    distance: savedDistance,
+    time: savedTime,
+  });
+  if (
+    previousPerformance.distance !== savedDistance ||
+    previousPerformance.time !== savedTime
+  ) {
     setPreviousPerformance({ distance: savedDistance, time: savedTime });
     setDistance(savedDistance === null ? "" : String(savedDistance));
     setMinutes(savedTime === null ? "" : String(getMinutes(savedTime)));

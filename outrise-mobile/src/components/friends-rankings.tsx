@@ -167,7 +167,11 @@ const styles = StyleSheet.create({
   current: { borderColor: Colors.dark.accent },
   pressed: { opacity: 0.5 },
   rank: {
-    fontFamily: Fonts.display, color: Colors.dark.text, fontSize: 20, fontWeight: "900" },
+    fontFamily: Fonts.display,
+    color: Colors.dark.text,
+    fontSize: 20,
+    fontWeight: "900",
+  },
   identity: { flex: 1, gap: 5 },
   username: { color: Colors.dark.text, fontSize: 14, fontWeight: "900" },
   meta: { color: Colors.dark.textMuted, fontSize: 9 },

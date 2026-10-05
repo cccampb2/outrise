@@ -16,6 +16,7 @@ export type AccountRestriction = {
 };
 
 const sessionExpiredListeners = new Set<() => void>();
+
 export function onSessionExpired(listener: () => void) {
   sessionExpiredListeners.add(listener);
   return () => {
@@ -24,6 +25,7 @@ export function onSessionExpired(listener: () => void) {
 }
 
 const emailVerificationListeners = new Set<() => void>();
+
 export function onEmailVerificationRequired(listener: () => void) {
   emailVerificationListeners.add(listener);
   return () => {
@@ -34,6 +36,7 @@ export function onEmailVerificationRequired(listener: () => void) {
 const restrictionListeners = new Set<
   (restriction: AccountRestriction) => void
 >();
+
 export function onAccountRestricted(
   listener: (restriction: AccountRestriction) => void,
 ) {

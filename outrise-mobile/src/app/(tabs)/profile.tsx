@@ -200,21 +200,31 @@ export default function ProfileScreen() {
           />
 
           <View style={styles.topBar}>
-            <BrandHeader label={user.accountStatus.toUpperCase()} accentColor={accent} />
+            <BrandHeader
+              label={user.accountStatus.toUpperCase()}
+              accentColor={accent}
+            />
 
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-            <View style={styles.badgeCode}>
-              <Text
-                style={[
-                  styles.memberCode,
-                  {
-                    color: accent,
-                  },
-                ]}
-              >
-                {`LEVEL_${String(user.progression.level).padStart(3, "0")}`}
-              </Text>
-            </View>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+              }}
+            >
+              <View style={styles.badgeCode}>
+                <Text
+                  style={[
+                    styles.memberCode,
+                    {
+                      color: accent,
+                    },
+                  ]}
+                >
+                  {`LEVEL_${String(user.progression.level).padStart(3, "0")}`}
+                </Text>
+              </View>
             </View>
           </View>
 
@@ -638,7 +648,7 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-        <ProfileRecords userId={user.id} />
+          <ProfileRecords userId={user.id} />
 
           {/* RECENT ACTIVITY */}
 
@@ -654,96 +664,67 @@ export default function ProfileScreen() {
 
           <View style={styles.activityContainer}>
             {workoutHistoryQuery.isPending ? (
-              <Text style={styles.emptyText}>
-                {"// LOADING_WORKOUT_HISTORY..."}
-              </Text>
+              <Text style={styles.activityEmpty}>Loading recent workouts…</Text>
             ) : workoutHistoryQuery.isError ? (
-              <Text style={styles.emptyText}>
-                {"// ERROR: UNABLE_TO_LOAD_HISTORY"}
+              <Text style={styles.activityEmpty}>
+                Recent workouts couldn’t load.
               </Text>
             ) : recentWorkouts.length === 0 ? (
-              <Text style={styles.emptyText}>{"// NO_WORKOUTS_RECORDED"}</Text>
+              <Text style={styles.activityEmpty}>
+                Your completed workouts will appear here.
+              </Text>
             ) : (
-              recentWorkouts.map((workout, index) => (
-                <Pressable
-                  key={workout._id}
-                  onPress={() => router.push(`/workout-session/${workout._id}`)}
-                  style={({ pressed }) => [
-                    styles.activityRow,
-                    pressed ? styles.activityRowPressed : null,
-                  ]}
-                >
-                  <View style={styles.activityTimeline}>
-                    <View
-                      style={[
-                        styles.activityNode,
-                        {
-                          borderColor: accent,
-                        },
-                      ]}
-                    >
-                      <View
-                        style={[
-                          styles.activityNodeInner,
-                          {
-                            backgroundColor:
-                              index === 0 ? accent : "transparent",
-                          },
-                        ]}
-                      />
-                    </View>
-
-                    {index < recentWorkouts.length - 1 ? (
-                      <View style={styles.activityTimelineLine} />
-                    ) : null}
-                  </View>
-
-                  <View style={styles.activityContent}>
-                    <View style={styles.activityTop}>
-                      <Text style={styles.workoutName} numberOfLines={1}>
-                        {workout.workoutName.toUpperCase()}
+              recentWorkouts.map((workout) => {
+                const date = new Date(workout.completedAt ?? workout.startedAt);
+                return (
+                  <Pressable
+                    key={workout._id}
+                    accessibilityRole="button"
+                    accessibilityLabel={`View ${workout.workoutName}, completed ${date.toLocaleDateString()}`}
+                    onPress={() =>
+                      router.push(`/workout-session/${workout._id}`)
+                    }
+                    style={({ pressed }) => [
+                      styles.activityRow,
+                      { borderLeftColor: accent },
+                      pressed && styles.activityRowPressed,
+                    ]}
+                  >
+                    <View style={styles.activityDate}>
+                      <Text style={styles.workoutDay}>
+                        {date.getDate().toString().padStart(2, "0")}
                       </Text>
-
-                      <Text style={styles.workoutDate}>
-                        {new Date(workout.completedAt ?? workout.startedAt)
-                          .toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                          })
+                      <Text style={styles.workoutMonth}>
+                        {date
+                          .toLocaleDateString("en-US", { month: "short" })
                           .toUpperCase()}
                       </Text>
                     </View>
 
-                    <Text style={styles.workoutSummary} numberOfLines={1}>
-                      {getWorkoutSummary(workout)}
-                    </Text>
-
-                    <View style={styles.activityFooter}>
-                      <Text
-                        style={[
-                          styles.activityStatus,
-                          {
-                            color: accent,
-                          },
-                        ]}
-                      >
-                        {"[COMPLETED]"}
+                    <View style={styles.activityContent}>
+                      <Text style={styles.workoutName} numberOfLines={2}>
+                        {workout.workoutName.toUpperCase()}
                       </Text>
-
-                      <Text
-                        style={[
-                          styles.activityArrow,
-                          {
-                            color: accent,
-                          },
-                        ]}
-                      >
-                        →
+                      <Text style={styles.workoutSummary} numberOfLines={2}>
+                        {getWorkoutSummary(workout)}
                       </Text>
+                      <View style={styles.activityFooter}>
+                        <View
+                          style={[
+                            styles.activityStatusMark,
+                            { backgroundColor: accent },
+                          ]}
+                        />
+                        <Text style={styles.activityStatus}>COMPLETED</Text>
+                      </View>
                     </View>
-                  </View>
-                </Pressable>
-              ))
+
+                    <Text style={[styles.activityArrow, { color: accent }]}>
+                      →
+                    </Text>
+                  </Pressable>
+                );
+              })
             )}
           </View>
 
@@ -895,7 +876,10 @@ export default function ProfileScreen() {
             <Pressable
               accessibilityRole="button"
               onPress={() => router.push("/report-issue")}
-              style={({ pressed }) => [styles.accountActionRow, pressed && styles.accountActionRowPressed]}
+              style={({ pressed }) => [
+                styles.accountActionRow,
+                pressed && styles.accountActionRowPressed,
+              ]}
             >
               <View style={styles.accountText}>
                 <Text style={styles.dataLabel}>SUPPORT</Text>
@@ -904,8 +888,14 @@ export default function ProfileScreen() {
               <Text style={styles.accountActionArrow}>→</Text>
             </Pressable>
             <View style={styles.accountDivider} />
-            <Pressable accessibilityRole="button" onPress={() => router.push("/suggest-feature")}
-              style={({ pressed }) => [styles.accountActionRow, pressed && styles.accountActionRowPressed]}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.push("/suggest-feature")}
+              style={({ pressed }) => [
+                styles.accountActionRow,
+                pressed && styles.accountActionRowPressed,
+              ]}
+            >
               <View style={styles.accountText}>
                 <Text style={styles.dataLabel}>YOUR IDEAS</Text>
                 <Text style={styles.accountActionValue}>Suggest a feature</Text>
@@ -913,10 +903,18 @@ export default function ProfileScreen() {
               <Text style={styles.accountActionArrow}>→</Text>
             </Pressable>
             <View style={styles.accountDivider} />
-            <Pressable accessibilityRole="button" onPress={() => router.push("/about")}
-              style={({ pressed }) => [styles.accountActionRow, pressed && styles.accountActionRowPressed]}>
-              <View style={styles.accountText}><Text style={styles.dataLabel}>BEHIND OUTRISE</Text>
-                <Text style={styles.accountActionValue}>About Outrise</Text></View>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.push("/about")}
+              style={({ pressed }) => [
+                styles.accountActionRow,
+                pressed && styles.accountActionRowPressed,
+              ]}
+            >
+              <View style={styles.accountText}>
+                <Text style={styles.dataLabel}>BEHIND OUTRISE</Text>
+                <Text style={styles.accountActionValue}>About Outrise</Text>
+              </View>
               <Text style={styles.accountActionArrow}>→</Text>
             </Pressable>
           </View>
@@ -970,7 +968,6 @@ const styles = StyleSheet.create({
     color: Colors.dark.accent,
     fontSize: 12,
     letterSpacing: 1.5,
-
   },
 
   /* HERO */
@@ -1641,100 +1638,105 @@ const styles = StyleSheet.create({
   /* ACTIVITY */
 
   activityContainer: {
+    gap: 8,
     marginBottom: 32,
   },
 
   activityRow: {
     flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
     minHeight: 92,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    backgroundColor: Colors.dark.backgroundElement,
+    borderWidth: 1,
+    borderColor: Colors.dark.borderStrong,
+    borderLeftWidth: 2,
   },
 
   activityRowPressed: {
-    opacity: 0.5,
+    backgroundColor: Colors.dark.backgroundSelected,
+    opacity: 0.8,
   },
 
-  activityTimeline: {
-    width: 26,
+  activityDate: {
+    width: 48,
     alignItems: "center",
+    paddingRight: 12,
+    borderRightWidth: 1,
+    borderRightColor: Colors.dark.borderStrong,
+    gap: 2,
   },
 
-  activityNode: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 4,
+  workoutDay: {
+    fontFamily: Fonts.display,
+    color: Colors.dark.text,
+    fontSize: 28,
+    lineHeight: 32,
+    fontWeight: "800",
   },
 
-  activityNodeInner: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-  },
-
-  activityTimelineLine: {
-    width: 1,
-    flex: 1,
-    backgroundColor: Colors.dark.borderSubtle,
-    marginTop: 4,
+  workoutMonth: {
+    color: Colors.dark.textSecondary,
+    fontSize: 9,
+    fontWeight: "700",
+    letterSpacing: 0.6,
   },
 
   activityContent: {
     flex: 1,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.dark.borderSubtle,
-    paddingBottom: 14,
-    marginBottom: 14,
-    paddingLeft: 6,
-  },
-
-  activityTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 10,
+    minWidth: 0,
+    gap: 6,
   },
 
   workoutName: {
-    flex: 1,
+    fontFamily: Fonts.display,
     color: Colors.dark.text,
-    fontSize: 13,
-    fontWeight: "800",
-    letterSpacing: 0.5,
-  },
-
-  workoutDate: {
-    color: Colors.dark.textDim,
-    fontSize: 8,
-    fontWeight: "800",
-    letterSpacing: 0.8,
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: "700",
+    letterSpacing: 0.3,
   },
 
   workoutSummary: {
-    color: Colors.dark.textMuted,
+    color: Colors.dark.textSecondary,
     fontSize: 10,
-
-    marginTop: 6,
+    lineHeight: 15,
   },
 
   activityFooter: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 10,
+    gap: 6,
+    marginTop: 2,
+  },
+
+  activityStatusMark: {
+    width: 4,
+    height: 4,
   },
 
   activityStatus: {
+    color: Colors.dark.textMuted,
     fontSize: 8,
-    fontWeight: "900",
-    letterSpacing: 1,
+    fontWeight: "700",
+    letterSpacing: 0.8,
   },
 
   activityArrow: {
+    fontSize: 18,
+    fontWeight: "600",
+  },
+
+  activityEmpty: {
+    color: Colors.dark.textSecondary,
     fontSize: 12,
-    fontWeight: "900",
+    lineHeight: 18,
+    padding: 16,
+    backgroundColor: Colors.dark.backgroundElement,
+    borderWidth: 1,
+    borderColor: Colors.dark.borderStrong,
   },
 
   emptyText: {

@@ -185,10 +185,15 @@ export const getWorkoutOfTheWeekHistoryController = async (req, res, next) => {
   }
 };
 
-
-export const getWorkoutOfTheWeekOccurrencesController = async (req, res, next) => {
+export const getWorkoutOfTheWeekOccurrencesController = async (
+  req,
+  res,
+  next,
+) => {
   try {
     const result = await getWorkoutOfTheWeekOccurrences(req.query);
     res.status(200).json(result);
-  } catch (error) { next(error); }
+  } catch (error) {
+    next(error);
+  }
 };

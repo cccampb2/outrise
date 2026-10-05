@@ -32,7 +32,10 @@ export function UserRoleBadge({
         accessible={false}
       />
       {showLabel && (
-        <AppText style={[styles.label, { color: badge.color }]} numberOfLines={1}>
+        <AppText
+          style={[styles.label, { color: badge.color }]}
+          numberOfLines={1}
+        >
           {badge.label.toUpperCase()}
         </AppText>
       )}
@@ -51,7 +54,9 @@ export function UserRoleName({
 }) {
   return (
     <View style={styles.nameRow}>
-      <AppText style={[style, styles.name]} numberOfLines={1}>{username}</AppText>
+      <AppText style={[style, styles.name]} numberOfLines={1}>
+        {username}
+      </AppText>
       <UserRoleBadge role={role} />
     </View>
   );

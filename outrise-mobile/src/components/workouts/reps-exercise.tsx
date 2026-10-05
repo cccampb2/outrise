@@ -1,4 +1,7 @@
-import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
+import {
+  AppText as Text,
+  AppTextInput as TextInput,
+} from "@/components/app-text";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 

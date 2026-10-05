@@ -2,7 +2,12 @@ import type { UserRole } from "@/constants/user-roles";
 import { apiRequest } from "./client";
 import type { AccountStatus } from "./users";
 
-export const accountStatuses = ["active", "flagged", "suspended", "banned"] as const;
+export const accountStatuses = [
+  "active",
+  "flagged",
+  "suspended",
+  "banned",
+] as const;
 export type AdminUser = {
   _id: string;
   username: string;
@@ -44,27 +49,51 @@ export type UserRoleInput = {
   reason: string;
 };
 
-export async function getAdminUsers(page = 1, search = "", status = "all"): Promise<{
+export async function getAdminUsers(
+  page = 1,
+  search = "",
+  status = "all",
+): Promise<{
   users: AdminUser[];
   pagination: { page: number; totalPages: number; total: number };
 }> {
-  const params = new URLSearchParams({ page: String(page), limit: "20", status });
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: "20",
+    status,
+  });
   if (search) params.set("search", search);
   const response = await apiRequest(`/admin/users?${params}`);
   return response.json();
 }
 
-export async function getAdminUser(userId: string): Promise<{ user: AdminUser; history: AccountModeration[]; roleHistory: UserRoleChange[] }> {
+export async function getAdminUser(userId: string): Promise<{
+  user: AdminUser;
+  history: AccountModeration[];
+  roleHistory: UserRoleChange[];
+}> {
   const response = await apiRequest(`/admin/users/${userId}`);
   return response.json();
 }
 
-export async function setUserAccountStatus(userId: string, data: AccountStatusInput): Promise<{ user: AdminUser }> {
-  const response = await apiRequest(`/admin/users/${userId}/status`, { method: "PATCH", body: JSON.stringify(data) });
+export async function setUserAccountStatus(
+  userId: string,
+  data: AccountStatusInput,
+): Promise<{ user: AdminUser }> {
+  const response = await apiRequest(`/admin/users/${userId}/status`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
   return response.json();
 }
 
-export async function setUserRole(userId: string, data: UserRoleInput): Promise<{ user: AdminUser }> {
-  const response = await apiRequest(`/admin/users/${userId}/role`, { method: "PATCH", body: JSON.stringify(data) });
+export async function setUserRole(
+  userId: string,
+  data: UserRoleInput,
+): Promise<{ user: AdminUser }> {
+  const response = await apiRequest(`/admin/users/${userId}/role`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
   return response.json();
 }

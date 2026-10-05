@@ -72,65 +72,75 @@ export default function RevealScreen() {
   }
 
   useEffect(() => {
-    emblemOpacity.set(withTiming(1, {
-      duration: 100,
-    }));
-
-    emblemScale.set(withSequence(
-      withTiming(
-        0.9,
-        {
-          duration: 550,
-          easing: Easing.out(Easing.cubic),
-        },
-        (finished) => {
-          if (finished) {
-            scheduleOnRN(triggerImpact);
-
-            shakeX.set(withSequence(
-              withTiming(-8, {
-                duration: 25,
-              }),
-              withTiming(7, {
-                duration: 25,
-              }),
-              withTiming(-5, {
-                duration: 25,
-              }),
-              withTiming(3, {
-                duration: 25,
-              }),
-              withTiming(0, {
-                duration: 30,
-              }),
-            ));
-          }
-        },
-      ),
-      withTiming(1.08, {
-        duration: 90,
-        easing: Easing.in(Easing.quad),
+    emblemOpacity.set(
+      withTiming(1, {
+        duration: 100,
       }),
-      withTiming(
-        1,
-        {
-          duration: 100,
-          easing: Easing.out(Easing.quad),
-        },
-        (finished) => {
-          if (finished) {
-            textOpacity.set(withTiming(1, {
-              duration: 350,
-            }));
+    );
 
-            textTranslateY.set(withTiming(0, {
-              duration: 350,
-              easing: Easing.out(Easing.cubic),
-            }));
-          }
-        },
+    emblemScale.set(
+      withSequence(
+        withTiming(
+          0.9,
+          {
+            duration: 550,
+            easing: Easing.out(Easing.cubic),
+          },
+          (finished) => {
+            if (finished) {
+              scheduleOnRN(triggerImpact);
+
+              shakeX.set(
+                withSequence(
+                  withTiming(-8, {
+                    duration: 25,
+                  }),
+                  withTiming(7, {
+                    duration: 25,
+                  }),
+                  withTiming(-5, {
+                    duration: 25,
+                  }),
+                  withTiming(3, {
+                    duration: 25,
+                  }),
+                  withTiming(0, {
+                    duration: 30,
+                  }),
+                ),
+              );
+            }
+          },
+        ),
+        withTiming(1.08, {
+          duration: 90,
+          easing: Easing.in(Easing.quad),
+        }),
+        withTiming(
+          1,
+          {
+            duration: 100,
+            easing: Easing.out(Easing.quad),
+          },
+          (finished) => {
+            if (finished) {
+              textOpacity.set(
+                withTiming(1, {
+                  duration: 350,
+                }),
+              );
+
+              textTranslateY.set(
+                withTiming(0, {
+                  duration: 350,
+                  easing: Easing.out(Easing.cubic),
+                }),
+              );
+            }
+          },
+        ),
       ),
-    ));
+    );
   }, [emblemOpacity, emblemScale, shakeX, textOpacity, textTranslateY]);
 
   if (!faction) {
@@ -193,7 +203,9 @@ export default function RevealScreen() {
               },
             ]}
           >
-            {faction.slug === recommendedFaction?.slug ? "MATCH_FOUND" : "FACTION_SELECTED"}
+            {faction.slug === recommendedFaction?.slug
+              ? "MATCH_FOUND"
+              : "FACTION_SELECTED"}
           </Text>
         </View>
 
@@ -254,7 +266,9 @@ export default function RevealScreen() {
                   },
                 ]}
               >
-                {faction.slug === recommendedFaction?.slug ? "RECOMMENDED_FACTION" : "SELECTED_FACTION"}
+                {faction.slug === recommendedFaction?.slug
+                  ? "RECOMMENDED_FACTION"
+                  : "SELECTED_FACTION"}
               </Text>
 
               <View
@@ -267,9 +281,7 @@ export default function RevealScreen() {
               />
             </View>
 
-            <Text style={styles.title}>
-              {faction.name.toUpperCase()}
-            </Text>
+            <Text style={styles.title}>{faction.name.toUpperCase()}</Text>
 
             <Text style={styles.tagline}>{faction.tagline}</Text>
 
@@ -301,13 +313,13 @@ export default function RevealScreen() {
 
               <Text style={styles.descriptionLabel}>FACTION_PROFILE</Text>
 
-              <Text style={styles.description}>
-                {faction.description}
-              </Text>
+              <Text style={styles.description}>{faction.description}</Text>
             </View>
 
             <View style={styles.actions}>
-              <Text style={styles.confirmationNote}>Your faction becomes permanent once confirmed.</Text>
+              <Text style={styles.confirmationNote}>
+                Your faction becomes permanent once confirmed.
+              </Text>
               <Pressable
                 disabled={isConfirming}
                 onPress={handleAcceptFaction}

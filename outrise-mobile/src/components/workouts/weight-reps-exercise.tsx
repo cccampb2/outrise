@@ -1,4 +1,7 @@
-import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
+import {
+  AppText as Text,
+  AppTextInput as TextInput,
+} from "@/components/app-text";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useState } from "react";
 
@@ -322,6 +325,7 @@ export function WeightRepsExercise({
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   targetHeader: {
     flexDirection: "row",

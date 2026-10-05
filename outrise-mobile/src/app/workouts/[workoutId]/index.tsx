@@ -279,7 +279,8 @@ export default function WorkoutDetailScreen() {
                   <Text style={styles.exerciseName}>{exercise.name}</Text>
 
                   <Text style={styles.exerciseCategory}>
-                    {exercise.category.toUpperCase()}{" // "}
+                    {exercise.category.toUpperCase()}
+                    {" // "}
                     {exercise.measurementType
                       .replaceAll("_", " ")
                       .toUpperCase()}

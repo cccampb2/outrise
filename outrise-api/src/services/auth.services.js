@@ -31,8 +31,10 @@ export const registerUser = async ({ username, email, password }) => {
   } catch (error) {
     // The account already exists. Continue into the verification screen with a
     // session so the user can request another code without repeating signup.
-    logger.warn("Initial verification email delivery could not be confirmed.",
-      error.deliveryFailure || { reason: "EMAIL_CONFIGURATION" });
+    logger.warn(
+      "Initial verification email delivery could not be confirmed.",
+      error.deliveryFailure || { reason: "EMAIL_CONFIGURATION" },
+    );
   }
   return user;
 };

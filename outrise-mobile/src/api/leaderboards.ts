@@ -1,6 +1,8 @@
 import type { UserRole } from "@/constants/user-roles";
 import { apiRequest } from "./client";
-import { FactionSlug } from "./factions";
+import type { FactionColors, FactionSlug } from "./factions";
+
+export type { FactionColors } from "./factions";
 
 export type LeaderboardFaction = {
   _id: string;
@@ -35,10 +37,16 @@ export type GetFriendsLeaderboardResponse = {
   pagination: LeaderboardPagination;
 };
 
-export async function getFriendsLeaderboard(
-  { page = 1, limit = 25 }: { page?: number; limit?: number } = {},
-): Promise<GetFriendsLeaderboardResponse> {
-  const response = await apiRequest(`/leaderboards/friends?page=${page}&limit=${limit}`);
+export async function getFriendsLeaderboard({
+  page = 1,
+  limit = 25,
+}: {
+  page?: number;
+  limit?: number;
+} = {}): Promise<GetFriendsLeaderboardResponse> {
+  const response = await apiRequest(
+    `/leaderboards/friends?page=${page}&limit=${limit}`,
+  );
   return response.json();
 }
 
@@ -51,15 +59,6 @@ export type GetGlobalLeaderboardResponse = {
 export type GetGlobalLeaderboardParams = {
   page?: number;
   limit?: number;
-};
-
-export type FactionColors = {
-  primary: string;
-  hover: string;
-  deep: string;
-  darkSurface: string;
-  border: string;
-  glow: string;
 };
 
 export type FactionStandingFaction = {

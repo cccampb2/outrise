@@ -19,7 +19,8 @@ const validateWorkoutOfTheWeekExercises = async (exercises) => {
     throw new NotFoundError("One or more exercises were not found");
   }
   const exerciseIds = exercises.map(
-    (workoutExercise) => workoutExercise.exercise._id ?? workoutExercise.exercise,
+    (workoutExercise) =>
+      workoutExercise.exercise._id ?? workoutExercise.exercise,
   );
 
   const uniqueExerciseIds = new Set(
@@ -47,8 +48,10 @@ const validateWorkoutOfTheWeekExercises = async (exercises) => {
 
     validateWorkoutTarget({
       measurementType: exercise.measurementType,
-      target: typeof workoutExercise.target.toObject === "function"
-        ? workoutExercise.target.toObject() : workoutExercise.target,
+      target:
+        typeof workoutExercise.target.toObject === "function"
+          ? workoutExercise.target.toObject()
+          : workoutExercise.target,
       exerciseName: exercise.name,
     });
   });
@@ -104,7 +107,6 @@ const hasWorkoutOfTheWeekChanges = (workoutOfTheWeek, updates) => {
     }
   }
 
-  // Nothing in the request changed the template.
   return false;
 };
 
@@ -134,23 +136,39 @@ const getRandomEligibleWorkoutOfTheWeek = async ({ weekStart, weekEnd }) => {
     },
   });
 
-  const exerciseIds = candidates.flatMap((template) => template.exercises.map((entry) => entry.exercise));
-  const activeExercises = await Exercise.find({ _id: { $in: exerciseIds }, isActive: true });
-  const exerciseMap = new Map(activeExercises.map((exercise) => [String(exercise._id), exercise]));
+  const exerciseIds = candidates.flatMap((template) =>
+    template.exercises.map((entry) => entry.exercise),
+  );
+  const activeExercises = await Exercise.find({
+    _id: { $in: exerciseIds },
+    isActive: true,
+  });
+  const exerciseMap = new Map(
+    activeExercises.map((exercise) => [String(exercise._id), exercise]),
+  );
   const eligibleTemplates = candidates.filter((template) => {
-    if (!template.exercises.length) return false;
+    if (!template.exercises.length) {
+      return false;
+    }
     return template.exercises.every((entry) => {
       const exercise = exerciseMap.get(String(entry.exercise));
-      if (!exercise) return false;
+      if (!exercise) {
+        return false;
+      }
       try {
         validateWorkoutTarget({
           measurementType: exercise.measurementType,
-          target: typeof entry.target.toObject === "function" ? entry.target.toObject() : entry.target,
+          target:
+            typeof entry.target.toObject === "function"
+              ? entry.target.toObject()
+              : entry.target,
           exerciseName: exercise.name,
         });
         return true;
       } catch (error) {
-        if (error.statusCode === 400) return false;
+        if (error.statusCode === 400) {
+          return false;
+        }
         throw error;
       }
     });
@@ -219,7 +237,9 @@ export const createWorkoutOfTheWeekOccurrence = async ({
 }) => {
   const { weekStart, weekEnd } = getWorkoutOfTheWeekWindow(startDate);
   if (weekEnd <= new Date()) {
-    throw new BadRequestError("Choose the current week or a future week. Finished weeks cannot be scheduled.");
+    throw new BadRequestError(
+      "Choose the current week or a future week. Finished weeks cannot be scheduled.",
+    );
   }
 
   const conflictingOccurrence = await WorkoutOfTheWeekOccurrence.findOne({
@@ -512,12 +532,21 @@ export const reconcileWorkoutOfTheWeekOccurrences = async () => {
     await occurrenceToActivate.save();
   }
   // Reconcile the event too, so a failed write after activation is retried next run.
-  const activeOccurrence = occurrenceToActivate ?? await WorkoutOfTheWeekOccurrence.findOne({ status: "active", startsAt: { $lte: now }, endsAt: { $gt: now } });
+  const activeOccurrence =
+    occurrenceToActivate ??
+    (await WorkoutOfTheWeekOccurrence.findOne({
+      status: "active",
+      startsAt: { $lte: now },
+      endsAt: { $gt: now },
+    }));
   if (activeOccurrence) {
     await createActivityEvent({
-      type: "wotw_launched", audience: "global",
-      sourceType: "workout_of_the_week_occurrence", sourceId: activeOccurrence._id,
-      details: { workoutName: activeOccurrence.name }, occurredAt: activeOccurrence.startsAt,
+      type: "wotw_launched",
+      audience: "global",
+      sourceType: "workout_of_the_week_occurrence",
+      sourceId: activeOccurrence._id,
+      details: { workoutName: activeOccurrence.name },
+      occurredAt: activeOccurrence.startsAt,
       idempotencyKey: `wotw:${activeOccurrence._id}:launched`,
     });
   }
@@ -646,15 +675,26 @@ export const getWorkoutOfTheWeekHistory = async ({
   };
 };
 
-
-export const getWorkoutOfTheWeekOccurrences = async ({ page = 1, limit = 20, status = "all" }) => {
+export const getWorkoutOfTheWeekOccurrences = async ({
+  page = 1,
+  limit = 20,
+  status = "all",
+}) => {
   const filter = status === "all" ? {} : { status };
   const [occurrences, totalOccurrences] = await Promise.all([
-    WorkoutOfTheWeekOccurrence.find(filter).sort({ startsAt: -1 }).skip((page - 1) * limit).limit(limit),
+    WorkoutOfTheWeekOccurrence.find(filter)
+      .sort({ startsAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit),
     WorkoutOfTheWeekOccurrence.countDocuments(filter),
   ]);
   return {
     occurrences,
-    pagination: { page, limit, totalOccurrences, totalPages: Math.ceil(totalOccurrences / limit) },
+    pagination: {
+      page,
+      limit,
+      totalOccurrences,
+      totalPages: Math.ceil(totalOccurrences / limit),
+    },
   };
 };

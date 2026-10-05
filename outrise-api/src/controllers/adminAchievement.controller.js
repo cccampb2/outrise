@@ -14,6 +14,7 @@ export const listAchievementsController = async (req, res, next) => {
     next(error);
   }
 };
+
 export const getAchievementController = async (req, res, next) => {
   try {
     const achievement = await getAdminAchievement(req.params.id);
@@ -22,6 +23,7 @@ export const getAchievementController = async (req, res, next) => {
     next(error);
   }
 };
+
 export const createAchievementController = async (req, res, next) => {
   try {
     const achievement = await createAdminAchievement(req.body);
@@ -30,6 +32,7 @@ export const createAchievementController = async (req, res, next) => {
     next(error);
   }
 };
+
 export const updateAchievementController = async (req, res, next) => {
   try {
     const achievement = await updateAdminAchievement(req.params.id, req.body);
@@ -38,6 +41,7 @@ export const updateAchievementController = async (req, res, next) => {
     next(error);
   }
 };
+
 export const achievementStatusController = async (req, res, next) => {
   try {
     const achievement = await setAchievementStatus(

@@ -3,7 +3,10 @@ import Season from "../models/Season.js";
 import SeasonContribution from "../models/SeasonContribution.js";
 import User from "../models/User.js";
 import mongoose from "mongoose";
-import { getFactionActivityStandings, recordFactionSeasonChanges } from "./factionActivity.service.js";
+import {
+  getFactionActivityStandings,
+  recordFactionSeasonChanges,
+} from "./factionActivity.service.js";
 
 export const addSeasonContribution = async ({
   userId,
@@ -15,8 +18,13 @@ export const addSeasonContribution = async ({
   }
   if (!mongoSession) {
     const session = await mongoose.startSession();
-    try { return await session.withTransaction(() => addSeasonContribution({ userId, amount, mongoSession: session })); }
-    finally { await session.endSession(); }
+    try {
+      return await session.withTransaction(() =>
+        addSeasonContribution({ userId, amount, mongoSession: session }),
+      );
+    } finally {
+      await session.endSession();
+    }
   }
 
   const now = new Date();
@@ -48,7 +56,9 @@ export const addSeasonContribution = async ({
     { $inc: { activityRevision: 1 } },
     { returnDocument: "after", session: mongoSession },
   );
-  if (!season) return null;
+  if (!season) {
+    return null;
+  }
   const before = await getFactionActivityStandings(season._id, mongoSession);
   const contribution = await SeasonContribution.findOneAndUpdate(
     {

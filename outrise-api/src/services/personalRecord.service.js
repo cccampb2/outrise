@@ -5,27 +5,43 @@ import Exercise from "../models/Exercise.js";
 import { createActivityEvent } from "./activity.service.js";
 
 async function recordPRActivity(personalRecord, mongoSession) {
-  const user = await User.findById(personalRecord.user).select("username").session(mongoSession).lean();
-  const exercise = await Exercise.findById(personalRecord.exercise).select("name").session(mongoSession).lean();
-  if (!user || !exercise) throw new Error("Unable to resolve personal record activity details");
-  await createActivityEvent({
-    type: "personal_record_set",
-    actor: personalRecord.user,
-    audience: "friends",
-    sourceType: "personal_record",
-    sourceId: personalRecord._id,
-    details: {
-      actorUsername: user.username,
-      exerciseName: exercise.name,
-      recordType: personalRecord.recordType,
-      recordCategory: personalRecord.recordCategory,
-      value: personalRecord.value,
-      unit: personalRecord.recordType === "max_weight" ? "lb" : personalRecord.recordType === "max_reps" ? "reps" : "seconds",
-      distanceMiles: personalRecord.distanceMiles,
+  const user = await User.findById(personalRecord.user)
+    .select("username")
+    .session(mongoSession)
+    .lean();
+  const exercise = await Exercise.findById(personalRecord.exercise)
+    .select("name")
+    .session(mongoSession)
+    .lean();
+  if (!user || !exercise) {
+    throw new Error("Unable to resolve personal record activity details");
+  }
+  await createActivityEvent(
+    {
+      type: "personal_record_set",
+      actor: personalRecord.user,
+      audience: "friends",
+      sourceType: "personal_record",
+      sourceId: personalRecord._id,
+      details: {
+        actorUsername: user.username,
+        exerciseName: exercise.name,
+        recordType: personalRecord.recordType,
+        recordCategory: personalRecord.recordCategory,
+        value: personalRecord.value,
+        unit:
+          personalRecord.recordType === "max_weight"
+            ? "lb"
+            : personalRecord.recordType === "max_reps"
+              ? "reps"
+              : "seconds",
+        distanceMiles: personalRecord.distanceMiles,
+      },
+      idempotencyKey: `personal_record_set:${personalRecord._id}`,
+      occurredAt: personalRecord.achievedAt,
     },
-    idempotencyKey: `personal_record_set:${personalRecord._id}`,
-    occurredAt: personalRecord.achievedAt,
-  }, { mongoSession });
+    { mongoSession },
+  );
 }
 
 // Rep counts that Outrise recognizes as official strength PR categories.

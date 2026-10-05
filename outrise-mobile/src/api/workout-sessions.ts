@@ -154,7 +154,9 @@ export type CompleteWorkoutResponse = {
   } | null;
 };
 
-export async function completeActiveWorkout(sessionId: string): Promise<CompleteWorkoutResponse> {
+export async function completeActiveWorkout(
+  sessionId: string,
+): Promise<CompleteWorkoutResponse> {
   const response = await apiRequest(`/workout-sessions/${sessionId}/complete`, {
     method: "PATCH",
   });

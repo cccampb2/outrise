@@ -1,11 +1,13 @@
 import mongoose from "mongoose";
 import { ACCOUNT_STATUSES } from "../constants/accountStatus.js";
 
-const accountModerationSchema = new mongoose.Schema(
+const { Schema, model } = mongoose;
+
+const accountModerationSchema = new Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    user: { type: Schema.Types.ObjectId, ref: "User", required: true },
     admin: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
@@ -17,4 +19,6 @@ const accountModerationSchema = new mongoose.Schema(
   { timestamps: true },
 );
 accountModerationSchema.index({ user: 1, createdAt: -1, _id: -1 });
-export default mongoose.model("AccountModeration", accountModerationSchema);
+const AccountModeration = model("AccountModeration", accountModerationSchema);
+
+export default AccountModeration;

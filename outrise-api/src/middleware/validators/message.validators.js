@@ -35,6 +35,10 @@ export const getConversationsSchema = {
 };
 
 export const markConversationReadSchema = {
-  params: Joi.object({ conversationId: Joi.string().hex().length(24).required() }),
-  body: Joi.object({ throughMessageId: Joi.string().hex().length(24).required() }),
+  params: Joi.object({
+    conversationId: Joi.string().hex().length(24).required(),
+  }),
+  body: Joi.object({
+    throughMessageId: Joi.string().hex().length(24).required(),
+  }),
 };

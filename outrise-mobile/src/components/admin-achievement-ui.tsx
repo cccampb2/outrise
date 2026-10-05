@@ -1,11 +1,18 @@
-import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
+import {
+  AppText as Text,
+  AppTextInput as TextInput,
+} from "@/components/app-text";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Colors, Fonts } from "@/constants/theme";
 
 export const adminAchievementStyles = StyleSheet.create({
   page: { paddingTop: 8, paddingBottom: 32, gap: 16 },
   title: {
-    fontFamily: Fonts.display, color: Colors.dark.text, fontSize: 24, fontWeight: "900" },
+    fontFamily: Fonts.display,
+    color: Colors.dark.text,
+    fontSize: 24,
+    fontWeight: "900",
+  },
   text: { color: Colors.dark.textSecondary, fontSize: 12, lineHeight: 18 },
   label: {
     color: Colors.dark.textTechnical,
@@ -44,6 +51,7 @@ export const adminAchievementStyles = StyleSheet.create({
   action: { color: Colors.dark.accent, fontWeight: "800", fontSize: 11 },
   error: { color: Colors.dark.danger, fontSize: 12 },
 });
+
 export function AdminField({
   label,
   value,
@@ -74,6 +82,7 @@ export function AdminField({
     </View>
   );
 }
+
 export function AdminChoices<T extends string>({
   label,
   options,

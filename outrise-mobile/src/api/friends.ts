@@ -13,17 +13,35 @@ export type FriendUser = {
 };
 
 export type FriendListItem = { user: FriendUser; acceptedAt: string };
-export type FriendRequestItem = { requestId: string; user: FriendUser; createdAt: string };
+export type FriendRequestItem = {
+  requestId: string;
+  user: FriendUser;
+  createdAt: string;
+};
 export type FriendListSection = "friends" | "incoming" | "outgoing";
 
-export async function getFriendList(section: FriendListSection, page = 1, limit = 25): Promise<{
+export async function getFriendList(
+  section: FriendListSection,
+  page = 1,
+  limit = 25,
+): Promise<{
   items: (FriendListItem | FriendRequestItem)[];
-  pagination: { page: number; limit: number; totalPages: number; totalUsers?: number; totalRequests?: number };
+  pagination: {
+    page: number;
+    limit: number;
+    totalPages: number;
+    totalUsers?: number;
+    totalRequests?: number;
+  };
 }> {
-  const path = section === "friends" ? "/friends" : `/friends/requests/${section}`;
+  const path =
+    section === "friends" ? "/friends" : `/friends/requests/${section}`;
   const response = await apiRequest(`${path}?page=${page}&limit=${limit}`);
   const data = await response.json();
-  return { items: section === "friends" ? data.friends : data.requests, pagination: data.pagination };
+  return {
+    items: section === "friends" ? data.friends : data.requests,
+    pagination: data.pagination,
+  };
 }
 
 export type FriendshipRelationship = {
@@ -36,15 +54,21 @@ export async function sendFriendRequest(userId: string): Promise<void> {
 }
 
 export async function acceptFriendRequest(requestId: string): Promise<void> {
-  await apiRequest(`/friends/requests/${requestId}/accept`, { method: "PATCH" });
+  await apiRequest(`/friends/requests/${requestId}/accept`, {
+    method: "PATCH",
+  });
 }
 
 export async function declineFriendRequest(requestId: string): Promise<void> {
-  await apiRequest(`/friends/requests/${requestId}/decline`, { method: "DELETE" });
+  await apiRequest(`/friends/requests/${requestId}/decline`, {
+    method: "DELETE",
+  });
 }
 
 export async function cancelFriendRequest(requestId: string): Promise<void> {
-  await apiRequest(`/friends/requests/${requestId}/cancel`, { method: "DELETE" });
+  await apiRequest(`/friends/requests/${requestId}/cancel`, {
+    method: "DELETE",
+  });
 }
 
 export async function removeFriend(userId: string): Promise<void> {

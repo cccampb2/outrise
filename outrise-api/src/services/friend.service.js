@@ -14,11 +14,25 @@ async function getRelationshipList({ userId, page = 1, limit = 25, kind }) {
   const isFriends = kind === "friends";
   const incoming = kind === "incoming";
   const match = isFriends
-    ? { status: "accepted", $or: [{ requester: currentUserId }, { recipient: currentUserId }] }
-    : { status: "pending", [incoming ? "recipient" : "requester"]: currentUserId };
+    ? {
+        status: "accepted",
+        $or: [{ requester: currentUserId }, { recipient: currentUserId }],
+      }
+    : {
+        status: "pending",
+        [incoming ? "recipient" : "requester"]: currentUserId,
+      };
   const otherUser = isFriends
-    ? { $cond: [{ $eq: ["$requester", currentUserId] }, "$recipient", "$requester"] }
-    : incoming ? "$requester" : "$recipient";
+    ? {
+        $cond: [
+          { $eq: ["$requester", currentUserId] },
+          "$recipient",
+          "$requester",
+        ],
+      }
+    : incoming
+      ? "$requester"
+      : "$recipient";
 
   const [result] = await Friendship.aggregate([
     { $match: match },
@@ -30,7 +44,15 @@ async function getRelationshipList({ userId, page = 1, limit = 25, kind }) {
         foreignField: "_id",
         pipeline: [
           { $match: { accountStatus: { $in: ACCESSIBLE_ACCOUNT_STATUSES } } },
-          { $project: { username: 1, role: 1, faction: 1, lifetimeXP: 1, profileImage: 1 } },
+          {
+            $project: {
+              username: 1,
+              role: 1,
+              faction: 1,
+              lifetimeXP: 1,
+              profileImage: 1,
+            },
+          },
         ],
         as: "user",
       },
@@ -51,10 +73,13 @@ async function getRelationshipList({ userId, page = 1, limit = 25, kind }) {
   ]);
 
   const rows = result?.rows ?? [];
-  await User.populate(rows.map((row) => row.user), {
-    path: "faction",
-    select: "name slug colors",
-  });
+  await User.populate(
+    rows.map((row) => row.user),
+    {
+      path: "faction",
+      select: "name slug colors",
+    },
+  );
   const entries = rows.map((row) => {
     const progression = getProgressFromXP(row.user.lifetimeXP ?? 0);
     const user = {
@@ -83,9 +108,14 @@ async function getRelationshipList({ userId, page = 1, limit = 25, kind }) {
   };
 }
 
-export const getFriends = (params) => getRelationshipList({ ...params, kind: "friends" });
-export const getIncomingFriendRequests = (params) => getRelationshipList({ ...params, kind: "incoming" });
-export const getOutgoingFriendRequests = (params) => getRelationshipList({ ...params, kind: "outgoing" });
+export const getFriends = (params) =>
+  getRelationshipList({ ...params, kind: "friends" });
+
+export const getIncomingFriendRequests = (params) =>
+  getRelationshipList({ ...params, kind: "incoming" });
+
+export const getOutgoingFriendRequests = (params) =>
+  getRelationshipList({ ...params, kind: "outgoing" });
 
 function getFriendshipPair(firstUserId, secondUserId) {
   const firstId = firstUserId.toString();
@@ -123,9 +153,10 @@ export const getFriendshipRelationship = async ({ userId, otherUserId }) => {
   }
 
   return {
-    status: friendship.requester.toString() === userId.toString()
-      ? "outgoing"
-      : "incoming",
+    status:
+      friendship.requester.toString() === userId.toString()
+        ? "outgoing"
+        : "incoming",
     requestId: friendship._id,
   };
 };
@@ -211,17 +242,20 @@ export const acceptFriendRequest = async ({ userId, requestId }) => {
         throw new NotFoundError("Pending friend request not found");
       }
 
-      await createActivityEvent({
-        type: "friend_request_accepted",
-        actor: userId,
-        audience: "personal",
-        recipient: friendship.requester,
-        sourceType: "friendship",
-        sourceId: friendship._id,
-        details: { actorUsername: recipient.username },
-        idempotencyKey: `friend_request_accepted:${friendship._id}`,
-        occurredAt: friendship.acceptedAt,
-      }, { mongoSession });
+      await createActivityEvent(
+        {
+          type: "friend_request_accepted",
+          actor: userId,
+          audience: "personal",
+          recipient: friendship.requester,
+          sourceType: "friendship",
+          sourceId: friendship._id,
+          details: { actorUsername: recipient.username },
+          idempotencyKey: `friend_request_accepted:${friendship._id}`,
+          occurredAt: friendship.acceptedAt,
+        },
+        { mongoSession },
+      );
 
       return friendship;
     });
@@ -281,25 +315,33 @@ export const sendFriendRequest = async ({ requesterId, recipientId }) => {
     const mongoSession = await mongoose.startSession();
     try {
       return await mongoSession.withTransaction(async () => {
-        const [friendship] = await Friendship.create([{
-          requester: requesterId,
-          recipient: recipientId,
-          userLow,
-          userHigh,
-          status: "pending",
-        }], { session: mongoSession });
+        const [friendship] = await Friendship.create(
+          [
+            {
+              requester: requesterId,
+              recipient: recipientId,
+              userLow,
+              userHigh,
+              status: "pending",
+            },
+          ],
+          { session: mongoSession },
+        );
 
-        await createActivityEvent({
-          type: "friend_request_received",
-          actor: requesterId,
-          audience: "personal",
-          recipient: recipientId,
-          sourceType: "friendship",
-          sourceId: friendship._id,
-          details: { actorUsername: requester.username },
-          idempotencyKey: `friend_request_received:${friendship._id}`,
-          occurredAt: friendship.createdAt,
-        }, { mongoSession });
+        await createActivityEvent(
+          {
+            type: "friend_request_received",
+            actor: requesterId,
+            audience: "personal",
+            recipient: recipientId,
+            sourceType: "friendship",
+            sourceId: friendship._id,
+            details: { actorUsername: requester.username },
+            idempotencyKey: `friend_request_received:${friendship._id}`,
+            occurredAt: friendship.createdAt,
+          },
+          { mongoSession },
+        );
 
         return friendship;
       });

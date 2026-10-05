@@ -79,10 +79,7 @@ function getPerformanceValue(verification: Verification) {
 
   switch (measurementType) {
     case "weight_reps": {
-      if (
-        performance.weightLbs == null ||
-        performance.reps == null
-      ) {
+      if (performance.weightLbs == null || performance.reps == null) {
         return "PERFORMANCE_UNAVAILABLE";
       }
 
@@ -347,7 +344,10 @@ export default function VerificationDetailScreen() {
             {/* HEADER */}
 
             <View style={styles.header}>
-              <BrandHeader label="VERIFICATION" style={styles.brandLabelLayout} />
+              <BrandHeader
+                label="VERIFICATION"
+                style={styles.brandLabelLayout}
+              />
 
               <Text style={styles.exerciseName}>
                 {getExerciseName(verification)}

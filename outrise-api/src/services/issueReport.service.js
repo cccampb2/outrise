@@ -10,23 +10,32 @@ function populateAdmins(query) {
     .populate("history.admin replies.admin", "username");
 }
 
-export async function createIssueReport({ email, subject, message, reportedUserId }) {
+export const createIssueReport = async ({
+  email,
+  subject,
+  message,
+  reportedUserId,
+}) => {
   // Public submissions cannot set status, reviewers, or internal notes.
   const report = await IssueReport.create({
-    email, subject, message,
+    email,
+    subject,
+    message,
     ...(reportedUserId ? { reportedUser: reportedUserId } : {}),
   });
   return report;
-}
+};
 
-export async function listIssueReports({
+export const listIssueReports = async ({
   page = 1,
   limit = 20,
   search = "",
   status = "open",
-}) {
+}) => {
   const filter = {};
-  if (status !== "all") filter.status = status;
+  if (status !== "all") {
+    filter.status = status;
+  }
   if (search) {
     const pattern = {
       $regex: search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
@@ -48,30 +57,32 @@ export async function listIssueReports({
     reports,
     pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
   };
-}
+};
 
-export async function getIssueReport(reportId) {
+export const getIssueReport = async (reportId) => {
   const report = await populateAdmins(IssueReport.findById(reportId)).lean();
-  if (!report) throw new NotFoundError("Issue report not found");
+  if (!report) {
+    throw new NotFoundError("Issue report not found");
+  }
   // A supplied email is an unverified claim, not proof of account ownership.
   const account = await User.findOne({ email: report.email })
     .select("username accountStatus suspendedUntil")
     .lean();
   const reportedAccount = report.reportedUser
     ? await User.findById(report.reportedUser)
-      .select("username accountStatus suspendedUntil")
-      .lean()
+        .select("username accountStatus suspendedUntil")
+        .lean()
     : null;
   return { report, account, reportedAccount };
-}
+};
 
-export async function updateIssueReport({
+export const updateIssueReport = async ({
   reportId,
   adminId,
   status,
   expectedRevision,
   note = "",
-}) {
+}) => {
   if (
     !ISSUE_REPORT_STATUSES.includes(status) ||
     !Number.isInteger(expectedRevision) ||
@@ -86,33 +97,29 @@ export async function updateIssueReport({
   const current = await IssueReport.findById(reportId)
     .select("status reviewer revision")
     .lean();
-  if (!current) throw new NotFoundError("Issue report not found");
+  if (!current) {
+    throw new NotFoundError("Issue report not found");
+  }
   const conflictMessage =
     "Another administrator updated this report. Refresh it before saving your changes.";
-  if (current.revision !== expectedRevision)
+  if (current.revision !== expectedRevision) {
     throw new ConflictError(conflictMessage);
-  if (current.status === status && !note.trim())
+  }
+  if (current.status === status && !note.trim()) {
     throw new BadRequestError("Change the status or add an internal note");
+  }
   const now = new Date();
   const update = {
     status,
     reviewer: status === "open" ? null : (current.reviewer ?? adminId),
-    resolvedBy:
-      status === "resolved"
-        ? current.status === "resolved"
-          ? undefined
-          : adminId
-        : null,
-    resolvedAt:
-      status === "resolved"
-        ? current.status === "resolved"
-          ? undefined
-          : now
-        : null,
   };
-  // Note-only edits preserve who resolved the report and when.
-  if (update.resolvedBy === undefined) delete update.resolvedBy;
-  if (update.resolvedAt === undefined) delete update.resolvedAt;
+  if (status !== "resolved") {
+    update.resolvedBy = null;
+    update.resolvedAt = null;
+  } else if (current.status !== "resolved") {
+    update.resolvedBy = adminId;
+    update.resolvedAt = now;
+  }
   const report = await populateAdmins(
     IssueReport.findOneAndUpdate(
       { _id: reportId, revision: expectedRevision },
@@ -132,6 +139,8 @@ export async function updateIssueReport({
       { returnDocument: "after", runValidators: true },
     ),
   ).lean();
-  if (!report) throw new ConflictError(conflictMessage);
+  if (!report) {
+    throw new ConflictError(conflictMessage);
+  }
   return report;
-}
+};

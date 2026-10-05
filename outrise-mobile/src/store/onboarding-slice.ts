@@ -34,5 +34,6 @@ const onboardingSlice = createSlice({
   },
 });
 
-export const { setRecommendedFaction, setSelectedFaction, resetOnboarding } = onboardingSlice.actions;
+export const { setRecommendedFaction, setSelectedFaction, resetOnboarding } =
+  onboardingSlice.actions;
 export default onboardingSlice.reducer;

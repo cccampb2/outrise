@@ -93,19 +93,34 @@ export async function sendMessage(
 }
 
 export type ConversationIdentity = {
-  _id: string; userLow: string; userHigh: string; lastMessageAt: string | null;
+  _id: string;
+  userLow: string;
+  userHigh: string;
+  lastMessageAt: string | null;
 };
-export async function getOrCreateConversation(userId: string): Promise<{ conversation: ConversationIdentity }> {
-  const response = await apiRequest(`/conversations/with/${userId}`, { method: "POST" });
+
+export async function getOrCreateConversation(
+  userId: string,
+): Promise<{ conversation: ConversationIdentity }> {
+  const response = await apiRequest(`/conversations/with/${userId}`, {
+    method: "POST",
+  });
   return response.json();
 }
 
-export async function getUnreadMessageCount(): Promise<{ unreadCount: number }> {
+export async function getUnreadMessageCount(): Promise<{
+  unreadCount: number;
+}> {
   const response = await apiRequest("/conversations/unread-count");
   return response.json();
 }
-export async function markConversationRead(conversationId: string, throughMessageId: string): Promise<void> {
+
+export async function markConversationRead(
+  conversationId: string,
+  throughMessageId: string,
+): Promise<void> {
   await apiRequest(`/conversations/${conversationId}/read`, {
-    method: "POST", body: JSON.stringify({ throughMessageId }),
+    method: "POST",
+    body: JSON.stringify({ throughMessageId }),
   });
 }

@@ -1,17 +1,26 @@
-import { listAdminUsers, getAdminUser, setUserAccountStatus, setUserRole } from "../services/adminUser.service.js";
+import {
+  listAdminUsers,
+  getAdminUser,
+  setUserAccountStatus,
+  setUserRole,
+} from "../services/adminUser.service.js";
 
 export const listAdminUsersController = async (req, res, next) => {
   try {
     const result = await listAdminUsers(req.query);
     res.status(200).json(result);
-  } catch (error) { next(error); }
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const getAdminUserController = async (req, res, next) => {
   try {
     const result = await getAdminUser(req.params.userId);
     res.status(200).json(result);
-  } catch (error) { next(error); }
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const setUserAccountStatusController = async (req, res, next) => {
@@ -24,7 +33,9 @@ export const setUserAccountStatusController = async (req, res, next) => {
       suspensionDays: req.body.suspensionDays,
     });
     res.status(200).json({ user });
-  } catch (error) { next(error); }
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const setUserRoleController = async (req, res, next) => {
@@ -37,5 +48,7 @@ export const setUserRoleController = async (req, res, next) => {
       reason: req.body.reason,
     });
     res.status(200).json({ user });
-  } catch (error) { next(error); }
+  } catch (error) {
+    next(error);
+  }
 };

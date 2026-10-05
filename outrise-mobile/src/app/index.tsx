@@ -10,7 +10,11 @@ import type { AppDispatch, RootState } from "@/store/store";
 import { Colors } from "@/constants/theme";
 import { ApiError } from "@/api/client";
 
-type Destination = "/login" | "/verify-email" | "/(onboarding)/faction" | "/(tabs)";
+type Destination =
+  | "/login"
+  | "/verify-email"
+  | "/(onboarding)/faction"
+  | "/(tabs)";
 
 export default function Index() {
   const dispatch = useDispatch<AppDispatch>();
@@ -34,7 +38,7 @@ export default function Index() {
 
       try {
         const user = await getCurrentUser(controller.signal);
-        if (controller.signal.aborted || token !== await getToken()) return;
+        if (controller.signal.aborted || token !== (await getToken())) return;
         dispatch(setCurrentUser(user));
 
         if (user.emailVerified !== true) {
@@ -45,7 +49,7 @@ export default function Index() {
           setDestination("/(tabs)");
         }
       } catch (error) {
-        if (controller.signal.aborted || token !== await getToken()) return;
+        if (controller.signal.aborted || token !== (await getToken())) return;
         if (error instanceof ApiError && error.accountRestriction) {
           await deleteToken();
           dispatch(setAccountRestriction(error.accountRestriction));
@@ -66,17 +70,32 @@ export default function Index() {
     return () => controller.abort();
   }, [dispatch, currentUser, retryAttempt]);
 
-  if (currentUser) return <Redirect href={currentUser.emailVerified !== true ? "/verify-email" : currentUser.faction === null ? "/(onboarding)/faction" : "/(tabs)"} />;
+  if (currentUser)
+    return (
+      <Redirect
+        href={
+          currentUser.emailVerified !== true
+            ? "/verify-email"
+            : currentUser.faction === null
+              ? "/(onboarding)/faction"
+              : "/(tabs)"
+        }
+      />
+    );
 
   if (sessionError) {
     return (
       <View style={styles.loading}>
         <Text style={styles.errorText}>Unable to connect to Outrise</Text>
-        <Pressable accessibilityRole="button" onPress={() => {
-          setSessionError(false);
-          setDestination(null);
-          setRetryAttempt((attempt) => attempt + 1);
-        }} style={styles.retryButton}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => {
+            setSessionError(false);
+            setDestination(null);
+            setRetryAttempt((attempt) => attempt + 1);
+          }}
+          style={styles.retryButton}
+        >
           <Text style={styles.retryText}>TRY AGAIN →</Text>
         </Pressable>
       </View>
@@ -105,6 +124,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: "center",
   },
-  retryButton: { minHeight: 48, justifyContent: "center", padding: 16, marginTop: 12 },
+  retryButton: {
+    minHeight: 48,
+    justifyContent: "center",
+    padding: 16,
+    marginTop: 12,
+  },
   retryText: { color: Colors.dark.accent, fontSize: 12, fontWeight: "700" },
 });

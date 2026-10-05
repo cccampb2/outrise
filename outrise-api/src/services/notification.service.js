@@ -14,24 +14,26 @@ export const NOTIFICATION_TYPES = [
   "faction_season_won",
 ];
 
-export async function getNotificationVisibility(userId) {
+export const getNotificationVisibility = async (userId) => {
   const user = await User.findById(userId)
     .select("faction accountStatus createdAt")
     .lean();
-  if (!user || !canAccessAccount(user.accountStatus))
+  if (!user || !canAccessAccount(user.accountStatus)) {
     throw new NotFoundError("User not found");
+  }
   const audiences = [
     { audience: "personal", recipient: userId },
     { audience: "global", occurredAt: { $gte: user.createdAt } },
   ];
-  if (user.faction)
+  if (user.faction) {
     audiences.push({
       audience: "faction",
       faction: user.faction,
       occurredAt: { $gte: user.createdAt },
     });
+  }
   return { type: { $in: NOTIFICATION_TYPES }, $or: audiences };
-}
+};
 
 async function getNotificationFilters(userId) {
   const visibility = await getNotificationVisibility(userId);
@@ -51,12 +53,12 @@ async function getNotificationFilters(userId) {
   };
 }
 
-export async function getNotifications({
+export const getNotifications = async ({
   userId,
   page = 1,
   limit = 20,
   unreadOnly = false,
-}) {
+}) => {
   const filters = await getNotificationFilters(userId);
   const filter = unreadOnly ? filters.unread : filters.all;
   const [events, total, unreadCount] = await Promise.all([
@@ -80,20 +82,20 @@ export async function getNotifications({
     unreadCount,
     pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
   };
-}
+};
 
-export async function getUnreadNotificationCount(userId) {
+export const getUnreadNotificationCount = async (userId) => {
   const filters = await getNotificationFilters(userId);
   const unreadCount = await ActivityEvent.countDocuments(filters.unread);
   return { unreadCount };
-}
+};
 
-export async function updateNotificationState({
+export const updateNotificationState = async ({
   userId,
   eventIds,
   all = false,
   dismiss = false,
-}) {
+}) => {
   const visibility = await getNotificationVisibility(userId);
   const now = new Date();
   const events = await ActivityEvent.find({
@@ -102,8 +104,9 @@ export async function updateNotificationState({
   })
     .select("_id")
     .lean();
-  if (!all && events.length !== eventIds.length)
+  if (!all && events.length !== eventIds.length) {
     throw new NotFoundError("One or more notifications were not found");
+  }
   for (let offset = 0; offset < events.length; offset += 500) {
     await NotificationState.bulkWrite(
       events.slice(offset, offset + 500).map((event) => ({
@@ -118,4 +121,4 @@ export async function updateNotificationState({
       })),
     );
   }
-}
+};

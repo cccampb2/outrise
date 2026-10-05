@@ -8,14 +8,40 @@ import {
   type TextStyle,
 } from "react-native";
 
-type FontStyle = Pick<TextStyle, "fontWeight" | "fontStyle" | "fontFamily" | "letterSpacing">;
-const FontContext = createContext<FontStyle>({ fontWeight: "400", fontStyle: "normal", fontFamily: "Barlow-Regular", letterSpacing: 0 });
+type FontStyle = Pick<
+  TextStyle,
+  "fontWeight" | "fontStyle" | "fontFamily" | "letterSpacing"
+>;
+const FontContext = createContext<FontStyle>({
+  fontWeight: "400",
+  fontStyle: "normal",
+  fontFamily: "Barlow-Regular",
+  letterSpacing: 0,
+});
 
 function fontFamily({ fontWeight, fontStyle, fontFamily }: FontStyle) {
-  const family = fontFamily?.startsWith("BarlowCondensed") ? "BarlowCondensed" : "Barlow";
+  const family = fontFamily?.startsWith("BarlowCondensed")
+    ? "BarlowCondensed"
+    : "Barlow";
   const weight = fontWeight === "bold" ? 700 : Number(fontWeight) || 400;
-  const face = weight >= 900 ? "Black" : weight >= 800 ? "ExtraBold" : weight >= 700 ? "Bold" : weight >= 600 ? "SemiBold" : weight >= 500 ? "Medium" : "Regular";
-  const variant = fontStyle === "italic" ? face === "Regular" ? "Italic" : `${face}Italic` : face;
+  const face =
+    weight >= 900
+      ? "Black"
+      : weight >= 800
+        ? "ExtraBold"
+        : weight >= 700
+          ? "Bold"
+          : weight >= 600
+            ? "SemiBold"
+            : weight >= 500
+              ? "Medium"
+              : "Regular";
+  const variant =
+    fontStyle === "italic"
+      ? face === "Regular"
+        ? "Italic"
+        : `${face}Italic`
+      : face;
   return `${family}-${variant}`;
 }
 
@@ -25,11 +51,16 @@ function typographyStyle(font: FontStyle): TextStyle {
     fontFamily: family,
     fontWeight: "normal",
     fontStyle: "normal",
-    letterSpacing: (font.letterSpacing ?? 0) + (family.startsWith("BarlowCondensed") ? 1 : 0),
+    letterSpacing:
+      (font.letterSpacing ?? 0) +
+      (family.startsWith("BarlowCondensed") ? 1 : 0),
   };
 }
 
-export const AppText = forwardRef<NativeText, TextProps>(function AppText({ style, children, ...props }, ref) {
+export const AppText = forwardRef<NativeText, TextProps>(function AppText(
+  { style, children, ...props },
+  ref,
+) {
   const inherited = useContext(FontContext);
   const flattened = StyleSheet.flatten(style);
   const font = {
@@ -46,7 +77,15 @@ export const AppText = forwardRef<NativeText, TextProps>(function AppText({ styl
   );
 });
 
-export const AppTextInput = forwardRef<NativeTextInput, TextInputProps>(function AppTextInput({ style, ...props }, ref) {
-  const flattened = StyleSheet.flatten(style);
-  return <NativeTextInput {...props} ref={ref} style={[style, typographyStyle(flattened ?? {})]} />;
-});
+export const AppTextInput = forwardRef<NativeTextInput, TextInputProps>(
+  function AppTextInput({ style, ...props }, ref) {
+    const flattened = StyleSheet.flatten(style);
+    return (
+      <NativeTextInput
+        {...props}
+        ref={ref}
+        style={[style, typographyStyle(flattened ?? {})]}
+      />
+    );
+  },
+);

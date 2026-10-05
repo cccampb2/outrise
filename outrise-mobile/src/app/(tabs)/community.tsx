@@ -140,7 +140,12 @@ export default function CommunityScreen() {
                 compactSearch && { marginBottom: 14 },
               ]}
             >
-              <View style={[styles.sectionHeading, compactSearch && { marginBottom: 12 }]}>
+              <View
+                style={[
+                  styles.sectionHeading,
+                  compactSearch && { marginBottom: 12 },
+                ]}
+              >
                 <Text style={styles.sectionTitle}>DISCOVER ATHLETES</Text>
                 <Ionicons
                   name="globe-outline"

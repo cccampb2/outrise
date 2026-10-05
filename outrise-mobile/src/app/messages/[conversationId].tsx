@@ -21,6 +21,7 @@ import {
 import { Colors } from "@/constants/theme";
 import type { RootState } from "@/store/store";
 type Attempt = { text: string; idempotencyKey: string };
+
 export default function ConversationScreen() {
   const params = useLocalSearchParams<{
     conversationId: string;
@@ -59,24 +60,33 @@ export default function ConversationScreen() {
   });
   const latestMessageId = query.data?.pages[0]?.messages[0]?._id;
   const [readError, setReadError] = useState(false);
-  useFocusEffect(useCallback(() => {
-    if (!latestMessageId || !validId) return;
-    let cancelled = false;
-    const acknowledge = async () => {
-      if (AppState.currentState !== "active") return;
-      try {
-        await markConversationRead(conversationId, latestMessageId);
-        if (!cancelled) setReadError(false);
-        await Promise.all([
-          client.invalidateQueries({ queryKey: ["conversations", userId] }),
-          client.invalidateQueries({ queryKey: ["notifications", userId] }),
-        ]);
-      } catch { if (!cancelled) setReadError(true); }
-    };
-    void acknowledge();
-    const interval = setInterval(() => { void acknowledge(); }, 30000);
-    return () => { cancelled = true; clearInterval(interval); };
-  }, [latestMessageId, validId, conversationId, client, userId]));
+  useFocusEffect(
+    useCallback(() => {
+      if (!latestMessageId || !validId) return;
+      let cancelled = false;
+      const acknowledge = async () => {
+        if (AppState.currentState !== "active") return;
+        try {
+          await markConversationRead(conversationId, latestMessageId);
+          if (!cancelled) setReadError(false);
+          await Promise.all([
+            client.invalidateQueries({ queryKey: ["conversations", userId] }),
+            client.invalidateQueries({ queryKey: ["notifications", userId] }),
+          ]);
+        } catch {
+          if (!cancelled) setReadError(true);
+        }
+      };
+      void acknowledge();
+      const interval = setInterval(() => {
+        void acknowledge();
+      }, 30000);
+      return () => {
+        cancelled = true;
+        clearInterval(interval);
+      };
+    }, [latestMessageId, validId, conversationId, client, userId]),
+  );
   const rows = query.data?.pages.flatMap((page) => page.messages) ?? [];
   const messages = rows.filter(
     (row, index) => rows.findIndex((other) => other._id === row._id) === index,
@@ -121,7 +131,11 @@ export default function ConversationScreen() {
             : "CONVERSATION"}
         </Text>
       </View>
-      {readError && <Text style={styles.subtitle}>Read status couldn’t sync. We’ll try again shortly.</Text>}
+      {readError && (
+        <Text style={styles.subtitle}>
+          Read status couldn’t sync. We’ll try again shortly.
+        </Text>
+      )}
       {!validId ? (
         <Text style={styles.error}>This conversation link is invalid.</Text>
       ) : (
@@ -142,11 +156,11 @@ export default function ConversationScreen() {
             </View>
           )}
           <FlatList
-            style={{ flex: 1 }}
+            style={styles.list}
             inverted
             data={messages}
             keyExtractor={(item) => item._id}
-            contentContainerStyle={{ paddingVertical: 12 }}
+            contentContainerStyle={styles.messagesContent}
             keyboardShouldPersistTaps="handled"
             renderItem={({ item }) => (
               <View

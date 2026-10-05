@@ -1,7 +1,16 @@
 import { BrandHeader } from "@/components/brand-header";
-import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
+import {
+  AppText as Text,
+  AppTextInput as TextInput,
+} from "@/components/app-text";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, View, Image } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  View,
+  Image,
+} from "react-native";
 import { router } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import * as ImagePicker from "expo-image-picker";
@@ -527,7 +536,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "800",
     letterSpacing: 1,
-
   },
 
   /* HEADER */
@@ -633,7 +641,6 @@ const styles = StyleSheet.create({
     color: Colors.dark.textDim,
     fontSize: 8,
     fontWeight: "700",
-
   },
 
   input: {

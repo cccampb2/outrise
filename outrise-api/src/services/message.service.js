@@ -190,16 +190,30 @@ export const sendMessage = async ({
         },
       );
 
-      const sender = await User.findById(userId).select("username").session(mongoSession);
-      if (!sender) throw new NotFoundError("Sender not found");
-      const recipient = conversation.userLow.toString() === userId.toString() ? conversation.userHigh : conversation.userLow;
-      await createActivityEvent({
-        type: "message_received", audience: "personal", actor: userId, recipient,
-        sourceType: "message", sourceId: createdMessage._id,
-        details: { actorUsername: sender.username, conversationId },
-        occurredAt: createdMessage.createdAt,
-        idempotencyKey: `message_received:${createdMessage._id}`,
-      }, { mongoSession });
+      const sender = await User.findById(userId)
+        .select("username")
+        .session(mongoSession);
+      if (!sender) {
+        throw new NotFoundError("Sender not found");
+      }
+      const recipient =
+        conversation.userLow.toString() === userId.toString()
+          ? conversation.userHigh
+          : conversation.userLow;
+      await createActivityEvent(
+        {
+          type: "message_received",
+          audience: "personal",
+          actor: userId,
+          recipient,
+          sourceType: "message",
+          sourceId: createdMessage._id,
+          details: { actorUsername: sender.username, conversationId },
+          occurredAt: createdMessage.createdAt,
+          idempotencyKey: `message_received:${createdMessage._id}`,
+        },
+        { mongoSession },
+      );
       return createdMessage;
     });
 
@@ -257,8 +271,13 @@ export const getConversations = async ({ userId, page = 1, limit = 20 }) => {
     .populate("userLow userHigh", "username profileImage")
     .lean();
 
+  const conversationsWithUnreadCounts = await addUnreadCounts(
+    conversations.slice(0, limit),
+    userId,
+  );
+
   return {
-    conversations: await addUnreadCounts(conversations.slice(0, limit), userId),
+    conversations: conversationsWithUnreadCounts,
     pagination: {
       page,
       limit,
@@ -267,47 +286,99 @@ export const getConversations = async ({ userId, page = 1, limit = 20 }) => {
   };
 };
 
-const unreadFilter = (userId, conversationIds) => ({
-  conversation: { $in: conversationIds },
-  sender: { $ne: new mongoose.Types.ObjectId(userId.toString()) },
-  readBy: { $ne: new mongoose.Types.ObjectId(userId.toString()) },
-});
-async function addUnreadCounts(conversations, userId) {
-  if (!conversations.length) return [];
+const unreadFilter = (userId, conversationIds) => {
+  const currentUserId = new mongoose.Types.ObjectId(userId.toString());
+
+  return {
+    conversation: { $in: conversationIds },
+    sender: { $ne: currentUserId },
+    readBy: { $ne: currentUserId },
+  };
+};
+
+const addUnreadCounts = async (conversations, userId) => {
+  if (!conversations.length) {
+    return [];
+  }
   const counts = await Message.aggregate([
-    { $match: unreadFilter(userId, conversations.map((conversation) => conversation._id)) },
+    {
+      $match: unreadFilter(
+        userId,
+        conversations.map((conversation) => conversation._id),
+      ),
+    },
     { $group: { _id: "$conversation", unreadCount: { $sum: 1 } } },
   ]);
-  const byId = new Map(counts.map((count) => [count._id.toString(), count.unreadCount]));
-  return conversations.map((conversation) => ({ ...conversation, unreadCount: byId.get(conversation._id.toString()) ?? 0 }));
-}
-export async function getUnreadMessageCount(userId) {
-  const conversationIds = await Conversation.find({ $or: [{ userLow: userId }, { userHigh: userId }] }).distinct("_id");
-  const unreadCount = await Message.countDocuments(unreadFilter(userId, conversationIds));
+  const byId = new Map(
+    counts.map((count) => [count._id.toString(), count.unreadCount]),
+  );
+  return conversations.map((conversation) => ({
+    ...conversation,
+    unreadCount: byId.get(conversation._id.toString()) ?? 0,
+  }));
+};
+
+export const getUnreadMessageCount = async (userId) => {
+  const conversationIds = await Conversation.find({
+    $or: [{ userLow: userId }, { userHigh: userId }],
+  }).distinct("_id");
+  const unreadCount = await Message.countDocuments(
+    unreadFilter(userId, conversationIds),
+  );
   return { unreadCount };
-}
-export async function markConversationRead({ userId, conversationId, throughMessageId }) {
+};
+
+export const markConversationRead = async ({
+  userId,
+  conversationId,
+  throughMessageId,
+}) => {
   await getConversationForUser({ userId, conversationId });
-  const throughMessage = await Message.findOne({ _id: throughMessageId, conversation: conversationId }).select("createdAt").lean();
-  if (!throughMessage) throw new NotFoundError("Message not found in this conversation");
+  const throughMessage = await Message.findOne({
+    _id: throughMessageId,
+    conversation: conversationId,
+  })
+    .select("createdAt")
+    .lean();
+  if (!throughMessage) {
+    throw new NotFoundError("Message not found in this conversation");
+  }
   // Acknowledge only the history actually fetched. A later arrival remains unread.
   const cutoff = [
     { createdAt: { $lt: throughMessage.createdAt } },
     { createdAt: throughMessage.createdAt, _id: { $lte: throughMessage._id } },
   ];
-  await Message.updateMany({ conversation: conversationId, sender: { $ne: userId }, $or: cutoff }, { $addToSet: { readBy: userId } });
+  await Message.updateMany(
+    { conversation: conversationId, sender: { $ne: userId }, $or: cutoff },
+    { $addToSet: { readBy: userId } },
+  );
   const events = await ActivityEvent.find({
-    type: "message_received", recipient: userId, "details.conversationId": conversationId,
+    type: "message_received",
+    recipient: userId,
+    "details.conversationId": conversationId,
     $or: [
       { occurredAt: { $lt: throughMessage.createdAt } },
-      { occurredAt: throughMessage.createdAt, sourceId: { $lte: throughMessage._id } },
+      {
+        occurredAt: throughMessage.createdAt,
+        sourceId: { $lte: throughMessage._id },
+      },
     ],
-  }).select("_id").lean();
+  })
+    .select("_id")
+    .lean();
   const readAt = new Date();
   for (let offset = 0; offset < events.length; offset += 500) {
-    await NotificationState.bulkWrite(events.slice(offset, offset + 500).map((event) => ({ updateOne: {
-      filter: { user: userId, event: event._id },
-      update: { $set: { readAt }, $setOnInsert: { user: userId, event: event._id } }, upsert: true,
-    } })));
+    await NotificationState.bulkWrite(
+      events.slice(offset, offset + 500).map((event) => ({
+        updateOne: {
+          filter: { user: userId, event: event._id },
+          update: {
+            $set: { readAt },
+            $setOnInsert: { user: userId, event: event._id },
+          },
+          upsert: true,
+        },
+      })),
+    );
   }
-}
+};

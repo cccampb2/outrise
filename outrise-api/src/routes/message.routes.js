@@ -21,7 +21,11 @@ const router = express.Router();
 
 router.use(authenticate);
 router.get("/unread-count", getUnreadMessageCountController);
-router.post("/:conversationId/read", validate(markConversationReadSchema), markConversationReadController);
+router.post(
+  "/:conversationId/read",
+  validate(markConversationReadSchema),
+  markConversationReadController,
+);
 
 router.get("/", validate(getConversationsSchema), getConversationsController);
 

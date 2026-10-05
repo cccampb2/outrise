@@ -116,7 +116,10 @@ export default function HomeScreen() {
 
         <View style={styles.header}>
           <View style={styles.headerTop}>
-            <BrandHeader label={user?.accountStatus.toUpperCase() ?? "ACTIVE"} accentColor={accent} />
+            <BrandHeader
+              label={user?.accountStatus.toUpperCase() ?? "ACTIVE"}
+              accentColor={accent}
+            />
 
             <View
               style={{ flexDirection: "row", alignItems: "center", gap: 12 }}
@@ -307,7 +310,13 @@ export default function HomeScreen() {
             <Text style={styles.wotwSystemMessageText}>
               {"// UNABLE_TO_LOAD_WEEKLY_CHALLENGE"}
             </Text>
-            <Pressable accessibilityRole="button" onPress={() => { void currentWorkoutOfTheWeekQuery.refetch(); }} style={{ minHeight: 44, justifyContent: "center" }}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                void currentWorkoutOfTheWeekQuery.refetch();
+              }}
+              style={{ minHeight: 44, justifyContent: "center" }}
+            >
               <Text style={styles.wotwSystemMessageText}>RETRY</Text>
             </Pressable>
           </View>

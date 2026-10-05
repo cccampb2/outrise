@@ -20,8 +20,12 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     setCurrentUser(state, action: PayloadAction<CurrentUser>) {
-      if (state.user?.id !== action.payload.id) state.emailVerificationResendAt = null;
-      state.user = { ...action.payload, emailVerified: action.payload.emailVerified === true };
+      if (state.user?.id !== action.payload.id)
+        state.emailVerificationResendAt = null;
+      state.user = {
+        ...action.payload,
+        emailVerified: action.payload.emailVerified === true,
+      };
       state.accountNotice = null;
     },
     clearCurrentUser(state) {
@@ -46,6 +50,13 @@ const authSlice = createSlice({
   },
 });
 
-export const { setCurrentUser, clearCurrentUser, setAccountRestriction, clearAccountNotice, setEmailVerificationRequired, setEmailVerificationResendAt } = authSlice.actions;
+export const {
+  setCurrentUser,
+  clearCurrentUser,
+  setAccountRestriction,
+  clearAccountNotice,
+  setEmailVerificationRequired,
+  setEmailVerificationResendAt,
+} = authSlice.actions;
 
 export default authSlice.reducer;

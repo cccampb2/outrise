@@ -91,92 +91,90 @@ export const reconcileSeasons = async () => {
 
   try {
     return await mongoSession.withTransaction(async () => {
-  
-    const now = new Date();
+      const now = new Date();
 
-    let {
-      activeSeason,
+      let {
+        activeSeason,
 
-      upcomingSeason,
-    } = await initializeSeasons(mongoSession);
+        upcomingSeason,
+      } = await initializeSeasons(mongoSession);
 
-    while (activeSeason.endsAt <= now) {
-      const winningFaction = await getSeasonWinningFaction(
-        activeSeason._id,
+      while (activeSeason.endsAt <= now) {
+        const winningFaction = await getSeasonWinningFaction(
+          activeSeason._id,
 
-        mongoSession,
-      );
+          mongoSession,
+        );
 
-      activeSeason.winningFaction = winningFaction;
+        activeSeason.winningFaction = winningFaction;
 
-      activeSeason.status = "completed";
+        activeSeason.status = "completed";
 
-      await activeSeason.save({
-        session: mongoSession,
-      });
+        await activeSeason.save({
+          session: mongoSession,
+        });
 
-      await recordSeasonWin(activeSeason, mongoSession);
+        await recordSeasonWin(activeSeason, mongoSession);
 
-      upcomingSeason.status = "active";
+        upcomingSeason.status = "active";
 
-      await upcomingSeason.save({
-        session: mongoSession,
-      });
+        await upcomingSeason.save({
+          session: mongoSession,
+        });
 
-      activeSeason = upcomingSeason;
+        activeSeason = upcomingSeason;
 
-      const nextQuarter = getNextQuarter({
-        year: activeSeason.year,
+        const nextQuarter = getNextQuarter({
+          year: activeSeason.year,
 
-        quarter: activeSeason.quarter,
-      });
+          quarter: activeSeason.quarter,
+        });
 
-      const latestSeason = await Season.findOne()
+        const latestSeason = await Season.findOne()
 
-        .sort({
-          seasonNumber: -1,
-        })
+          .sort({
+            seasonNumber: -1,
+          })
 
-        .session(mongoSession);
+          .session(mongoSession);
 
-      const nextSeasonNumber = latestSeason.seasonNumber + 1;
+        const nextSeasonNumber = latestSeason.seasonNumber + 1;
 
-      const startsAt = getQuarterStartDate(
-        nextQuarter.year,
+        const startsAt = getQuarterStartDate(
+          nextQuarter.year,
 
-        nextQuarter.quarter,
-      );
+          nextQuarter.quarter,
+        );
 
-      const endsAt = getQuarterEndDate(
-        nextQuarter.year,
+        const endsAt = getQuarterEndDate(
+          nextQuarter.year,
 
-        nextQuarter.quarter,
-      );
+          nextQuarter.quarter,
+        );
 
-      upcomingSeason = new Season({
-        seasonNumber: nextSeasonNumber,
+        upcomingSeason = new Season({
+          seasonNumber: nextSeasonNumber,
 
-        quarter: nextQuarter.quarter,
+          quarter: nextQuarter.quarter,
 
-        year: nextQuarter.year,
+          year: nextQuarter.year,
 
-        startsAt,
+          startsAt,
 
-        endsAt,
+          endsAt,
 
-        status: "upcoming",
-      });
+          status: "upcoming",
+        });
 
-      await upcomingSeason.save({
-        session: mongoSession,
-      });
-    }
+        await upcomingSeason.save({
+          session: mongoSession,
+        });
+      }
 
-
-    return {
-      activeSeason,
-      upcomingSeason,
-    };
+      return {
+        activeSeason,
+        upcomingSeason,
+      };
     });
   } finally {
     await mongoSession.endSession();

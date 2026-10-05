@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 export const ISSUE_REPORT_STATUSES = ["open", "in_review", "resolved"];
-const { Schema } = mongoose;
+const { Schema, model } = mongoose;
 const historySchema = new Schema({
   admin: { type: Schema.Types.ObjectId, ref: "User", required: true },
   previousStatus: { type: String, enum: ISSUE_REPORT_STATUSES, required: true },
@@ -68,4 +68,6 @@ const issueReportSchema = new Schema(
 
 issueReportSchema.index({ status: 1, createdAt: -1, _id: -1 });
 issueReportSchema.index({ email: 1, createdAt: -1 });
-export default mongoose.model("IssueReport", issueReportSchema);
+const IssueReport = model("IssueReport", issueReportSchema);
+
+export default IssueReport;

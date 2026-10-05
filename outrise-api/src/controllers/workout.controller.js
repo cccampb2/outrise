@@ -50,6 +50,7 @@ export const getMyWorkoutsController = async (req, res, next) => {
     next(error);
   }
 };
+
 export const getWorkoutByIdController = async (req, res, next) => {
   try {
     const workoutId = req.params.id;

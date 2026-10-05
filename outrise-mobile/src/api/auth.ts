@@ -59,7 +59,9 @@ type PasswordResetRequestResponse = {
   resendAfterSeconds: number;
 };
 
-export async function requestPasswordReset(email: string): Promise<PasswordResetRequestResponse> {
+export async function requestPasswordReset(
+  email: string,
+): Promise<PasswordResetRequestResponse> {
   const response = await apiRequest("/auth/forgot-password", {
     method: "POST",
     body: JSON.stringify({ email }),
@@ -80,18 +82,22 @@ export async function resetPassword(credentials: {
   return await response.json();
 }
 
-type EmailVerificationRequestResponse = {
-  message: string;
-  emailVerified: false;
-  expiresInMinutes: number;
-  resendAfterSeconds: number;
-} | {
-  message: string;
-  emailVerified: true;
-  alreadyVerified?: true;
-};
+type EmailVerificationRequestResponse =
+  | {
+      message: string;
+      emailVerified: false;
+      expiresInMinutes: number;
+      resendAfterSeconds: number;
+    }
+  | {
+      message: string;
+      emailVerified: true;
+      alreadyVerified?: true;
+    };
 
-export async function requestEmailVerification(signal?: AbortSignal): Promise<EmailVerificationRequestResponse> {
+export async function requestEmailVerification(
+  signal?: AbortSignal,
+): Promise<EmailVerificationRequestResponse> {
   const response = await apiRequest("/auth/email-verification/request", {
     method: "POST",
     body: JSON.stringify({}),
@@ -100,7 +106,10 @@ export async function requestEmailVerification(signal?: AbortSignal): Promise<Em
   return await response.json();
 }
 
-export async function confirmEmailVerification(code: string, signal?: AbortSignal): Promise<{ message: string; emailVerified: true }> {
+export async function confirmEmailVerification(
+  code: string,
+  signal?: AbortSignal,
+): Promise<{ message: string; emailVerified: true }> {
   const response = await apiRequest("/auth/email-verification/confirm", {
     method: "POST",
     body: JSON.stringify({ code }),

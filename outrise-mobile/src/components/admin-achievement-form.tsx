@@ -1,6 +1,6 @@
 import { AppText as Text } from "@/components/app-text";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, View } from "react-native";
 import { router } from "expo-router";
 import {
   useInfiniteQuery,
@@ -139,6 +139,7 @@ export function AdminAchievementForm({
     },
   });
   function submit() {
+    if (save.isPending) return;
     setError("");
     if (
       !name.trim() ||
@@ -154,9 +155,9 @@ export function AdminAchievementForm({
       !xp.trim() ||
       !Number.isInteger(Number(xp)) ||
       Number(xp) < 1 ||
-      Number(xp) > 150
+      Number(xp) > 5000
     ) {
-      setError("XP reward must be a whole number from 1 to 150.");
+      setError("XP reward must be a whole number from 1 to 5,000.");
       return;
     }
     if (
@@ -166,7 +167,7 @@ export function AdminAchievementForm({
       setError("Choose an exercise and wait for its details to load.");
       return;
     }
-    save.mutate({
+    const data: AchievementInput = {
       name: name.trim(),
       description: description.trim(),
       category,
@@ -182,7 +183,16 @@ export function AdminAchievementForm({
       badgeKey: badge.trim(),
       isActive: active,
       isSecret: secret,
-    });
+    };
+
+    Alert.alert(
+      "Confirm XP reward",
+      `"${data.name}" awards ${data.xpReward.toLocaleString()} XP. Is that correct?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Confirm and save", onPress: () => save.mutate(data) },
+      ],
+    );
   }
   return (
     <Screen scroll keyboardAvoiding>
@@ -332,7 +342,7 @@ export function AdminAchievementForm({
         )}
         <AdminField label={unit} value={value} onChange={setValue} numeric />
         <AdminField
-          label="XP reward (1–150)"
+          label="XP reward (1–5,000)"
           value={xp}
           onChange={setXP}
           numeric

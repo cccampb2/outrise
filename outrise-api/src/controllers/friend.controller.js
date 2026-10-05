@@ -11,7 +11,11 @@ import {
 
 export const getFriendsController = async (req, res, next) => {
   try {
-    const result = await getFriends({ userId: req.user.userId, page: req.query.page, limit: req.query.limit });
+    const result = await getFriends({
+      userId: req.user.userId,
+      page: req.query.page,
+      limit: req.query.limit,
+    });
     res.status(200).json(result);
   } catch (error) {
     next(error);
@@ -20,7 +24,11 @@ export const getFriendsController = async (req, res, next) => {
 
 export const getIncomingFriendRequestsController = async (req, res, next) => {
   try {
-    const result = await getIncomingFriendRequests({ userId: req.user.userId, page: req.query.page, limit: req.query.limit });
+    const result = await getIncomingFriendRequests({
+      userId: req.user.userId,
+      page: req.query.page,
+      limit: req.query.limit,
+    });
     res.status(200).json(result);
   } catch (error) {
     next(error);
@@ -29,7 +37,11 @@ export const getIncomingFriendRequestsController = async (req, res, next) => {
 
 export const getOutgoingFriendRequestsController = async (req, res, next) => {
   try {
-    const result = await getOutgoingFriendRequests({ userId: req.user.userId, page: req.query.page, limit: req.query.limit });
+    const result = await getOutgoingFriendRequests({
+      userId: req.user.userId,
+      page: req.query.page,
+      limit: req.query.limit,
+    });
     res.status(200).json(result);
   } catch (error) {
     next(error);

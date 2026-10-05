@@ -21,7 +21,8 @@ export default function AssessmentScreen() {
     queryKey: ["faction-assessment"],
     queryFn: async () => {
       const result = await getFactionAssessment();
-      if (!result.questions.length) throw new Error("The assessment is unavailable. Please try again.");
+      if (!result.questions.length)
+        throw new Error("The assessment is unavailable. Please try again.");
       return result;
     },
   });
@@ -108,8 +109,16 @@ export default function AssessmentScreen() {
         <View style={styles.center}>
           <Text style={styles.errorLabel}>{"// ASSESSMENT_ERROR"}</Text>
 
-          <Text style={styles.errorText}>{assessmentQuery.error?.message ?? "Unable to load faction assessment"}</Text>
-          <Pressable style={styles.continueButton} onPress={() => { void assessmentQuery.refetch(); }}>
+          <Text style={styles.errorText}>
+            {assessmentQuery.error?.message ??
+              "Unable to load faction assessment"}
+          </Text>
+          <Pressable
+            style={styles.continueButton}
+            onPress={() => {
+              void assessmentQuery.refetch();
+            }}
+          >
             <Text style={styles.continueButtonText}>RETRY</Text>
           </Pressable>
         </View>

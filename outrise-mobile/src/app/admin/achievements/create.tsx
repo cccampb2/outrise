@@ -7,6 +7,15 @@ import { AdminAchievementForm } from "@/components/admin-achievement-form";
 import { adminAchievementStyles } from "@/components/admin-achievement-ui";
 
 export default function CreateAchievementScreen() {
-  const isAdmin = useSelector((state: { auth: { user: { role: string } | null } }) => hasAdminAccess(state.auth.user?.role));
-  return isAdmin ? <AdminAchievementForm /> : <Screen><Text style={adminAchievementStyles.error}>Admin access required.</Text></Screen>;
+  const isAdmin = useSelector(
+    (state: { auth: { user: { role: string } | null } }) =>
+      hasAdminAccess(state.auth.user?.role),
+  );
+  return isAdmin ? (
+    <AdminAchievementForm />
+  ) : (
+    <Screen>
+      <Text style={adminAchievementStyles.error}>Admin access required.</Text>
+    </Screen>
+  );
 }

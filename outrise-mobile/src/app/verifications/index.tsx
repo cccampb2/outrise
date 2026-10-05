@@ -105,10 +105,7 @@ function getPerformanceLabel(verification: Verification) {
 
   switch (measurementType) {
     case "weight_reps": {
-      if (
-        performance.weightLbs == null ||
-        performance.reps == null
-      ) {
+      if (performance.weightLbs == null || performance.reps == null) {
         return "PERFORMANCE_UNAVAILABLE";
       }
 

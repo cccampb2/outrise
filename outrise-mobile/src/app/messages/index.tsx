@@ -19,6 +19,7 @@ import {
 } from "@/components/messaging-ui";
 import { Colors } from "@/constants/theme";
 import type { RootState } from "@/store/store";
+
 export default function MessagesScreen() {
   const userId = useSelector((state: RootState) => state.auth.user?.id);
   const query = useConversations();
@@ -56,10 +57,10 @@ export default function MessagesScreen() {
         </Text>
       </View>
       <FlatList
-        style={{ flex: 1 }}
+        style={styles.list}
         data={conversations}
         keyExtractor={(item) => item._id}
-        contentContainerStyle={{ paddingBottom: 24 }}
+        contentContainerStyle={styles.inboxContent}
         showsVerticalScrollIndicator={false}
         refreshing={query.isRefetching && !query.isFetchingNextPage}
         onRefresh={() => {
@@ -95,7 +96,7 @@ export default function MessagesScreen() {
                   </Text>
                 )}
               </View>
-              <View style={{ flex: 1 }}>
+              <View style={styles.rowBody}>
                 <Text style={styles.name} numberOfLines={1}>
                   {other?.username ?? "Deleted account"}
                 </Text>
@@ -110,10 +111,16 @@ export default function MessagesScreen() {
                     : "Start the conversation"}
                 </Text>
               </View>
-              {item.unreadCount > 0 && <View accessibilityLabel={`${item.unreadCount} unread messages`}
-                style={{ backgroundColor: Colors.dark.text, minWidth: 24, paddingHorizontal: 7, paddingVertical: 5, alignItems: "center" }}>
-                <Text style={{ color: Colors.dark.background, fontSize: 12, fontWeight: "800" }}>{item.unreadCount > 99 ? "99+" : item.unreadCount}</Text>
-              </View>}
+              {item.unreadCount > 0 && (
+                <View
+                  accessibilityLabel={`${item.unreadCount} unread messages`}
+                  style={styles.unreadBadge}
+                >
+                  <Text style={styles.unreadCount}>
+                    {item.unreadCount > 99 ? "99+" : item.unreadCount}
+                  </Text>
+                </View>
+              )}
               <Text style={styles.subtitle}>→</Text>
             </Pressable>
           );

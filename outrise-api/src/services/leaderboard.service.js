@@ -1,4 +1,7 @@
-import { ACCESSIBLE_ACCOUNT_STATUSES, canAccessAccount } from "../constants/accountStatus.js";
+import {
+  ACCESSIBLE_ACCOUNT_STATUSES,
+  canAccessAccount,
+} from "../constants/accountStatus.js";
 import User from "../models/User.js";
 import { getProgressFromXP } from "../utils/progression.js";
 import Faction from "../models/Faction.js";
@@ -7,18 +10,30 @@ import SeasonContribution from "../models/SeasonContribution.js";
 import NotFoundError from "../errors/NotFoundError.js";
 import Friendship from "../models/Friendship.js";
 
-export const getFriendsLeaderboard = async ({ userId, page = 1, limit = 25 }) => {
+export const getFriendsLeaderboard = async ({
+  userId,
+  page = 1,
+  limit = 25,
+}) => {
   const friendships = await Friendship.find({
     status: "accepted",
     $or: [{ requester: userId }, { recipient: userId }],
-  }).select("requester recipient").lean();
+  })
+    .select("requester recipient")
+    .lean();
 
-  const participantIds = [userId, ...friendships.map((friendship) =>
-    friendship.requester.toString() === userId.toString()
-      ? friendship.recipient
-      : friendship.requester,
-  )];
-  const filter = { _id: { $in: participantIds }, accountStatus: { $in: ACCESSIBLE_ACCOUNT_STATUSES } };
+  const participantIds = [
+    userId,
+    ...friendships.map((friendship) =>
+      friendship.requester.toString() === userId.toString()
+        ? friendship.recipient
+        : friendship.requester,
+    ),
+  ];
+  const filter = {
+    _id: { $in: participantIds },
+    accountStatus: { $in: ACCESSIBLE_ACCOUNT_STATUSES },
+  };
   const skip = (page - 1) * limit;
 
   const [users, totalUsers, viewer] = await Promise.all([
@@ -30,7 +45,10 @@ export const getFriendsLeaderboard = async ({ userId, page = 1, limit = 25 }) =>
       .populate("faction", "name slug")
       .lean(),
     User.countDocuments(filter),
-    User.findOne({ _id: userId, accountStatus: { $in: ACCESSIBLE_ACCOUNT_STATUSES } })
+    User.findOne({
+      _id: userId,
+      accountStatus: { $in: ACCESSIBLE_ACCOUNT_STATUSES },
+    })
       .select("username role lifetimeXP faction")
       .populate("faction", "name slug")
       .lean(),
@@ -65,7 +83,12 @@ export const getFriendsLeaderboard = async ({ userId, page = 1, limit = 25 }) =>
   return {
     leaderboard: users.map((user, index) => toRow(user, skip + index + 1)),
     currentUser,
-    pagination: { page, limit, totalUsers, totalPages: Math.ceil(totalUsers / limit) },
+    pagination: {
+      page,
+      limit,
+      totalUsers,
+      totalPages: Math.ceil(totalUsers / limit),
+    },
   };
 };
 

@@ -101,9 +101,10 @@ const validateVerificationPerformance = (measurementType, performance) => {
 };
 
 const publicVerification = (verification) => {
-  const result = typeof verification.toObject === "function"
-    ? verification.toObject()
-    : { ...verification };
+  const result =
+    typeof verification.toObject === "function"
+      ? verification.toObject()
+      : { ...verification };
   delete result.idempotencyKey;
   delete result.submissionFingerprint;
   return result;
@@ -117,34 +118,48 @@ export const createVerification = async ({
   idempotencyKey,
 }) => {
   const submissionFingerprint = idempotencyKey
-    ? createHash("sha256").update(JSON.stringify({
-        exerciseId: String(exerciseId),
-        reps: performance.reps,
-        weightLbs: performance.weightLbs,
-        distanceMiles: performance.distanceMiles,
-        timeSeconds: performance.timeSeconds,
-        proof: createHash("sha256").update(proofFile.buffer).digest("hex"),
-      })).digest("hex")
+    ? createHash("sha256")
+        .update(
+          JSON.stringify({
+            exerciseId: String(exerciseId),
+            reps: performance.reps,
+            weightLbs: performance.weightLbs,
+            distanceMiles: performance.distanceMiles,
+            timeSeconds: performance.timeSeconds,
+            proof: createHash("sha256").update(proofFile.buffer).digest("hex"),
+          }),
+        )
+        .digest("hex")
     : undefined;
 
   const findPreviousSubmission = async () => {
-    const previous = await Verification.findOne({ user: userId, idempotencyKey })
-      .select("+submissionFingerprint");
+    const previous = await Verification.findOne({
+      user: userId,
+      idempotencyKey,
+    }).select("+submissionFingerprint");
     if (previous && previous.submissionFingerprint !== submissionFingerprint) {
-      throw new ConflictError("This submission attempt was already used for different proof or performance. Start a new attempt.");
+      throw new ConflictError(
+        "This submission attempt was already used for different proof or performance. Start a new attempt.",
+      );
     }
     return previous;
   };
 
   if (idempotencyKey) {
     const previous = await findPreviousSubmission();
-    if (previous) return publicVerification(previous);
+    if (previous) {
+      return publicVerification(previous);
+    }
   }
 
   const exercise = await Exercise.findById(exerciseId);
-  if (!exercise) throw new NotFoundError("Exercise not found");
+  if (!exercise) {
+    throw new NotFoundError("Exercise not found");
+  }
   if (!exercise.isActive) {
-    throw new BadRequestError("Verification cannot be submitted for an inactive exercise");
+    throw new BadRequestError(
+      "Verification cannot be submitted for an inactive exercise",
+    );
   }
   validateVerificationPerformance(exercise.measurementType, performance);
 
@@ -162,12 +177,16 @@ export const createVerification = async ({
     return publicVerification(verification);
   } catch (error) {
     if (uploadedProof?.publicId) {
-      try { await deleteVerificationVideo(uploadedProof.publicId); } catch {}
+      try {
+        await deleteVerificationVideo(uploadedProof.publicId);
+      } catch {}
     }
     // A concurrent retry may have inserted the same attempt during the upload.
     if (idempotencyKey && error.code === 11000) {
       const previous = await findPreviousSubmission();
-      if (previous) return publicVerification(previous);
+      if (previous) {
+        return publicVerification(previous);
+      }
     }
     throw error;
   }
@@ -269,9 +288,14 @@ export const rejectVerification = async ({
   const mongoSession = await mongoose.startSession();
   try {
     return await mongoSession.withTransaction(async () => {
-      const verification = await Verification.findById(verificationId).session(mongoSession);
-      if (!verification) throw new NotFoundError("Verification not found");
-      if (verification.status !== "pending") throw new ConflictError("Only pending verifications can be rejected");
+      const verification =
+        await Verification.findById(verificationId).session(mongoSession);
+      if (!verification) {
+        throw new NotFoundError("Verification not found");
+      }
+      if (verification.status !== "pending") {
+        throw new ConflictError("Only pending verifications can be rejected");
+      }
       verification.status = "rejected";
       verification.reviewedBy = adminId;
       verification.reviewedAt = new Date();
@@ -280,104 +304,109 @@ export const rejectVerification = async ({
       await recordVerificationActivity(verification, mongoSession);
       return verification;
     });
-  } finally { await mongoSession.endSession(); }
+  } finally {
+    await mongoSession.endSession();
+  }
 };
+
 // TODO: Make the pending-to-approved transition atomic for concurrent admin reviews.
 export const approveVerification = async ({ verificationId, adminId }) => {
   const mongoSession = await mongoose.startSession();
 
-
   try {
     return await mongoSession.withTransaction(async () => {
-    const verification =
-      await Verification.findById(verificationId).session(mongoSession);
+      const verification =
+        await Verification.findById(verificationId).session(mongoSession);
 
-    if (!verification) {
-      throw new NotFoundError("Verification not found");
-    }
+      if (!verification) {
+        throw new NotFoundError("Verification not found");
+      }
 
-    if (verification.status !== "pending") {
-      throw new ConflictError("Only pending verification can be approved");
-    }
+      if (verification.status !== "pending") {
+        throw new ConflictError("Only pending verification can be approved");
+      }
 
-    const reviewedAt = new Date();
+      const reviewedAt = new Date();
 
-    verification.status = "approved";
-    verification.reviewedBy = adminId;
-    verification.reviewedAt = reviewedAt;
-    verification.rejectionReason = null;
+      verification.status = "approved";
+      verification.reviewedBy = adminId;
+      verification.reviewedAt = reviewedAt;
+      verification.rejectionReason = null;
 
-    await verification.save({ session: mongoSession });
+      await verification.save({ session: mongoSession });
 
-    await recordVerificationActivity(verification, mongoSession);
+      await recordVerificationActivity(verification, mongoSession);
 
-    const candidate = getVerificationPRCandidate(verification);
+      const candidate = getVerificationPRCandidate(verification);
 
-    let newPersonalRecord = null;
+      let newPersonalRecord = null;
 
-    if (candidate) {
-      newPersonalRecord = await processPRCandidate({
+      if (candidate) {
+        newPersonalRecord = await processPRCandidate({
+          userId: verification.user,
+          exerciseId: verification.exercise,
+          sourceType: "verification",
+          verificationId: verification._id,
+          achievedAt: reviewedAt,
+          candidate,
+          mongoSession,
+        });
+      }
+
+      const verificationAchievements = await checkVerificationCountAchievements(
+        {
+          userId: verification.user,
+          verificationId: verification._id,
+          mongoSession,
+        },
+      );
+
+      const verifiedPerformanceAchievements =
+        await checkVerifiedPerformanceAchievements({
+          verification,
+          mongoSession,
+        });
+
+      let personalRecordAchievements = [];
+
+      if (newPersonalRecord) {
+        personalRecordAchievements = await checkPersonalRecordCountAchievements(
+          {
+            userId: verification.user,
+            personalRecordId: newPersonalRecord._id,
+            mongoSession,
+          },
+        );
+      }
+
+      const progressionResult = await processProgressionAchievements({
         userId: verification.user,
-        exerciseId: verification.exercise,
-        sourceType: "verification",
-        verificationId: verification._id,
-        achievedAt: reviewedAt,
-        candidate,
         mongoSession,
       });
-    }
 
-    const verificationAchievements = await checkVerificationCountAchievements({
-      userId: verification.user,
-      verificationId: verification._id,
-      mongoSession,
-    });
+      const unlockedAchievements = [
+        ...verificationAchievements,
+        ...verifiedPerformanceAchievements,
+        ...personalRecordAchievements,
+        ...progressionResult.unlockedAchievements,
+      ];
 
-    const verifiedPerformanceAchievements =
-      await checkVerifiedPerformanceAchievements({
+      const achievementUnlocks = unlockedAchievements.map((unlock) => ({
+        id: unlock.achievement._id,
+        name: unlock.achievement.name,
+        description: unlock.achievement.description,
+        category: unlock.achievement.category,
+        badgeKey: unlock.achievement.badgeKey,
+        xpAwarded: unlock.xpResult?.awardedAmount ?? 0,
+        unlockedAt: unlock.userAchievement.unlockedAt,
+      }));
+
+      return {
         verification,
-        mongoSession,
-      });
-
-    let personalRecordAchievements = [];
-
-    if (newPersonalRecord) {
-      personalRecordAchievements = await checkPersonalRecordCountAchievements({
-        userId: verification.user,
-        personalRecordId: newPersonalRecord._id,
-        mongoSession,
-      });
-    }
-
-    const progressionResult = await processProgressionAchievements({
-      userId: verification.user,
-      mongoSession,
-    });
-
-    const unlockedAchievements = [
-      ...verificationAchievements,
-      ...verifiedPerformanceAchievements,
-      ...personalRecordAchievements,
-      ...progressionResult.unlockedAchievements,
-    ];
-
-    const achievementUnlocks = unlockedAchievements.map((unlock) => ({
-      id: unlock.achievement._id,
-      name: unlock.achievement.name,
-      description: unlock.achievement.description,
-      category: unlock.achievement.category,
-      badgeKey: unlock.achievement.badgeKey,
-      xpAwarded: unlock.xpResult?.awardedAmount ?? 0,
-      unlockedAt: unlock.userAchievement.unlockedAt,
-    }));
-
-
-    return {
-      verification,
-      newPersonalRecord,
-      unlockedAchievements: achievementUnlocks,
-      echelonRewards: progressionResult.echelonRewards,
-    };
+        newPersonalRecord,
+        unlockedAchievements: achievementUnlocks,
+        echelonRewards: progressionResult.echelonRewards,
+      };
     });
   } finally {
     await mongoSession.endSession();

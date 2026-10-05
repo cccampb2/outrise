@@ -1,4 +1,9 @@
-import { randomBytes, randomInt, createHmac, timingSafeEqual } from "node:crypto";
+import {
+  randomBytes,
+  randomInt,
+  createHmac,
+  timingSafeEqual,
+} from "node:crypto";
 import bcrypt from "bcrypt";
 import User from "../models/User.js";
 import AppError from "../errors/AppError.js";
@@ -13,8 +18,10 @@ import {
 const EXPIRY_MINUTES = 10;
 const RESEND_WAIT_MS = 60 * 1000;
 const MAX_ATTEMPTS = 5;
-const REQUEST_MESSAGE = "If an account exists for that email, a reset code will be sent. Check your inbox and spam folder.";
-const INVALID_CODE_MESSAGE = "Invalid or expired reset code. Request a new code if needed.";
+const REQUEST_MESSAGE =
+  "If an account exists for that email, a reset code will be sent. Check your inbox and spam folder.";
+const INVALID_CODE_MESSAGE =
+  "Invalid or expired reset code. Request a new code if needed.";
 
 function normalizeEmail(email) {
   if (typeof email !== "string" || !email.trim()) {
@@ -33,7 +40,7 @@ function hashCode(email, resetId, code) {
     .digest("hex");
 }
 
-export async function requestPasswordReset({ email }) {
+export const requestPasswordReset = async ({ email }) => {
   email = normalizeEmail(email);
   getPasswordResetEmailConfig();
   const code = String(randomInt(0, 1000000)).padStart(6, "0");
@@ -52,7 +59,11 @@ export async function requestPasswordReset({ email }) {
       $or: [
         { passwordResetRequestedAt: { $exists: false } },
         { passwordResetRequestedAt: null },
-        { passwordResetRequestedAt: { $lte: new Date(now.getTime() - RESEND_WAIT_MS) } },
+        {
+          passwordResetRequestedAt: {
+            $lte: new Date(now.getTime() - RESEND_WAIT_MS),
+          },
+        },
       ],
     },
     { $set: { passwordReset: reset, passwordResetRequestedAt: now } },
@@ -71,32 +82,56 @@ export async function requestPasswordReset({ email }) {
     }).catch((error) => {
       // A timeout may occur after Resend accepted the email. Keep the saved code
       // valid until expiry so a delivered message remains usable.
-      logger.warn("Password reset email delivery could not be confirmed. Check Resend configuration.",
-        error.deliveryFailure || { reason: "EMAIL_CONFIGURATION" });
+      logger.warn(
+        "Password reset email delivery could not be confirmed. Check Resend configuration.",
+        error.deliveryFailure || { reason: "EMAIL_CONFIGURATION" },
+      );
     });
   }
-  return { message: REQUEST_MESSAGE, expiresInMinutes: EXPIRY_MINUTES, resendAfterSeconds: 60 };
-}
+  return {
+    message: REQUEST_MESSAGE,
+    expiresInMinutes: EXPIRY_MINUTES,
+    resendAfterSeconds: 60,
+  };
+};
 
-export async function resetPassword({ email, code, password, confirmPassword }) {
+export const resetPassword = async ({
+  email,
+  code,
+  password,
+  confirmPassword,
+}) => {
   email = normalizeEmail(email);
   if (typeof code !== "string" || !/^\d{6}$/.test(code)) {
     throw new BadRequestError(INVALID_CODE_MESSAGE);
   }
-  if (typeof password !== "string" || password.length < 8 || Buffer.byteLength(password, "utf8") > 72) {
-    throw new BadRequestError("Password must have at least 8 characters and be no more than 72 UTF-8 bytes.");
+  if (
+    typeof password !== "string" ||
+    password.length < 8 ||
+    Buffer.byteLength(password, "utf8") > 72
+  ) {
+    throw new BadRequestError(
+      "Password must have at least 8 characters and be no more than 72 UTF-8 bytes.",
+    );
   }
   if (password !== confirmPassword) {
     throw new BadRequestError("Passwords must match.");
   }
   const user = await User.findOne({ email }).select("+passwordReset");
   const reset = user?.passwordReset;
-  if (!reset || reset.expiresAt <= new Date() || reset.attempts >= MAX_ATTEMPTS) {
+  if (
+    !reset ||
+    reset.expiresAt <= new Date() ||
+    reset.attempts >= MAX_ATTEMPTS
+  ) {
     throw new BadRequestError(INVALID_CODE_MESSAGE);
   }
   const candidate = Buffer.from(hashCode(email, reset.id, code), "hex");
   const stored = Buffer.from(reset.codeHash, "hex");
-  if (stored.length !== candidate.length || !timingSafeEqual(candidate, stored)) {
+  if (
+    stored.length !== candidate.length ||
+    !timingSafeEqual(candidate, stored)
+  ) {
     await User.updateOne(
       {
         _id: user._id,
@@ -127,10 +162,20 @@ export async function resetPassword({ email, code, password, confirmPassword }) 
     },
     { returnDocument: "after", runValidators: true },
   ).select("email");
-  if (!updatedUser) throw new BadRequestError(INVALID_CODE_MESSAGE);
+  if (!updatedUser) {
+    throw new BadRequestError(INVALID_CODE_MESSAGE);
+  }
 
-  void sendPasswordChangedEmail({ to: updatedUser.email, resetId: reset.id })
-    .catch((error) => logger.warn("Password change confirmation email could not be sent.",
-      error.deliveryFailure || { reason: "EMAIL_CONFIGURATION" }));
-  return { message: "Your password has been reset. Sign in with your new password." };
-}
+  void sendPasswordChangedEmail({
+    to: updatedUser.email,
+    resetId: reset.id,
+  }).catch((error) =>
+    logger.warn(
+      "Password change confirmation email could not be sent.",
+      error.deliveryFailure || { reason: "EMAIL_CONFIGURATION" },
+    ),
+  );
+  return {
+    message: "Your password has been reset. Sign in with your new password.",
+  };
+};

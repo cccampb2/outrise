@@ -38,19 +38,7 @@ export const validateWorkoutTarget = ({
     );
   }
 
-  if (measurementType === "weight_reps") {
-    if (target.sets === undefined) {
-      throw new BadRequestError(`${exerciseName} requires sets`);
-    }
-
-    if (target.reps === undefined) {
-      throw new BadRequestError(`${exerciseName} requires reps`);
-    }
-
-    return;
-  }
-
-  if (measurementType === "reps") {
+  if (measurementType === "weight_reps" || measurementType === "reps") {
     if (target.sets === undefined) {
       throw new BadRequestError(`${exerciseName} requires sets`);
     }

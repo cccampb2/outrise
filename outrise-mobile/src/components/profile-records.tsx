@@ -18,6 +18,7 @@ function dateLabel(value: string) {
     year: "numeric",
   });
 }
+
 function performanceLabel(record: ProfilePerformance) {
   const { reps, weightLbs, distanceMiles, timeSeconds } = record.performance;
   const time =

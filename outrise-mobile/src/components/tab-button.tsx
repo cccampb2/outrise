@@ -15,11 +15,13 @@ import { Fonts } from "@/constants/theme";
 
 type TabButtonProps = TabTriggerSlotProps & {
   label: string;
+  edge?: "left" | "right";
   icon: (color: string) => ReactNode;
 };
 
 export function TabButton({
   label,
+  edge,
   icon,
   isFocused,
   ...props
@@ -57,6 +59,12 @@ export function TabButton({
   });
 
   const color = isFocused ? "#FFFFFF" : "#87939F";
+  const edgeStyle =
+    edge === "left"
+      ? styles.leftEdge
+      : edge === "right"
+        ? styles.rightEdge
+        : undefined;
 
   return (
     <Pressable
@@ -66,9 +74,15 @@ export function TabButton({
         ...props.accessibilityState,
         selected: Boolean(isFocused),
       }}
-      style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        styles.pressable,
+        edgeStyle,
+        pressed && styles.pressed,
+      ]}
     >
-      <View style={[styles.module, isFocused && styles.moduleFocused]}>
+      <View
+        style={[styles.module, edgeStyle, isFocused && styles.moduleFocused]}
+      >
         <Animated.View
           pointerEvents="none"
           style={[styles.activeIndicator, indicatorAnimatedStyle]}
@@ -100,9 +114,8 @@ const styles = StyleSheet.create({
   pressable: {
     flex: 1,
     minWidth: 0,
-    height: "100%",
     minHeight: 60,
-
+    overflow: "hidden",
   },
 
   module: {
@@ -114,11 +127,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "transparent",
 
-
     paddingTop: 9,
     paddingBottom: 5,
     paddingHorizontal: 2,
   },
+
+  leftEdge: { borderBottomLeftRadius: 21 },
+  rightEdge: { borderBottomRightRadius: 21 },
 
   moduleFocused: {
     backgroundColor: "#111B26",

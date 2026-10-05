@@ -117,7 +117,10 @@ export default function RankingsScreen() {
     if (globalLeaderboardQuery.isPending) {
       return (
         <Screen>
-          <RankingsHeader selectedTab={selectedTab} onSelectTab={setSelectedTab} />
+          <RankingsHeader
+            selectedTab={selectedTab}
+            onSelectTab={setSelectedTab}
+          />
           <View style={styles.stateScreen}>
             <ActivityIndicator size="large" color={colors.accent} />
 
@@ -130,7 +133,10 @@ export default function RankingsScreen() {
     if (globalLeaderboardQuery.isError) {
       return (
         <Screen>
-          <RankingsHeader selectedTab={selectedTab} onSelectTab={setSelectedTab} />
+          <RankingsHeader
+            selectedTab={selectedTab}
+            onSelectTab={setSelectedTab}
+          />
           <View style={styles.stateScreen}>
             <Text style={styles.errorTitle}>RANKINGS_UNAVAILABLE</Text>
 

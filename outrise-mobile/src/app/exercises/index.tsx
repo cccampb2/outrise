@@ -1,5 +1,8 @@
 import { BrandHeader } from "@/components/brand-header";
-import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
+import {
+  AppText as Text,
+  AppTextInput as TextInput,
+} from "@/components/app-text";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
@@ -49,28 +52,12 @@ export default function ExerciseLibraryScreen() {
 
   const normalizedSearch = search.trim();
 
-  /*
-   * MUSCLE GROUP METADATA
-   *
-   * This query is intentionally separate from the exercise-results query.
-   *
-   * The muscle-group buttons should represent all muscle groups available
-   * in the exercise database. They should not change just because the user
-   * selected one of the filters.
-   */
+  // Keep all muscle groups available when the exercise filters change.
   const muscleGroupsQuery = useQuery({
     queryKey: ["exercises", "muscle-groups"],
     queryFn: getExerciseMuscleGroups,
   });
 
-  /*
-   * EXERCISE RESULTS
-   *
-   * This query changes whenever category, muscle group, or search changes.
-   *
-   * Because those values are part of the queryKey, TanStack Query treats
-   * each filter combination as its own cached query.
-   */
   const exercisesQuery = useInfiniteQuery({
     queryKey: ["exercises", "library", category, muscleGroup, normalizedSearch],
 
@@ -108,20 +95,7 @@ export default function ExerciseLibraryScreen() {
   function handleCategoryChange(nextCategory: CategoryFilter) {
     setCategory(nextCategory);
 
-    /*
-     * Clear the muscle filter when switching categories.
-     *
-     * Otherwise a combination such as:
-     *
-     * strength + chest
-     *
-     * could become:
-     *
-     * cardio + chest
-     *
-     * which may legitimately return zero results and make it look like
-     * the category filter is broken.
-     */
+    // The previous muscle group may not apply to the new category.
     setMuscleGroup(null);
   }
 

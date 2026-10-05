@@ -6,5 +6,10 @@ import { createIssueReportController } from "../controllers/issueReport.controll
 
 const router = express.Router();
 // Account restrictions must never prevent submitting an issue report.
-router.post("/", validate(createIssueReportSchema), limitIssueReports, createIssueReportController);
+router.post(
+  "/",
+  validate(createIssueReportSchema),
+  limitIssueReports,
+  createIssueReportController,
+);
 export default router;

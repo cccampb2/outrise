@@ -1,6 +1,15 @@
 import { BrandHeader } from "@/components/brand-header";
-import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
-import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from "react-native";
+import {
+  AppText as Text,
+  AppTextInput as TextInput,
+} from "@/components/app-text";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
 import { useMemo, useRef, useState } from "react";
 import { router } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -65,7 +74,9 @@ function getVideoMimeType(asset: ImagePicker.ImagePickerAsset) {
 
 export default function SubmitVerificationScreen() {
   const queryClient = useQueryClient();
-  const submissionAttempt = useRef<{ fingerprint: string; key: string } | null>(null);
+  const submissionAttempt = useRef<{ fingerprint: string; key: string } | null>(
+    null,
+  );
   const [search, setSearch] = useState("");
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
     null,
@@ -123,7 +134,10 @@ export default function SubmitVerificationScreen() {
         return;
       }
       console.error("VERIFICATION SUBMISSION ERROR:", error);
-      Alert.alert("Submission Not Confirmed", "Your submission may already be saved. Retry with the same details when connected.");
+      Alert.alert(
+        "Submission Not Confirmed",
+        "Your submission may already be saved. Retry with the same details when connected.",
+      );
     },
   });
 
@@ -309,7 +323,11 @@ export default function SubmitVerificationScreen() {
       return;
     }
 
-    const fingerprint = JSON.stringify({ exerciseId: selectedExercise._id, performance, video: video.uri });
+    const fingerprint = JSON.stringify({
+      exerciseId: selectedExercise._id,
+      performance,
+      video: video.uri,
+    });
     if (submissionAttempt.current?.fingerprint !== fingerprint) {
       submissionAttempt.current = {
         fingerprint,
@@ -476,7 +494,7 @@ export default function SubmitVerificationScreen() {
 
               {measurementType === "reps" ? (
                 <PerformanceInput
-                    editable={!createVerificationMutation.isPending}
+                  editable={!createVerificationMutation.isPending}
                   label="REPS"
                   value={reps}
                   onChangeText={setReps}
@@ -486,7 +504,7 @@ export default function SubmitVerificationScreen() {
 
               {measurementType === "time" || measurementType === "duration" ? (
                 <PerformanceInput
-                    editable={!createVerificationMutation.isPending}
+                  editable={!createVerificationMutation.isPending}
                   label="TIME_SECONDS"
                   value={timeSeconds}
                   onChangeText={setTimeSeconds}
@@ -543,7 +561,10 @@ export default function SubmitVerificationScreen() {
                     </Text>
                   </View>
 
-                  <Pressable disabled={createVerificationMutation.isPending} onPress={() => setVideo(null)}>
+                  <Pressable
+                    disabled={createVerificationMutation.isPending}
+                    onPress={() => setVideo(null)}
+                  >
                     <Text style={styles.removeVideoText}>REMOVE</Text>
                   </Pressable>
                 </View>

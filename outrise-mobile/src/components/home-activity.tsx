@@ -1,6 +1,12 @@
 import { AppText as Text } from "@/components/app-text";
 import { useState } from "react";
-import { Alert, ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import {
+  Alert,
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import {

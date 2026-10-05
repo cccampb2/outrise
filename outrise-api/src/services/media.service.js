@@ -47,7 +47,7 @@ export const deleteProfileImage = async (publicId) => {
   }
 };
 
-export function uploadProfileImageBuffer(buffer) {
+export const uploadProfileImageBuffer = (buffer) => {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
@@ -79,4 +79,4 @@ export function uploadProfileImageBuffer(buffer) {
 
     uploadStream.end(buffer);
   });
-}
+};

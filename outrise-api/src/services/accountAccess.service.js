@@ -8,7 +8,7 @@ const restoreUpdate = {
   $unset: { moderationReason: "", moderatedBy: "", moderatedAt: "" },
 };
 
-export async function restoreExpiredSuspensions() {
+export const restoreExpiredSuspensions = async () => {
   await User.updateMany(
     {
       accountStatus: "suspended",
@@ -16,10 +16,12 @@ export async function restoreExpiredSuspensions() {
     },
     restoreUpdate,
   );
-}
+};
 
-export async function ensureAccountAccess(user) {
-  if (!user) throw new UnauthorizedError("Account not found");
+export const ensureAccountAccess = async (user) => {
+  if (!user) {
+    throw new UnauthorizedError("Account not found");
+  }
   const now = new Date();
   if (
     user.accountStatus === "suspended" &&
@@ -37,11 +39,15 @@ export async function ensureAccountAccess(user) {
       { returnDocument: "after", runValidators: true },
     );
     user = restored ?? (await User.findById(user._id));
-    if (!user) throw new UnauthorizedError("Account not found");
+    if (!user) {
+      throw new UnauthorizedError("Account not found");
+    }
   }
   if (["suspended", "banned"].includes(user.accountStatus)) {
     throw new AccountRestrictedError(user);
   }
-  if (!canAccessAccount(user.accountStatus)) throw new UnauthorizedError("Account access unavailable");
+  if (!canAccessAccount(user.accountStatus)) {
+    throw new UnauthorizedError("Account access unavailable");
+  }
   return user;
-}
+};

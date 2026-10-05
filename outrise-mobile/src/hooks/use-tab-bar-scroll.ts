@@ -29,9 +29,11 @@ export function useTabBarScroll(enabled = true) {
       const difference = currentY - previousY;
 
       if (currentY <= 0) {
-        tabBarTranslateY.set(withTiming(0, {
-          duration: 200,
-        }));
+        tabBarTranslateY.set(
+          withTiming(0, {
+            duration: 200,
+          }),
+        );
         context.accumulatedDistance = 0;
         context.direction = null;
         context.previousY = currentY;
@@ -51,17 +53,21 @@ export function useTabBarScroll(enabled = true) {
       context.accumulatedDistance += Math.abs(difference);
 
       if (context.direction === "down" && context.accumulatedDistance >= 10) {
-        tabBarTranslateY.set(withTiming(100, {
-          duration: 200,
-        }));
+        tabBarTranslateY.set(
+          withTiming(100, {
+            duration: 200,
+          }),
+        );
 
         context.accumulatedDistance = 0;
       }
 
       if (context.direction === "up" && context.accumulatedDistance >= 10) {
-        tabBarTranslateY.set(withTiming(0, {
-          duration: 200,
-        }));
+        tabBarTranslateY.set(
+          withTiming(0, {
+            duration: 200,
+          }),
+        );
 
         context.accumulatedDistance = 0;
       }

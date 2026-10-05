@@ -54,8 +54,15 @@ export default function TrainScreen() {
         {/* HEADER */}
 
         <View style={styles.header}>
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-          <BrandHeader label="TRAINING" style={styles.brandLabelLayout} />
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+            }}
+          >
+            <BrandHeader label="TRAINING" style={styles.brandLabelLayout} />
           </View>
 
           <Text style={styles.sectionEyebrow}>TRAINING_CENTER</Text>
@@ -236,7 +243,13 @@ export default function TrainScreen() {
             <Text style={styles.systemMessageText}>
               {"// UNABLE_TO_LOAD_WEEKLY_CHALLENGE"}
             </Text>
-            <Pressable accessibilityRole="button" onPress={() => { void currentWorkoutOfTheWeekQuery.refetch(); }} style={{ minHeight: 44, justifyContent: "center" }}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                void currentWorkoutOfTheWeekQuery.refetch();
+              }}
+              style={{ minHeight: 44, justifyContent: "center" }}
+            >
               <Text style={styles.systemMessageText}>RETRY</Text>
             </Pressable>
           </View>
@@ -326,7 +339,13 @@ export default function TrainScreen() {
             <Text style={styles.systemMessageText}>
               {"// UNABLE_TO_LOAD_ACTIVE_SESSION"}
             </Text>
-            <Pressable accessibilityRole="button" onPress={() => { void activeWorkoutQuery.refetch(); }} style={{ minHeight: 44, justifyContent: "center" }}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                void activeWorkoutQuery.refetch();
+              }}
+              style={{ minHeight: 44, justifyContent: "center" }}
+            >
               <Text style={styles.systemMessageText}>RETRY</Text>
             </Pressable>
           </View>

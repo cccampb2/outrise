@@ -171,8 +171,8 @@ export default function HowItWorksScreen() {
         <InfoItem title="PERSONAL_RECORDS">
           <BodyText>
             Outrise recognizes performances as personal records only when they
-            meet the requirements for that exercise&apos;s measurement type. Official
-            rules are listed below.
+            meet the requirements for that exercise&apos;s measurement type.
+            Official rules are listed below.
           </BodyText>
         </InfoItem>
 

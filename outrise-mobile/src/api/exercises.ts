@@ -103,18 +103,38 @@ export async function getExerciseMuscleGroups(): Promise<GetExerciseMuscleGroups
   return await response.json();
 }
 
+export type ExerciseInput = Omit<Exercise, "_id" | "isActive" | "baseXP"> & {
+  baseXP: number;
+};
 
-export type ExerciseInput = Omit<Exercise, "_id" | "isActive" | "baseXP"> & { baseXP: number };
-
-export async function createExercise(input: ExerciseInput): Promise<{ exercise: Exercise }> {
-  const response = await apiRequest("/exercises", { method: "POST", body: JSON.stringify(input) });
+export async function createExercise(
+  input: ExerciseInput,
+): Promise<{ exercise: Exercise }> {
+  const response = await apiRequest("/exercises", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
   return response.json();
 }
-export async function updateExercise(id: string, input: ExerciseInput): Promise<{ exercise: Exercise }> {
-  const response = await apiRequest(`/exercises/${id}`, { method: "PATCH", body: JSON.stringify(input) });
+
+export async function updateExercise(
+  id: string,
+  input: ExerciseInput,
+): Promise<{ exercise: Exercise }> {
+  const response = await apiRequest(`/exercises/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
   return response.json();
 }
-export async function setExerciseArchived(id: string, archived: boolean): Promise<{ exercise: Exercise }> {
-  const response = await apiRequest(`/exercises/${id}/${archived ? "archive" : "restore"}`, { method: "PATCH" });
+
+export async function setExerciseArchived(
+  id: string,
+  archived: boolean,
+): Promise<{ exercise: Exercise }> {
+  const response = await apiRequest(
+    `/exercises/${id}/${archived ? "archive" : "restore"}`,
+    { method: "PATCH" },
+  );
   return response.json();
 }

@@ -58,17 +58,23 @@ const performAchievementUnlock = async ({
     mongoSession,
   });
 
-  await createActivityEvent({
-    type: "achievement_unlocked",
-    actor: userId,
-    audience: "personal",
-    recipient: userId,
-    sourceType: "achievement",
-    sourceId: achievement._id,
-    details: { actorUsername: xpResult.updatedUser.username, achievementName: achievement.name },
-    occurredAt: userAchievement.unlockedAt,
-    idempotencyKey: `user:${userId}:achievement:${achievement._id}:unlocked`,
-  }, { mongoSession });
+  await createActivityEvent(
+    {
+      type: "achievement_unlocked",
+      actor: userId,
+      audience: "personal",
+      recipient: userId,
+      sourceType: "achievement",
+      sourceId: achievement._id,
+      details: {
+        actorUsername: xpResult.updatedUser.username,
+        achievementName: achievement.name,
+      },
+      occurredAt: userAchievement.unlockedAt,
+      idempotencyKey: `user:${userId}:achievement:${achievement._id}:unlocked`,
+    },
+    { mongoSession },
+  );
 
   return { userAchievement, achievement, xpResult };
 };

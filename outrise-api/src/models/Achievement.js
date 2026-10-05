@@ -88,7 +88,8 @@ const achievementSchema = new Schema(
       type: String,
       required: true,
       trim: true,
-      set: (value) => typeof value === "string" ? value.trim().replace(/\s+/g, "-") : value,
+      set: (value) =>
+        typeof value === "string" ? value.trim().replace(/\s+/g, "-") : value,
     },
   },
   {

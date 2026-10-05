@@ -69,7 +69,8 @@ export function ProfileAchievements({
       {query.isPending && <ActivityIndicator color={Colors.dark.accent} />}
       <View style={styles.grid}>
         {visible.map((unlock) => {
-          const secret = unlock.unlocked && unlock.achievement?.isSecret;
+          const secret = Boolean(unlock.achievement?.isSecret);
+          const unlockedSecret = unlock.unlocked && secret;
           return (
             <View
               key={unlock.id}
@@ -77,14 +78,15 @@ export function ProfileAchievements({
                 styles.tile,
                 showAll ? styles.detailTile : styles.squareTile,
                 !unlock.unlocked && styles.lockedTile,
-                secret && styles.secretTile,
+                unlockedSecret && styles.secretTile,
+                unlockedSecret && !showAll && styles.secretPreviewTile,
               ]}
             >
               <Ionicons
                 name={
                   unlock.unlocked ? "ribbon-outline" : "lock-closed-outline"
                 }
-                size={28}
+                size={unlockedSecret && !showAll ? 24 : 28}
                 color={
                   !unlock.unlocked
                     ? Colors.dark.textMuted
@@ -97,13 +99,18 @@ export function ProfileAchievements({
                 style={[
                   styles.name,
                   !unlock.unlocked && styles.lockedText,
-                  secret && styles.secretText,
+                  unlockedSecret && styles.secretText,
                 ]}
-                numberOfLines={showAll ? undefined : 3}
+                numberOfLines={showAll ? undefined : secret ? 2 : 3}
               >
-                {unlock.achievement?.name ?? "Unlocked achievement"}
+                {secret && !unlock.unlocked
+                  ? "Secret achievement"
+                  : (unlock.achievement?.name ?? "Unlocked achievement")}
               </Text>
-              {showAll && (
+              {unlockedSecret && !showAll && (
+                <Text style={styles.secretLabel}>SECRET</Text>
+              )}
+              {showAll && !secret && (
                 <Text
                   style={[
                     styles.description,
@@ -114,10 +121,14 @@ export function ProfileAchievements({
                 </Text>
               )}
               {showAll && (
-                <Text style={[styles.date, secret && styles.secretText]}>
+                <Text
+                  style={[styles.date, unlockedSecret && styles.secretText]}
+                >
                   {unlock.unlocked
                     ? `${secret ? "SECRET UNLOCKED" : "UNLOCKED"}${unlock.unlockedAt ? ` · ${new Date(unlock.unlockedAt).toLocaleDateString()}` : ""}`
-                    : "LOCKED"}
+                    : secret
+                      ? "SECRET · LOCKED"
+                      : "LOCKED"}
                 </Text>
               )}
             </View>
@@ -148,12 +159,13 @@ export function ProfileAchievements({
         <Pressable
           accessibilityRole="button"
           disabled={query.isFetching}
+          accessibilityState={{ disabled: query.isFetching }}
           onPress={() => {
             void query.fetchNextPage();
           }}
-          style={styles.link}
+          style={styles.loadMoreButton}
         >
-          <Text style={styles.linkText}>
+          <Text style={styles.loadMoreText}>
             {query.isFetching ? "LOADING..." : "VIEW MORE →"}
           </Text>
         </Pressable>
@@ -188,6 +200,8 @@ const styles = StyleSheet.create({
   lockedText: { color: Colors.dark.textMuted },
   secretTile: { borderColor: "#39FF14", backgroundColor: "#081407" },
   secretText: { color: "#39FF14" },
+  secretPreviewTile: { gap: 4 },
+  secretLabel: { color: "#39FF14", fontSize: 8, fontWeight: "800" },
   name: {
     color: Colors.dark.text,
     fontSize: 10,
@@ -203,4 +217,16 @@ const styles = StyleSheet.create({
   empty: { color: Colors.dark.textMuted, fontSize: 12, paddingVertical: 12 },
   link: { minHeight: 44, justifyContent: "center" },
   linkText: { color: Colors.dark.accent, fontSize: 10, fontWeight: "800" },
+  loadMoreButton: {
+    minHeight: 52,
+    marginTop: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.dark.backgroundElement,
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
+  },
+  loadMoreText: { color: Colors.dark.accent, fontSize: 12, fontWeight: "800" },
 });

@@ -175,10 +175,6 @@ export default function WorkoutOfTheWeekScreen() {
     },
   });
 
-  /*
-   * Weekly challenge expiration countdown.
-   */
-
   useEffect(() => {
     if (!occurrence?.endsAt) {
       return;
@@ -197,24 +193,24 @@ export default function WorkoutOfTheWeekScreen() {
     };
   }, [occurrence?.endsAt]);
 
-  /*
-   * 10-second safety countdown before starting the WOTW.
-   *
-   * No WorkoutSession exists during this countdown.
-   * The backend request is only sent when the countdown reaches 0.
-   */
+  // Create the session only after the safety countdown, so cancelling does not start a workout.
 
   const { mutate: startChallenge } = startWorkoutOfTheWeekMutation;
   useEffect(() => {
     if (startCountdown === null) return;
-    const timeout = setTimeout(() => {
-      if (startCountdown === 0) {
-        setStartCountdown(null);
-        startChallenge();
-      } else {
-        setStartCountdown((current) => current === null ? null : current - 1);
-      }
-    }, startCountdown === 0 ? 0 : 1000);
+    const timeout = setTimeout(
+      () => {
+        if (startCountdown === 0) {
+          setStartCountdown(null);
+          startChallenge();
+        } else {
+          setStartCountdown((current) =>
+            current === null ? null : current - 1,
+          );
+        }
+      },
+      startCountdown === 0 ? 0 : 1000,
+    );
     return () => clearTimeout(timeout);
   }, [startCountdown, startChallenge]);
 

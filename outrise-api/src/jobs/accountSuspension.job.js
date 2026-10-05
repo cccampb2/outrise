@@ -7,7 +7,9 @@ export function startAccountSuspensionJob() {
     try {
       await restoreExpiredSuspensions();
     } catch (error) {
-      logger.error("Unable to restore expired suspensions", { error: error.message });
+      logger.error("Unable to restore expired suspensions", {
+        error: error.message,
+      });
     }
   });
 }

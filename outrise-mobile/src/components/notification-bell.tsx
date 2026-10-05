@@ -14,7 +14,13 @@ export function NotificationBell({ userId }: { userId?: string }) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={countQuery.isError ? "Notifications, unread count unavailable" : unreadCount === undefined ? "Notifications, checking unread count" : `Notifications, ${unreadCount} unread`}
+      accessibilityLabel={
+        countQuery.isError
+          ? "Notifications, unread count unavailable"
+          : unreadCount === undefined
+            ? "Notifications, checking unread count"
+            : `Notifications, ${unreadCount} unread`
+      }
       onPress={() => router.push("/notifications")}
       style={({ pressed }) => [styles.button, pressed && { opacity: 0.65 }]}
     >
@@ -33,6 +39,7 @@ export function NotificationBell({ userId }: { userId?: string }) {
     </Pressable>
   );
 }
+
 const styles = StyleSheet.create({
   button: {
     width: 44,

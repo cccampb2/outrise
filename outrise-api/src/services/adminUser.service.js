@@ -12,14 +12,16 @@ import ConflictError from "../errors/ConflictError.js";
 const adminUserFields =
   "username email role accountStatus suspendedUntil createdAt +moderationReason +moderatedBy +moderatedAt";
 
-export async function listAdminUsers({
+export const listAdminUsers = async ({
   page = 1,
   limit = 20,
   search = "",
   status = "all",
-}) {
+}) => {
   const filter = {};
-  if (status !== "all") filter.accountStatus = status;
+  if (status !== "all") {
+    filter.accountStatus = status;
+  }
   if (search) {
     const pattern = {
       $regex: search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
@@ -40,11 +42,13 @@ export async function listAdminUsers({
     users,
     pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
   };
-}
+};
 
-export async function getAdminUser(userId) {
+export const getAdminUser = async (userId) => {
   const user = await User.findById(userId).select(adminUserFields).lean();
-  if (!user) throw new NotFoundError("User not found");
+  if (!user) {
+    throw new NotFoundError("User not found");
+  }
   const history = await AccountModeration.find({ user: userId })
     .sort({ createdAt: -1, _id: -1 })
     .limit(30)
@@ -56,9 +60,15 @@ export async function getAdminUser(userId) {
     .populate("owner", "username")
     .lean();
   return { user, history, roleHistory };
-}
+};
 
-export async function setUserRole({ userId, ownerId, role, expectedRole, reason }) {
+export const setUserRole = async ({
+  userId,
+  ownerId,
+  role,
+  expectedRole,
+  reason,
+}) => {
   if (
     !["user", "admin"].includes(role) ||
     !USER_ROLES.includes(expectedRole) ||
@@ -66,34 +76,58 @@ export async function setUserRole({ userId, ownerId, role, expectedRole, reason 
     !reason.trim() ||
     reason.trim().length > 1000
   ) {
-    throw new BadRequestError("Choose user or admin and provide an internal reason (up to 1,000 characters)");
+    throw new BadRequestError(
+      "Choose user or admin and provide an internal reason (up to 1,000 characters)",
+    );
   }
 
   const session = await mongoose.startSession();
   try {
     return await session.withTransaction(async () => {
-      const owner = await User.findById(ownerId).select("role").session(session);
+      const owner = await User.findById(ownerId)
+        .select("role")
+        .session(session);
       if (owner?.role !== "owner") {
         throw new ForbiddenError("Only owners can change account roles");
       }
-      const user = await User.findById(userId).select(adminUserFields).session(session);
-      if (!user) throw new NotFoundError("User not found");
+      const user = await User.findById(userId)
+        .select(adminUserFields)
+        .session(session);
+      if (!user) {
+        throw new NotFoundError("User not found");
+      }
       if (user.role === "owner" || user._id.toString() === ownerId.toString()) {
-        throw new ForbiddenError("Owner accounts cannot have their roles changed here");
+        throw new ForbiddenError(
+          "Owner accounts cannot have their roles changed here",
+        );
       }
       if (user.role !== expectedRole) {
-        throw new ConflictError("This account's role has changed. Refresh and review it before trying again");
+        throw new ConflictError(
+          "This account's role has changed. Refresh and review it before trying again",
+        );
       }
-      if (user.role === role) throw new BadRequestError("This account already has that role");
+      if (user.role === role) {
+        throw new BadRequestError("This account already has that role");
+      }
       if (role === "admin" && user.accountStatus !== "active") {
-        throw new BadRequestError("Restore this account to active before promoting it to admin");
+        throw new BadRequestError(
+          "Restore this account to active before promoting it to admin",
+        );
       }
 
       const previousRole = user.role;
       user.role = role;
       await user.save({ session });
       await UserRoleChange.create(
-        [{ user: user._id, owner: ownerId, previousRole, role, reason: reason.trim() }],
+        [
+          {
+            user: user._id,
+            owner: ownerId,
+            previousRole,
+            role,
+            reason: reason.trim(),
+          },
+        ],
         { session },
       );
       return user;
@@ -101,15 +135,15 @@ export async function setUserRole({ userId, ownerId, role, expectedRole, reason 
   } finally {
     await session.endSession();
   }
-}
+};
 
-export async function setUserAccountStatus({
+export const setUserAccountStatus = async ({
   userId,
   adminId,
   status,
   reason,
   suspensionDays = 7,
-}) {
+}) => {
   if (
     !ACCOUNT_STATUSES.includes(status) ||
     typeof reason !== "string" ||
@@ -136,10 +170,13 @@ export async function setUserAccountStatus({
       const user = await User.findById(userId)
         .select(adminUserFields)
         .session(session);
-      if (!user) throw new NotFoundError("User not found");
+      if (!user) {
+        throw new NotFoundError("User not found");
+      }
       if (
         status !== "active" &&
-        (user._id.toString() === adminId.toString() || hasAdminAccess(user.role))
+        (user._id.toString() === adminId.toString() ||
+          hasAdminAccess(user.role))
       ) {
         throw new ForbiddenError(
           "Administrator and owner accounts cannot be flagged, suspended, or banned here",
@@ -175,4 +212,4 @@ export async function setUserAccountStatus({
   } finally {
     await session.endSession();
   }
-}
+};

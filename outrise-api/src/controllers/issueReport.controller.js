@@ -1,4 +1,7 @@
-import { sendIssueReportReply, retryIssueReportReply } from "../services/issueReportReply.service.js";
+import {
+  sendIssueReportReply,
+  retryIssueReportReply,
+} from "../services/issueReportReply.service.js";
 import {
   createIssueReport,
   listIssueReports,
@@ -14,15 +17,14 @@ export const createIssueReportController = async (req, res, next) => {
       message: req.body.message,
       reportedUserId: req.body.reportedUserId,
     });
-    res
-      .status(201)
-      .json({
-        message: "Your report has been submitted to the OUTRISE admin team.",
-      });
+    res.status(201).json({
+      message: "Your report has been submitted to the OUTRISE admin team.",
+    });
   } catch (error) {
     next(error);
   }
 };
+
 export const listIssueReportsController = async (req, res, next) => {
   try {
     const result = await listIssueReports(req.query);
@@ -31,6 +33,7 @@ export const listIssueReportsController = async (req, res, next) => {
     next(error);
   }
 };
+
 export const getIssueReportController = async (req, res, next) => {
   try {
     const result = await getIssueReport(req.params.reportId);
@@ -39,6 +42,7 @@ export const getIssueReportController = async (req, res, next) => {
     next(error);
   }
 };
+
 export const updateIssueReportController = async (req, res, next) => {
   try {
     const report = await updateIssueReport({
@@ -68,6 +72,7 @@ export const sendIssueReportReplyController = async (req, res, next) => {
     next(error);
   }
 };
+
 export const retryIssueReportReplyController = async (req, res, next) => {
   try {
     const report = await retryIssueReportReply({

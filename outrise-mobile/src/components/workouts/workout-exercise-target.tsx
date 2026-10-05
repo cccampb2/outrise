@@ -1,4 +1,7 @@
-import { AppText as Text, AppTextInput as TextInput } from "@/components/app-text";
+import {
+  AppText as Text,
+  AppTextInput as TextInput,
+} from "@/components/app-text";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 
@@ -46,7 +49,9 @@ function TargetInput({
   function handleChange(nextText: string) {
     if (!(decimal ? /^\d*(?:\.\d*)?$/ : /^\d*$/).test(nextText)) return;
     setText(nextText);
-    onChange(nextText === "" || nextText === "." ? undefined : Number(nextText));
+    onChange(
+      nextText === "" || nextText === "." ? undefined : Number(nextText),
+    );
   }
 
   return (
@@ -81,7 +86,10 @@ function TimeTargetInput({ value, onChange }: TimeTargetInputProps) {
     setPreviousValue(value);
     const totalSeconds = value ?? 0;
     // Parent updates caused by this input should not overwrite its drafts.
-    if (Number(minutesText || "0") * 60 + Number(secondsText || "0") !== totalSeconds) {
+    if (
+      Number(minutesText || "0") * 60 + Number(secondsText || "0") !==
+      totalSeconds
+    ) {
       setMinutesText(String(Math.floor(totalSeconds / 60)));
       setSecondsText(String(totalSeconds % 60));
     }
