@@ -9,10 +9,13 @@ const messageSchema = new Schema(
       ref: "Conversation",
       required: true,
     },
+    removedAt: { type: Date, default: null },
     sender: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: function () {
+        return !this.removedAt;
+      },
     },
     readBy: { type: [Schema.Types.ObjectId], ref: "User", default: [] },
     text: {

@@ -28,9 +28,12 @@ export const uploadVerificationVideo = async (fileBuffer) => {
 };
 
 export const deleteVerificationVideo = async (publicId) => {
-  await cloudinary.uploader.destroy(publicId, {
+  const result = await cloudinary.uploader.destroy(publicId, {
     resource_type: "video",
+    invalidate: true,
   });
+  if (!["ok", "not found"].includes(result?.result))
+    throw new Error("Verification upload cleanup failed.");
 };
 
 export const deleteProfileImage = async (publicId) => {

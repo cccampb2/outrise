@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { Writable } from "node:stream";
 import mongoose from "mongoose";
+import User from "../src/models/User.js";
 import Verification from "../src/models/Verification.js";
 import Exercise from "../src/models/Exercise.js";
 import cloudinary from "../src/config/cloudinary.js";
@@ -10,6 +11,12 @@ import { createVerificationSchema } from "../src/middleware/validators/verificat
 
 const id = () => new mongoose.Types.ObjectId();
 function fixture(t) {
+  const session = {
+    withTransaction: (callback) => callback(),
+    endSession: async () => {},
+  };
+  t.mock.method(mongoose, "startSession", async () => session);
+  t.mock.method(User, "updateOne", async () => ({ matchedCount: 1 }));
   const records = new Map(),
     counters = { uploads: 0, deletes: 0, creates: 0 };
   const input = {
@@ -50,11 +57,11 @@ function fixture(t) {
     assert.equal(options.resource_type, "video");
     return { result: "ok" };
   });
-  t.mock.method(Verification, "create", async (value) => {
+  t.mock.method(Verification, "create", async ([value]) => {
     counters.creates++;
     const record = { ...value, _id: id(), status: "pending" };
     records.set(key(value), record);
-    return record;
+    return [record];
   });
   return { input, records, counters, key };
 }
@@ -100,7 +107,7 @@ test("attempts are scoped to each user and a fresh attempt allows a new submissi
 test("a concurrent duplicate returns the winner and removes only the losing upload", async (t) => {
   const f = fixture(t);
   let winner;
-  t.mock.method(Verification, "create", async (value) => {
+  t.mock.method(Verification, "create", async ([value]) => {
     winner = {
       ...value,
       _id: id(),
@@ -157,4 +164,16 @@ test("attempt keys are bounded and uniquely indexed per user without affecting o
   assert.deepEqual(index[1].partialFilterExpression, {
     idempotencyKey: { $type: "string" },
   });
+});
+
+test("an upload cannot attach after account deletion starts", async (t) => {
+  const f = fixture(t);
+  User.updateOne.mock.restore();
+  t.mock.method(User, "updateOne", async () => ({ matchedCount: 0 }));
+  await assert.rejects(
+    () => createVerification(f.input),
+    /account is no longer available/,
+  );
+  assert.equal(f.counters.creates, 0);
+  assert.equal(f.counters.deletes, 1);
 });

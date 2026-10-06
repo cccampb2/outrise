@@ -99,7 +99,9 @@ export default function LoginScreen() {
 
       dispatch(setCurrentUser(user));
 
-      if (user.emailVerified !== true) {
+      if (!user.ageEligibilityConfirmedAt) {
+        router.replace("/age-eligibility");
+      } else if (user.emailVerified !== true) {
         router.replace("/verify-email");
       } else if (user.faction === null) {
         router.replace("/(onboarding)/faction");

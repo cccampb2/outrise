@@ -1,5 +1,6 @@
 import { registerUser, loginUser } from "../services/auth.services.js";
 import jwt from "jsonwebtoken";
+import { confirmAgeEligibility } from "../services/ageEligibility.service.js";
 import {
   requestEmailVerification,
   verifyEmail,
@@ -18,9 +19,9 @@ const createSessionToken = (user) =>
 
 export const register = async (req, res, next) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, age } = req.body;
 
-    const user = await registerUser({ username, email, password });
+    const user = await registerUser({ username, email, password, age });
     const token = createSessionToken(user);
 
     res.status(201).json({
@@ -30,6 +31,7 @@ export const register = async (req, res, next) => {
         username: user.username,
         email: user.email,
         emailVerified: user.emailVerified === true,
+        ageEligibilityConfirmedAt: user.ageEligibilityConfirmedAt ?? null,
         role: user.role,
         faction: user.faction,
       },
@@ -55,6 +57,7 @@ export const login = async (req, res, next) => {
         username: user.username,
         email: user.email,
         emailVerified: user.emailVerified === true,
+        ageEligibilityConfirmedAt: user.ageEligibilityConfirmedAt ?? null,
         role: user.role,
         faction: user.faction,
       },
@@ -102,6 +105,18 @@ export const verifyEmailController = async (req, res, next) => {
     const result = await verifyEmail({
       userId: req.user.userId,
       code: req.body.code,
+    });
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const confirmAgeEligibilityController = async (req, res, next) => {
+  try {
+    const result = await confirmAgeEligibility({
+      userId: req.user.userId,
+      age: req.body.age,
     });
     res.status(200).json(result);
   } catch (error) {

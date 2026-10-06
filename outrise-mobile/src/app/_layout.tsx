@@ -19,9 +19,18 @@ function AuthenticatedStack() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="(auth)" />
-      <Stack.Protected guard={user?.emailVerified === true}>
+      <Stack.Protected guard={!!user}>
+        <Stack.Screen name="delete-account" />
+      </Stack.Protected>
+      <Stack.Protected guard={!!user && !user.ageEligibilityConfirmedAt}>
+        <Stack.Screen name="age-eligibility" />
+      </Stack.Protected>
+      <Stack.Protected
+        guard={user?.emailVerified === true && !!user.ageEligibilityConfirmedAt}
+      >
         <Stack.Screen name="(onboarding)" />
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="blocked-users" />
         <Stack.Screen name="friends/index" />
         <Stack.Screen name="messages/index" />
         <Stack.Screen name="messages/announcements" />
@@ -42,6 +51,7 @@ function AuthenticatedStack() {
           <Stack.Screen name="admin/announcements" />
         </Stack.Protected>
         <Stack.Screen name="rankings/factions/[factionSlug]" />
+        <Stack.Screen name="rankings/seasons" />
         <Stack.Screen name="workout-session/active" />
         <Stack.Screen name="workout-session/[sessionId]" />
         <Stack.Screen name="admin/users/[userId]" />

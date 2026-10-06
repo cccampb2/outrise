@@ -12,6 +12,7 @@ import { ApiError } from "@/api/client";
 
 type Destination =
   | "/login"
+  | "/age-eligibility"
   | "/verify-email"
   | "/(onboarding)/faction"
   | "/(tabs)";
@@ -41,7 +42,9 @@ export default function Index() {
         if (controller.signal.aborted || token !== (await getToken())) return;
         dispatch(setCurrentUser(user));
 
-        if (user.emailVerified !== true) {
+        if (!user.ageEligibilityConfirmedAt) {
+          setDestination("/age-eligibility");
+        } else if (user.emailVerified !== true) {
           setDestination("/verify-email");
         } else if (user.faction === null) {
           setDestination("/(onboarding)/faction");
@@ -74,11 +77,13 @@ export default function Index() {
     return (
       <Redirect
         href={
-          currentUser.emailVerified !== true
-            ? "/verify-email"
-            : currentUser.faction === null
-              ? "/(onboarding)/faction"
-              : "/(tabs)"
+          !currentUser.ageEligibilityConfirmedAt
+            ? "/age-eligibility"
+            : currentUser.emailVerified !== true
+              ? "/verify-email"
+              : currentUser.faction === null
+                ? "/(onboarding)/faction"
+                : "/(tabs)"
         }
       />
     );

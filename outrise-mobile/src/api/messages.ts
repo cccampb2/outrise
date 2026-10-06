@@ -14,6 +14,8 @@ export type Conversation = {
   userLow: ChatUser | null;
   userHigh: ChatUser | null;
   unreadCount: number;
+  blocked: boolean;
+  closedAt: string | null;
   lastMessageAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -22,7 +24,8 @@ export type Conversation = {
 export type Message = {
   _id: string;
   conversation: string;
-  sender: string;
+  sender: string | null;
+  removedAt: string | null;
   text: string;
   idempotencyKey: string;
   createdAt: string;
@@ -41,6 +44,10 @@ export type ConversationsResponse = {
 };
 
 export type MessagesResponse = {
+  conversationClosed: boolean;
+  blocked: boolean;
+  blockedByMe: boolean;
+  otherUserId: string | null;
   messages: Message[];
   pagination: Pagination;
 };

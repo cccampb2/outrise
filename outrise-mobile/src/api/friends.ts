@@ -45,7 +45,7 @@ export async function getFriendList(
 }
 
 export type FriendshipRelationship = {
-  status: "none" | "incoming" | "outgoing" | "friends";
+  status: "none" | "incoming" | "outgoing" | "friends" | "blocked";
   requestId: string | null;
 };
 

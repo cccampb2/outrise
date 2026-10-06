@@ -309,7 +309,7 @@ export const getCurrentSeason = async () => {
   return activeSeason;
 };
 
-export const getSeasonHistory = async ({ page = 1, limit = 1 }) => {
+export const getSeasonHistory = async ({ page = 1, limit = 10 }) => {
   const skip = (page - 1) * limit;
 
   const query = {
@@ -318,7 +318,7 @@ export const getSeasonHistory = async ({ page = 1, limit = 1 }) => {
 
   const seasons = await Season.find(query)
     .sort({ seasonNumber: -1 })
-    .populate("winningFaction name")
+    .populate("winningFaction", "name slug colors")
     .skip(skip)
     .limit(limit)
     .lean({ virtuals: true });

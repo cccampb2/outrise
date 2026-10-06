@@ -1,3 +1,4 @@
+import { ExpiredVerificationProof } from "@/components/expired-verification-proof";
 import { BrandHeader } from "@/components/brand-header";
 import { AppText as Text } from "@/components/app-text";
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
@@ -403,7 +404,13 @@ export default function VerificationDetailScreen() {
                 <Text style={styles.sectionNumber}>02</Text>
               </View>
 
-              <VerificationVideo url={verification.proof.url} />
+              {verification.proof?.url ? (
+                <VerificationVideo url={verification.proof.url} />
+              ) : (
+                <ExpiredVerificationProof
+                  expired={!!verification.proofDeletedAt}
+                />
+              )}
             </View>
 
             {/* REVIEW INFORMATION */}

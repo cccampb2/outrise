@@ -68,6 +68,7 @@ function setup(t, { expiresIn, tokenVersion = 0, deliveryFails = false } = {}) {
     password: passwordHash,
     role: "user",
     accountStatus: "active",
+    ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
     emailVerified: false,
     faction: null,
     tokenVersion,
@@ -84,10 +85,14 @@ function setup(t, { expiresIn, tokenVersion = 0, deliveryFails = false } = {}) {
     return query(created && filter.email === user.email ? user : null);
   });
   t.mock.method(User, "create", async (input) => {
+    assert.ok(input.ageEligibilityConfirmedAt instanceof Date);
+    assert.equal(input.age, undefined);
+    user.ageEligibilityConfirmedAt = input.ageEligibilityConfirmedAt;
     assert.deepEqual(input, {
       username: user.username,
       email: user.email,
       password: passwordHash,
+      ageEligibilityConfirmedAt: user.ageEligibilityConfirmedAt,
     });
     created = true;
     return user;
@@ -150,6 +155,7 @@ async function signup(fixture) {
         username: fixture.user.username,
         email: fixture.user.email,
         password,
+        age: 18,
       },
     },
     res,
@@ -193,6 +199,7 @@ function assertSession(payload, fixture, expirySeconds) {
     username: fixture.user.username,
     email: fixture.user.email,
     emailVerified: fixture.user.emailVerified,
+    ageEligibilityConfirmedAt: fixture.user.ageEligibilityConfirmedAt,
     role: fixture.user.role,
     faction: fixture.user.faction,
   });

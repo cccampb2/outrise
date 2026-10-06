@@ -1,3 +1,4 @@
+import { getBlockedUserIds } from "./block.service.js";
 import { canAccessAccount } from "../constants/accountStatus.js";
 import ActivityEvent from "../models/ActivityEvent.js";
 import NotificationState from "../models/NotificationState.js";
@@ -33,7 +34,12 @@ export const getNotificationVisibility = async (userId) => {
       occurredAt: { $gte: user.createdAt },
     });
   }
-  return { type: { $in: NOTIFICATION_TYPES }, $or: audiences };
+  const excluded = await getBlockedUserIds(userId);
+  return {
+    actor: { $nin: excluded },
+    type: { $in: NOTIFICATION_TYPES },
+    $or: audiences,
+  };
 };
 
 async function getNotificationFilters(userId) {

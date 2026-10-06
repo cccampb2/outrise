@@ -1,3 +1,4 @@
+import { BlockUserControls } from "@/components/block-user-controls";
 import { useCallback, useRef, useState } from "react";
 import { ActivityIndicator, AppState, FlatList, View } from "react-native";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
@@ -93,7 +94,14 @@ export default function ConversationScreen() {
   );
   const send = () => {
     const text = draft.trim();
-    if (!text || text.length > 2000 || busy.current) return;
+    if (
+      !text ||
+      text.length > 2000 ||
+      busy.current ||
+      query.data?.pages[0]?.blocked ||
+      query.data?.pages[0]?.conversationClosed
+    )
+      return;
     if (attempt.current?.text !== text) {
       attempt.current = {
         text,
@@ -103,6 +111,9 @@ export default function ConversationScreen() {
     busy.current = true;
     mutation.mutate(attempt.current);
   };
+  const blocking = query.data?.pages[0];
+  const contactBlocked = blocking?.blocked === true;
+  const conversationClosed = query.data?.pages[0]?.conversationClosed === true;
   const accessDenied =
     query.error instanceof ApiError && [403, 404].includes(query.error.status);
   return (
@@ -126,11 +137,21 @@ export default function ConversationScreen() {
         </View>
         <BrandHeader label="MESSAGES" />
         <Text style={styles.name}>
-          {typeof params.username === "string"
-            ? params.username
-            : "CONVERSATION"}
+          {conversationClosed
+            ? "Deleted account"
+            : typeof params.username === "string"
+              ? params.username
+              : "CONVERSATION"}
         </Text>
       </View>
+      {blocking?.otherUserId && !conversationClosed && (
+        <BlockUserControls
+          userId={blocking.otherUserId}
+          username={
+            typeof params.username === "string" ? params.username : "this user"
+          }
+        />
+      )}
       {readError && (
         <Text style={styles.subtitle}>
           Read status couldn’t sync. We’ll try again shortly.
@@ -171,7 +192,9 @@ export default function ConversationScreen() {
                     : styles.otherBubble,
                 ]}
               >
-                <Text style={styles.message}>{item.text}</Text>
+                <Text style={styles.message}>
+                  {item.removedAt ? "Message removed" : item.text}
+                </Text>
                 <Text style={styles.meta}>
                   {new Date(item.createdAt).toLocaleTimeString(undefined, {
                     hour: "numeric",
@@ -209,6 +232,18 @@ export default function ConversationScreen() {
               { paddingBottom: Math.max(insets.bottom, 12) },
             ]}
           >
+            {conversationClosed ? (
+              <Text style={styles.meta}>
+                This account was deleted. You can read your messages, but this
+                conversation is closed.
+              </Text>
+            ) : null}
+            {contactBlocked && (
+              <Text style={styles.meta}>
+                Messages are disabled while either account has blocked the
+                other. Your chat history is still available.
+              </Text>
+            )}
             {mutation.isError && (
               <Text accessibilityRole="alert" style={styles.error}>
                 {messagingError(mutation.error)} Your text is kept here so you
@@ -217,13 +252,24 @@ export default function ConversationScreen() {
             )}
             <TextInput
               accessibilityLabel="Message"
-              placeholder="Write a message…"
+              placeholder={
+                conversationClosed
+                  ? "Conversation closed"
+                  : contactBlocked
+                    ? "Messaging unavailable"
+                    : "Write a message…"
+              }
               placeholderTextColor={Colors.dark.textMuted}
               style={styles.input}
               multiline
               maxLength={2000}
               value={draft}
-              editable={!mutation.isPending && !accessDenied}
+              editable={
+                !mutation.isPending &&
+                !accessDenied &&
+                !conversationClosed &&
+                !contactBlocked
+              }
               onChangeText={(text) => {
                 setDraft(text);
                 if (text.trim() !== attempt.current?.text) mutation.reset();
@@ -243,6 +289,8 @@ export default function ConversationScreen() {
                   !draft.trim() ||
                   mutation.isPending ||
                   accessDenied ||
+                  conversationClosed ||
+                  contactBlocked ||
                   query.isPending
                 }
                 onPress={send}

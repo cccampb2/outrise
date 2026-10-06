@@ -35,7 +35,10 @@ export const updateSuggestion = async ({
 }) => {
   const suggestion = await Suggestion.findOneAndUpdate(
     { _id: suggestionId, revision: expectedRevision },
-    { $set: { status }, $inc: { revision: 1 } },
+    {
+      $set: { status, closedAt: status === "closed" ? new Date() : null },
+      $inc: { revision: 1 },
+    },
     { returnDocument: "after", runValidators: true },
   )
     .populate("user", "username email")

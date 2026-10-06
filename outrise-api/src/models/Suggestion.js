@@ -25,11 +25,13 @@ const suggestionSchema = new Schema(
       default: "new",
       required: true,
     },
+    closedAt: { type: Date, default: null },
     revision: { type: Number, default: 0, min: 0 },
   },
   { timestamps: true },
 );
 suggestionSchema.index({ status: 1, createdAt: -1, _id: -1 });
+suggestionSchema.index({ status: 1, closedAt: 1, _id: 1 });
 const Suggestion = model("Suggestion", suggestionSchema);
 
 export default Suggestion;

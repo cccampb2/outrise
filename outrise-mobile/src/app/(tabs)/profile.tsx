@@ -919,6 +919,37 @@ export default function ProfileScreen() {
             </Pressable>
           </View>
 
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push("/blocked-users")}
+            style={styles.accountActionRow}
+          >
+            <View style={styles.accountText}>
+              <Text style={styles.dataLabel}>PRIVACY</Text>
+              <Text style={styles.accountActionValue}>Blocked users</Text>
+            </View>
+            <Text style={styles.accountActionArrow}>→</Text>
+          </Pressable>
+
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push("/delete-account")}
+            style={styles.accountActionRow}
+          >
+            <View style={styles.accountText}>
+              <Text style={styles.dataLabel}>ACCOUNT DELETION</Text>
+              <Text
+                style={[
+                  styles.accountActionValue,
+                  { color: Colors.dark.danger },
+                ]}
+              >
+                Delete account
+              </Text>
+            </View>
+            <Text style={styles.accountActionArrow}>→</Text>
+          </Pressable>
+
           {/* SIGN OUT */}
 
           <Pressable

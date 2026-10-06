@@ -9,7 +9,7 @@ const userRoleChangeSchema = new Schema(
     owner: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      default: null,
     },
     previousRole: { type: String, enum: USER_ROLES, required: true },
     role: { type: String, enum: ["user", "admin"], required: true },

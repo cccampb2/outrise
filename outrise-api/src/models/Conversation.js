@@ -14,6 +14,7 @@ const conversationSchema = new Schema(
       ref: "User",
       required: true,
     },
+    closedAt: { type: Date, default: null },
     lastMessageAt: {
       type: Date,
       default: null,

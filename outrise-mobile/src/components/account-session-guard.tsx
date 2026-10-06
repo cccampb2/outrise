@@ -7,6 +7,7 @@ import {
   onAccountRestricted,
   onSessionExpired,
   onEmailVerificationRequired,
+  onAgeEligibilityRequired,
   type AccountRestriction,
 } from "@/api/client";
 import { getCurrentUser } from "@/api/users";
@@ -16,6 +17,7 @@ import {
   setCurrentUser,
   clearCurrentUser,
   setEmailVerificationRequired,
+  setAgeEligibilityRequired,
 } from "@/store/auth-slice";
 import { store, type AppDispatch, type RootState } from "@/store/store";
 
@@ -23,6 +25,9 @@ export function AccountSessionGuard() {
   const userId = useSelector((state: RootState) => state.auth.user?.id);
   const emailVerified = useSelector(
     (state: RootState) => state.auth.user?.emailVerified,
+  );
+  const ageEligibilityConfirmedAt = useSelector(
+    (state: RootState) => state.auth.user?.ageEligibilityConfirmedAt,
   );
   const dispatch = useDispatch<AppDispatch>();
   const client = useQueryClient();
@@ -73,6 +78,17 @@ export function AccountSessionGuard() {
       void client.cancelQueries().catch(console.error);
     });
 
+    const unsubscribeAge = onAgeEligibilityRequired(() => {
+      if (
+        cancelled ||
+        handlingRestriction ||
+        store.getState().auth.user?.id !== userId
+      )
+        return;
+      dispatch(setAgeEligibilityRequired());
+      void client.cancelQueries().catch(console.error);
+    });
+
     async function refreshAccount() {
       if (refreshing || cancelled || handlingRestriction) return;
       refreshing = true;
@@ -83,7 +99,8 @@ export function AccountSessionGuard() {
           !cancelled &&
           !handlingRestriction &&
           currentUser?.id === userId &&
-          currentUser?.emailVerified === emailVerified
+          currentUser?.emailVerified === emailVerified &&
+          currentUser?.ageEligibilityConfirmedAt === ageEligibilityConfirmedAt
         ) {
           dispatch(setCurrentUser(user));
         }
@@ -108,7 +125,8 @@ export function AccountSessionGuard() {
       unsubscribe();
       unsubscribeSession();
       unsubscribeVerification();
+      unsubscribeAge();
     };
-  }, [userId, emailVerified, dispatch, client]);
+  }, [userId, emailVerified, ageEligibilityConfirmedAt, dispatch, client]);
   return null;
 }

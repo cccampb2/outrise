@@ -1,3 +1,4 @@
+import { ExpiredVerificationProof } from "@/components/expired-verification-proof";
 import {
   AppText as Text,
   AppTextInput as TextInput,
@@ -513,7 +514,11 @@ export default function AdminVerificationScreen() {
           </View>
         </View>
 
-        <VerificationVideo url={verification.proof.url} />
+        {verification.proof?.url ? (
+          <VerificationVideo url={verification.proof.url} />
+        ) : (
+          <ExpiredVerificationProof expired={!!verification.proofDeletedAt} />
+        )}
 
         {/* SUBMISSION DATA */}
 

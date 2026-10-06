@@ -1,5 +1,17 @@
 import { Joi } from "celebrate";
 
+const ageSchema = Joi.number()
+  .integer()
+  .min(18)
+  .max(120)
+  .strict()
+  .required()
+  .messages({
+    "number.min": "Outrise beta is available to adults aged 18 or older.",
+  });
+
+export const ageEligibilitySchema = { body: Joi.object({ age: ageSchema }) };
+
 const passwordSchema = Joi.string()
   .min(8)
   .custom((value, helpers) => {
@@ -14,6 +26,7 @@ const passwordSchema = Joi.string()
 export const registerSchema = {
   body: Joi.object({
     username: Joi.string().trim().min(3).max(30).required(),
+    age: ageSchema,
     email: Joi.string().trim().email().required(),
     password: passwordSchema.required(),
   }),

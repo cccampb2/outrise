@@ -12,7 +12,10 @@ export const errorHandler = (error, req, res, next) => {
       suspendedUntil: error.suspendedUntil,
     });
   }
-  if (error.statusCode === 401 && error.code === "SESSION_EXPIRED") {
+  if (
+    error.statusCode === 401 &&
+    ["SESSION_EXPIRED", "ACCOUNT_DELETION_PENDING"].includes(error.code)
+  ) {
     return res.status(401).json({
       error: error.name,
       code: error.code,
@@ -21,7 +24,9 @@ export const errorHandler = (error, req, res, next) => {
   }
   if (
     error.statusCode === 403 &&
-    error.code === "EMAIL_VERIFICATION_REQUIRED"
+    ["EMAIL_VERIFICATION_REQUIRED", "AGE_ELIGIBILITY_REQUIRED"].includes(
+      error.code,
+    )
   ) {
     return res
       .status(403)

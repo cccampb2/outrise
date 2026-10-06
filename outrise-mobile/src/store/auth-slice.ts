@@ -41,6 +41,9 @@ const authSlice = createSlice({
     clearAccountNotice(state) {
       state.accountNotice = null;
     },
+    setAgeEligibilityRequired(state) {
+      if (state.user) state.user.ageEligibilityConfirmedAt = null;
+    },
     setEmailVerificationRequired(state) {
       if (state.user) state.user.emailVerified = false;
     },
@@ -56,6 +59,7 @@ export const {
   setAccountRestriction,
   clearAccountNotice,
   setEmailVerificationRequired,
+  setAgeEligibilityRequired,
   setEmailVerificationResendAt,
 } = authSlice.actions;
 

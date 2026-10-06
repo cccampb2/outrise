@@ -62,7 +62,11 @@ export default function VerifyEmailScreen() {
       );
     dispatch(setCurrentUser(currentUser));
     router.replace(
-      currentUser.faction === null ? "/(onboarding)/faction" : "/(tabs)",
+      !currentUser.ageEligibilityConfirmedAt
+        ? "/age-eligibility"
+        : currentUser.faction === null
+          ? "/(onboarding)/faction"
+          : "/(tabs)",
     );
   }
 
@@ -184,6 +188,8 @@ export default function VerifyEmailScreen() {
   }
 
   if (!user) return <Redirect href="/" />;
+  if (!user.ageEligibilityConfirmedAt)
+    return <Redirect href="/age-eligibility" />;
   if (user.emailVerified === true)
     return (
       <Redirect
@@ -196,6 +202,13 @@ export default function VerifyEmailScreen() {
       <View style={styles.page}>
         <BrandHeader label="ACCOUNT VERIFICATION" />
         <Text style={styles.title}>Verify your email</Text>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.push("/delete-account")}
+          disabled={pending !== null}
+        >
+          <Text style={styles.text}>Delete account →</Text>
+        </Pressable>
         <Text style={styles.text}>
           Verify your email before continuing your ascent.
         </Text>

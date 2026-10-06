@@ -24,6 +24,9 @@ export default function RegisterScreen() {
   const inFlight = useRef(false);
   const createdSession = useRef<{ token: string } | null>(null);
   const [accountCreated, setAccountCreated] = useState(false);
+  const [age, setAge] = useState("");
+  const [ageAccepted, setAgeAccepted] = useState(false);
+  const [ageBlocked, setAgeBlocked] = useState(false);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,6 +44,15 @@ export default function RegisterScreen() {
     setError("");
 
     if (!createdSession.current) {
+      if (
+        !ageAccepted ||
+        !/^\d{1,3}$/.test(age) ||
+        Number(age) < 18 ||
+        Number(age) > 120
+      ) {
+        setError("Confirm your age eligibility before creating an account.");
+        return;
+      }
       if (!username.trim()) {
         setError("Username is required");
         return;
@@ -71,11 +83,13 @@ export default function RegisterScreen() {
           username: username.trim(),
           email: email.trim(),
           password,
+          age: Number(age),
         });
         // Preserve the session before local storage/cleanup. Continue can retry
         // without registering the account again or sending another signup email.
         createdSession.current = { token: data.token };
         setAccountCreated(true);
+        setAge("");
         setPassword("");
         setConfirmPassword("");
       }
@@ -130,120 +144,168 @@ export default function RegisterScreen() {
           <Text style={styles.subtitle}>Your ascent starts here.</Text>
         </View>
 
+        {!ageAccepted ? (
+          <View style={styles.form}>
+            <Text style={styles.subtitle}>
+              {ageBlocked
+                ? "Outrise beta is available to adults aged 18 or older."
+                : "Enter your current age to check eligibility. We save only the date you confirm eligibility, not your age."}
+            </Text>
+            {!ageBlocked ? (
+              <>
+                <View style={styles.field}>
+                  <Text style={styles.label}>AGE</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={age}
+                    onChangeText={setAge}
+                    keyboardType="number-pad"
+                    maxLength={3}
+                    placeholder="Enter your age"
+                    placeholderTextColor={Colors.dark.textMuted}
+                    accessibilityLabel="Your current age"
+                  />
+                </View>
+                {error ? <Text style={styles.errorText}>{error}</Text> : null}
+                <Pressable
+                  style={styles.createButton}
+                  onPress={() => {
+                    setError("");
+                    if (!/^\d{1,3}$/.test(age) || Number(age) > 120) {
+                      setError("Enter a valid whole-number age.");
+                      return;
+                    }
+                    if (Number(age) < 18) {
+                      setAgeBlocked(true);
+                      setAge("");
+                      return;
+                    }
+                    setAgeAccepted(true);
+                  }}
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.createButtonText}>CONTINUE →</Text>
+                </Pressable>
+              </>
+            ) : null}
+          </View>
+        ) : null}
         {/* FORM */}
 
-        <View style={styles.form}>
-          <View style={styles.field}>
-            <Text style={styles.label}>USERNAME</Text>
+        {ageAccepted ? (
+          <View style={styles.form}>
+            <View style={styles.field}>
+              <Text style={styles.label}>USERNAME</Text>
 
-            <TextInput
-              style={styles.input}
-              value={username}
-              editable={!isLoading && !accountCreated}
-              onChangeText={setUsername}
-              placeholder="Choose a username"
-              placeholderTextColor={Colors.dark.textMuted}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
+              <TextInput
+                style={styles.input}
+                value={username}
+                editable={!isLoading && !accountCreated}
+                onChangeText={setUsername}
+                placeholder="Choose a username"
+                placeholderTextColor={Colors.dark.textMuted}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>EMAIL</Text>
+            <View style={styles.field}>
+              <Text style={styles.label}>EMAIL</Text>
 
-            <TextInput
-              style={styles.input}
-              value={email}
-              editable={!isLoading && !accountCreated}
-              onChangeText={setEmail}
-              placeholder="Enter your email"
-              placeholderTextColor={Colors.dark.textMuted}
-              autoCapitalize="none"
-              keyboardType="email-address"
-            />
-          </View>
+              <TextInput
+                style={styles.input}
+                value={email}
+                editable={!isLoading && !accountCreated}
+                onChangeText={setEmail}
+                placeholder="Enter your email"
+                placeholderTextColor={Colors.dark.textMuted}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+            </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>PASSWORD</Text>
+            <View style={styles.field}>
+              <Text style={styles.label}>PASSWORD</Text>
 
-            <View style={styles.passwordContainer}>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={[styles.input, styles.passwordInput]}
+                  value={password}
+                  editable={!isLoading && !accountCreated}
+                  onChangeText={setPassword}
+                  placeholder="Create a password"
+                  placeholderTextColor={Colors.dark.textMuted}
+                  secureTextEntry={!showPassword}
+                />
+
+                <Pressable
+                  disabled={isLoading || accountCreated}
+                  onPress={handleShowPassword}
+                  style={({ pressed }) => [
+                    styles.passwordShow,
+                    pressed ? styles.iconPressed : null,
+                  ]}
+                >
+                  <AntDesign
+                    name={showPassword ? "eye" : "eye-invisible"}
+                    size={21}
+                    color={Colors.dark.textSecondary}
+                  />
+                </Pressable>
+              </View>
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>CONFIRM_PASSWORD</Text>
+
               <TextInput
                 style={[styles.input, styles.passwordInput]}
-                value={password}
+                value={confirmPassword}
                 editable={!isLoading && !accountCreated}
-                onChangeText={setPassword}
-                placeholder="Create a password"
+                onChangeText={setConfirmPassword}
+                placeholder="Enter your password again"
                 placeholderTextColor={Colors.dark.textMuted}
                 secureTextEntry={!showPassword}
               />
-
-              <Pressable
-                disabled={isLoading || accountCreated}
-                onPress={handleShowPassword}
-                style={({ pressed }) => [
-                  styles.passwordShow,
-                  pressed ? styles.iconPressed : null,
-                ]}
-              >
-                <AntDesign
-                  name={showPassword ? "eye" : "eye-invisible"}
-                  size={21}
-                  color={Colors.dark.textSecondary}
-                />
-              </Pressable>
             </View>
-          </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>CONFIRM_PASSWORD</Text>
+            {error ? (
+              <View style={styles.errorMessage}>
+                <View style={styles.errorTop}>
+                  <View style={styles.errorDot} />
 
-            <TextInput
-              style={[styles.input, styles.passwordInput]}
-              value={confirmPassword}
-              editable={!isLoading && !accountCreated}
-              onChangeText={setConfirmPassword}
-              placeholder="Enter your password again"
-              placeholderTextColor={Colors.dark.textMuted}
-              secureTextEntry={!showPassword}
-            />
-          </View>
+                  <Text style={styles.errorLabel}>REGISTRATION_ERROR</Text>
+                </View>
 
-          {error ? (
-            <View style={styles.errorMessage}>
-              <View style={styles.errorTop}>
-                <View style={styles.errorDot} />
-
-                <Text style={styles.errorLabel}>REGISTRATION_ERROR</Text>
+                <Text style={styles.errorText}>{error}</Text>
               </View>
+            ) : null}
 
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          ) : null}
+            <Pressable
+              disabled={isLoading}
+              onPress={handleRegister}
+              style={({ pressed }) => [
+                styles.createButton,
+                pressed && !isLoading && styles.createButtonPressed,
+                isLoading ? styles.buttonDisabled : null,
+              ]}
+            >
+              <View style={styles.buttonMarker} />
 
-          <Pressable
-            disabled={isLoading}
-            onPress={handleRegister}
-            style={({ pressed }) => [
-              styles.createButton,
-              pressed && !isLoading && styles.createButtonPressed,
-              isLoading ? styles.buttonDisabled : null,
-            ]}
-          >
-            <View style={styles.buttonMarker} />
+              <Text style={styles.createButtonText}>
+                {isLoading
+                  ? accountCreated
+                    ? "OPENING_ACCOUNT..."
+                    : "CREATING_ACCOUNT..."
+                  : accountCreated
+                    ? "CONTINUE"
+                    : "CREATE_ACCOUNT"}
+              </Text>
 
-            <Text style={styles.createButtonText}>
-              {isLoading
-                ? accountCreated
-                  ? "OPENING_ACCOUNT..."
-                  : "CREATING_ACCOUNT..."
-                : accountCreated
-                  ? "CONTINUE"
-                  : "CREATE_ACCOUNT"}
-            </Text>
-
-            <Text style={styles.buttonArrow}>→</Text>
-          </Pressable>
-        </View>
+              <Text style={styles.buttonArrow}>→</Text>
+            </Pressable>
+          </View>
+        ) : null}
 
         {/* LOGIN */}
 

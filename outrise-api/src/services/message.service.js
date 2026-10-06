@@ -1,3 +1,9 @@
+import {
+  ensureNotBlocked,
+  getBlockRelationship,
+  getBlockedUserIds,
+  lockContactUsers,
+} from "./block.service.js";
 import User from "../models/User.js";
 import ActivityEvent from "../models/ActivityEvent.js";
 import NotificationState from "../models/NotificationState.js";
@@ -147,6 +153,17 @@ export const sendMessage = async ({
     idempotencyKey,
   };
 
+  if (conversation.closedAt) {
+    throw new ForbiddenError(
+      "This conversation is closed because an account was deleted.",
+    );
+  }
+
+  const otherUserId =
+    conversation.userLow.toString() === userId.toString()
+      ? conversation.userHigh
+      : conversation.userLow;
+  await ensureNotBlocked({ userId, otherUserId });
   const existingMessage = await getExistingMessage(messageInput);
 
   if (existingMessage) {
@@ -162,6 +179,9 @@ export const sendMessage = async ({
 
   try {
     const message = await mongoSession.withTransaction(async () => {
+      await lockContactUsers({ userId, otherUserId, session: mongoSession });
+      await ensureNotBlocked({ userId, otherUserId, session: mongoSession });
+      await ensureConversationFriends({ userId, conversation });
       const [createdMessage] = await Message.create(
         [
           {
@@ -176,9 +196,10 @@ export const sendMessage = async ({
         },
       );
 
-      await Conversation.updateOne(
+      const updatedConversation = await Conversation.updateOne(
         {
           _id: conversationId,
+          closedAt: null,
         },
         {
           $max: {
@@ -189,6 +210,11 @@ export const sendMessage = async ({
           session: mongoSession,
         },
       );
+
+      if (updatedConversation.matchedCount !== 1)
+        throw new ForbiddenError(
+          "This conversation is closed because an account was deleted.",
+        );
 
       const sender = await User.findById(userId)
         .select("username")
@@ -239,7 +265,7 @@ export const getConversationMessages = async ({
   page = 1,
   limit = 30,
 }) => {
-  await getConversationForUser({ userId, conversationId });
+  const conversation = await getConversationForUser({ userId, conversationId });
   const skip = (page - 1) * limit;
   const messages = await Message.find({ conversation: conversationId })
     .sort({
@@ -250,7 +276,15 @@ export const getConversationMessages = async ({
     .limit(limit + 1)
     .lean();
 
+  const otherUserId =
+    conversation.userLow.toString() === userId.toString()
+      ? conversation.userHigh
+      : conversation.userLow;
+  const blocking = await getBlockRelationship({ userId, otherUserId });
   return {
+    otherUserId: conversation.closedAt ? null : otherUserId,
+    ...blocking,
+    conversationClosed: !!conversation.closedAt,
     messages: messages.slice(0, limit),
     pagination: {
       page,
@@ -271,13 +305,27 @@ export const getConversations = async ({ userId, page = 1, limit = 20 }) => {
     .populate("userLow userHigh", "username profileImage")
     .lean();
 
+  const excluded = new Set(
+    (await getBlockedUserIds(userId)).map((id) => id.toString()),
+  );
   const conversationsWithUnreadCounts = await addUnreadCounts(
     conversations.slice(0, limit),
     userId,
   );
 
   return {
-    conversations: conversationsWithUnreadCounts,
+    conversations: conversationsWithUnreadCounts.map((conversation) => {
+      const other =
+        conversation.userLow?._id.toString() === userId.toString()
+          ? conversation.userHigh
+          : conversation.userLow;
+      const blocked = !!other && excluded.has(other._id.toString());
+      return {
+        ...conversation,
+        blocked,
+        unreadCount: blocked ? 0 : conversation.unreadCount,
+      };
+    }),
     pagination: {
       page,
       limit,
@@ -291,6 +339,7 @@ const unreadFilter = (userId, conversationIds) => {
 
   return {
     conversation: { $in: conversationIds },
+    removedAt: null,
     sender: { $ne: currentUserId },
     readBy: { $ne: currentUserId },
   };
@@ -319,7 +368,10 @@ const addUnreadCounts = async (conversations, userId) => {
 };
 
 export const getUnreadMessageCount = async (userId) => {
+  const excluded = await getBlockedUserIds(userId);
   const conversationIds = await Conversation.find({
+    userLow: { $nin: excluded },
+    userHigh: { $nin: excluded },
     $or: [{ userLow: userId }, { userHigh: userId }],
   }).distinct("_id");
   const unreadCount = await Message.countDocuments(

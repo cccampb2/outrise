@@ -30,7 +30,7 @@ const workoutOfTheWeekSchema = new Schema(
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      default: null,
     },
 
     exercises: [

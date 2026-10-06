@@ -53,8 +53,10 @@ const getExistingPublication = async ({
     type: "system_announcement",
     sourceId: message._id,
   }).select("_id");
-  if (!event) throw new NotFoundError("Announcement notification not found");
-  return { systemMessage: publicMessage(message, event._id), created: false };
+  return {
+    systemMessage: publicMessage(message, event?._id ?? null, !event),
+    created: false,
+  };
 };
 
 export const publishSystemMessage = async ({
@@ -196,7 +198,7 @@ export const getSystemMessages = async ({
       return publicMessage(
         message,
         eventId ?? null,
-        Boolean(state?.readAt || state?.dismissedAt),
+        !eventId || Boolean(state?.readAt || state?.dismissedAt),
       );
     }),
     unreadCount,
@@ -220,7 +222,8 @@ export const getSystemMessage = async ({ userId, messageId }) => {
   })
     .select("_id")
     .lean();
-  if (!event) throw new NotFoundError("Announcement notification not found");
+  // Announcement content outlives its 90-day notification. Do not recreate that event.
+  if (!event) return publicMessage(message, null, true);
   const state = await NotificationState.findOne({
     user: userId,
     event: event._id,

@@ -13,7 +13,7 @@ export const socketAuth = async (socket, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const account = await User.findById(decoded.userId).select(
-      "role accountStatus suspendedUntil emailVerified +tokenVersion",
+      "role accountStatus suspendedUntil emailVerified ageEligibilityConfirmedAt deletionRequestedAt +tokenVersion",
     );
     if (
       account &&
@@ -26,6 +26,10 @@ export const socketAuth = async (socket, next) => {
 
     if (user.emailVerified !== true) {
       throw new Error("Verify your email before connecting");
+    }
+
+    if (!user.ageEligibilityConfirmedAt) {
+      throw new Error("Confirm your age eligibility before connecting");
     }
 
     socket.data.userId = user._id.toString();

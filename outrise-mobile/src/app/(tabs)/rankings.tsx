@@ -303,6 +303,21 @@ export default function RankingsScreen() {
               </View>
             ) : null}
 
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.push("/rankings/seasons")}
+              style={{
+                minHeight: 48,
+                justifyContent: "center",
+                paddingVertical: 12,
+              }}
+            >
+              <Text
+                style={{ color: colors.text, fontWeight: "700", fontSize: 13 }}
+              >
+                SEASON HISTORY →
+              </Text>
+            </Pressable>
             <View style={styles.factionLeaderboardHeader}>
               <View>
                 <Text style={styles.sectionEyebrow}>FACTION_NETWORK</Text>

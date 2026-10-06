@@ -159,14 +159,16 @@ export default function MessagesScreen() {
                   {other?.username ?? "Deleted account"}
                 </Text>
                 <Text style={styles.meta}>
-                  {item.lastMessageAt
-                    ? new Date(item.lastMessageAt).toLocaleString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                        hour: "numeric",
-                        minute: "2-digit",
-                      })
-                    : "Start the conversation"}
+                  {item.blocked
+                    ? "CONTACT UNAVAILABLE"
+                    : item.lastMessageAt
+                      ? new Date(item.lastMessageAt).toLocaleString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })
+                      : "Start the conversation"}
                 </Text>
               </View>
               {item.unreadCount > 0 && (

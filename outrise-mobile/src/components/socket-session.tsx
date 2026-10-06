@@ -19,6 +19,9 @@ type Notice =
 export function SocketSession() {
   const userId = useSelector((state: RootState) => state.auth.user?.id);
 
+  const ageEligibilityConfirmedAt = useSelector(
+    (state: RootState) => state.auth.user?.ageEligibilityConfirmedAt,
+  );
   const emailVerified = useSelector(
     (state: RootState) => state.auth.user?.emailVerified,
   );
@@ -44,7 +47,7 @@ export function SocketSession() {
   }, [notice]);
 
   useEffect(() => {
-    if (!userId || !emailVerified) {
+    if (!userId || !emailVerified || !ageEligibilityConfirmedAt) {
       return;
     }
 
@@ -53,16 +56,8 @@ export function SocketSession() {
 
     const onConnect = () => {
       console.log("Socket connected:", socket.id);
-      void client.invalidateQueries({ queryKey: ["system-messages", userId] });
-      void client.invalidateQueries({ queryKey: ["notifications", userId] });
-
-      void client.invalidateQueries({
-        queryKey: ["messages", userId],
-      });
-
-      void client.invalidateQueries({
-        queryKey: ["conversations", userId],
-      });
+      // Reconcile contact restrictions changed while this device was disconnected.
+      void client.invalidateQueries();
     };
 
     const onDisconnect = (reason: string) => {
@@ -145,6 +140,12 @@ export function SocketSession() {
       }
     };
     socket.on("announcement:new", onNewAnnouncement);
+    const onAccountsUpdated = () => {
+      setNotice(null);
+      void client.invalidateQueries();
+    };
+    socket.on("accounts:updated", onAccountsUpdated);
+    socket.on("contacts:updated", onAccountsUpdated);
     socket.on("announcements:read", refreshAnnouncements);
     socket.on("notifications:updated", refreshAnnouncements);
     socket.on("messages:read", onMessagesRead);
@@ -190,18 +191,21 @@ export function SocketSession() {
       socket.off("message:new", onNewMessage);
       socket.off("messages:read", onMessagesRead);
       socket.off("announcement:new", onNewAnnouncement);
+      socket.off("accounts:updated", onAccountsUpdated);
+      socket.off("contacts:updated", onAccountsUpdated);
       socket.off("announcements:read", refreshAnnouncements);
       socket.off("notifications:updated", refreshAnnouncements);
       socket.disconnect();
       socket.auth = {};
     };
-  }, [userId, emailVerified, client]);
+  }, [userId, emailVerified, ageEligibilityConfirmedAt, client]);
 
   if (
     !notice ||
     notice.recipientUserId !== userId ||
     !userId ||
     !emailVerified ||
+    !ageEligibilityConfirmedAt ||
     (notice.kind === "message"
       ? pathname === `/messages/${notice.conversation}`
       : pathname === "/messages/announcements" &&

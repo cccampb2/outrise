@@ -9,16 +9,18 @@ const accountModerationSchema = new Schema(
     admin: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      default: null,
     },
     previousStatus: { type: String, enum: ACCOUNT_STATUSES, required: true },
     status: { type: String, enum: ACCOUNT_STATUSES, required: true },
     reason: { type: String, trim: true, maxlength: 1000, required: true },
     suspendedUntil: { type: Date, default: null },
+    resolvedAt: { type: Date, default: null },
   },
   { timestamps: true },
 );
 accountModerationSchema.index({ user: 1, createdAt: -1, _id: -1 });
+accountModerationSchema.index({ resolvedAt: 1, user: 1 });
 const AccountModeration = model("AccountModeration", accountModerationSchema);
 
 export default AccountModeration;

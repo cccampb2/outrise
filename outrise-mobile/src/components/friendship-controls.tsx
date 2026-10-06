@@ -51,6 +51,8 @@ export function FriendshipControls({ user }: { user: PublicUser }) {
 
   if (!currentUserId || currentUserId === user.id) return null;
 
+  if (user.relationship.status === "blocked") return null;
+
   function confirmRemoval() {
     Alert.alert("Remove friend", `Remove ${user.username} from your friends?`, [
       { text: "Cancel", style: "cancel" },

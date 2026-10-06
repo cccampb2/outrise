@@ -1,6 +1,8 @@
+import { getBlockedUserIds } from "../services/block.service.js";
 import { ACCESSIBLE_ACCOUNT_STATUSES } from "../constants/accountStatus.js";
 import mongoose from "mongoose";
 import User from "../models/User.js";
+import { queueDeletingAccountUpload } from "../services/accountDeletion.service.js";
 import NotFoundError from "../errors/NotFoundError.js";
 import { getProgressFromXP } from "../utils/progression.js";
 import { getUserGlobalRank } from "../services/leaderboard.service.js";
@@ -29,6 +31,7 @@ export const getCurrentUser = async (req, res, next) => {
       username: user.username,
       email: user.email,
       emailVerified: user.emailVerified === true,
+      ageEligibilityConfirmedAt: user.ageEligibilityConfirmedAt ?? null,
       role: user.role,
       accountStatus: user.accountStatus,
       faction: user.faction,
@@ -78,7 +81,9 @@ export const searchUsers = async (req, res, next) => {
 
     const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+    const excluded = await getBlockedUserIds(req.user.userId);
     const filter = {
+      _id: { $nin: excluded },
       accountStatus: { $in: ACCESSIBLE_ACCOUNT_STATUSES },
       username: {
         $regex: escapedQuery,
@@ -232,6 +237,7 @@ export const updateCurrentUser = async (req, res, next) => {
       username: user.username,
       email: user.email,
       emailVerified: user.emailVerified === true,
+      ageEligibilityConfirmedAt: user.ageEligibilityConfirmedAt ?? null,
       role: user.role,
       accountStatus: user.accountStatus,
       faction: user.faction,
@@ -264,7 +270,7 @@ export const updateProfileImage = async (req, res, next) => {
       });
     }
 
-    const user = await User.findById(userId);
+    let user = await User.findById(userId);
 
     if (!user) {
       throw new NotFoundError("User not found");
@@ -274,12 +280,23 @@ export const updateProfileImage = async (req, res, next) => {
 
     const previousPublicId = user.profileImage?.publicId ?? null;
 
-    user.profileImage = {
-      url: uploadedImage.secure_url,
-      publicId: uploadedImage.public_id,
-    };
-
-    await user.save();
+    user = await User.findOneAndUpdate(
+      {
+        _id: userId,
+        deletionRequestedAt: null,
+        accountStatus: { $in: ACCESSIBLE_ACCOUNT_STATUSES },
+      },
+      {
+        $set: {
+          profileImage: {
+            url: uploadedImage.secure_url,
+            publicId: uploadedImage.public_id,
+          },
+        },
+      },
+      { returnDocument: "after", runValidators: true },
+    );
+    if (!user) throw new NotFoundError("This account is no longer available.");
     imageSaved = true;
 
     if (previousPublicId) {
@@ -302,6 +319,7 @@ export const updateProfileImage = async (req, res, next) => {
       username: user.username,
       email: user.email,
       emailVerified: user.emailVerified === true,
+      ageEligibilityConfirmedAt: user.ageEligibilityConfirmedAt ?? null,
       role: user.role,
       accountStatus: user.accountStatus,
       faction: user.faction,
@@ -322,6 +340,11 @@ export const updateProfileImage = async (req, res, next) => {
       try {
         await deleteProfileImage(uploadedImage.public_id);
       } catch (cleanupError) {
+        await queueDeletingAccountUpload({
+          userId: req.user.userId,
+          publicId: uploadedImage.public_id,
+          resourceType: "image",
+        }).catch(() => {});
         console.error(
           "Failed to clean up uploaded profile image:",
           uploadedImage.public_id,
@@ -373,6 +396,7 @@ export const removeProfileImage = async (req, res, next) => {
       username: user.username,
       email: user.email,
       emailVerified: user.emailVerified === true,
+      ageEligibilityConfirmedAt: user.ageEligibilityConfirmedAt ?? null,
       role: user.role,
       accountStatus: user.accountStatus,
       faction: user.faction,

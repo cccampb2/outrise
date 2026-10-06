@@ -5,7 +5,7 @@ import User from "../models/User.js";
 import { ensureAccountAccess } from "../services/accountAccess.service.js";
 
 const createAuthentication =
-  ({ allowUnverified = false } = {}) =>
+  ({ allowUnverified = false, allowRestricted = false } = {}) =>
   async (req, res, next) => {
     try {
       const authHeader = req.headers.authorization;
@@ -19,7 +19,7 @@ const createAuthentication =
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       const account = await User.findById(decoded.userId).select(
-        "role accountStatus suspendedUntil emailVerified +tokenVersion",
+        "role accountStatus suspendedUntil emailVerified ageEligibilityConfirmedAt deletionRequestedAt +tokenVersion",
       );
       // Legacy tokens/documents count as version zero until the first reset.
       if (
@@ -32,7 +32,10 @@ const createAuthentication =
         error.code = "SESSION_EXPIRED";
         throw error;
       }
-      const user = await ensureAccountAccess(account);
+      const user =
+        allowRestricted && account
+          ? account
+          : await ensureAccountAccess(account);
       // Use the current database role, rather than a potentially stale token role.
       const emailVerified = user.emailVerified === true;
       req.user = {
@@ -49,6 +52,13 @@ const createAuthentication =
         throw error;
       }
 
+      if (!allowUnverified && !user.ageEligibilityConfirmedAt) {
+        const error = new ForbiddenError(
+          "Confirm your age eligibility before continuing.",
+        );
+        error.code = "AGE_ELIGIBILITY_REQUIRED";
+        throw error;
+      }
       next();
     } catch (error) {
       if (
@@ -71,4 +81,10 @@ const createAuthentication =
 export const authenticate = createAuthentication();
 export const authenticateUnverified = createAuthentication({
   allowUnverified: true,
+});
+
+// Only the deletion endpoint may accept a restricted, authenticated account.
+export const authenticateAccountDeletion = createAuthentication({
+  allowUnverified: true,
+  allowRestricted: true,
 });

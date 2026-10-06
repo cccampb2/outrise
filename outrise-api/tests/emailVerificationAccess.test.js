@@ -79,6 +79,7 @@ test("all accounts need database email verification, including legacy accounts w
       _id: userId,
       role: "user",
       accountStatus: "active",
+      ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
       emailVerified,
     };
     const { error } = await invoke(authenticate);
@@ -99,6 +100,7 @@ test("stale or forged JWT verification claims never override the database", asyn
       _id: userId,
       role: "user",
       accountStatus: "active",
+      ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
       emailVerified,
     }),
   );
@@ -127,6 +129,7 @@ test("the verification exception permits unverified identities while retaining s
     _id: userId,
     role: "user",
     accountStatus: "active",
+    ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
     emailVerified: false,
     tokenVersion: 1,
   };
@@ -174,6 +177,7 @@ test("restoring an expired suspension preserves the current database verificatio
   let restored = {
     ...suspended,
     accountStatus: "active",
+    ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
     suspendedUntil: null,
   };
   t.mock.method(User, "findById", () => query(suspended));
@@ -217,7 +221,8 @@ test("only current-user reads bypass verification; profile writes and public pro
   assert.ok(hasMiddleware(currentUser, authenticateUnverified));
   assert.ok(!hasMiddleware(currentUser, authenticate));
   for (const { route: value } of routeLayers(userRoutes)) {
-    if (value === currentUser) continue;
+    if (value === currentUser || (value.methods.delete && value.path === "/me"))
+      continue;
     assert.ok(
       hasMiddleware(value, authenticate),
       `${Object.keys(value.methods)[0]} ${value.path} requires verification`,
@@ -362,6 +367,7 @@ test("signup requests one initial code and returns an unverified account without
     email: "tester@example.com",
     role: "user",
     accountStatus: "active",
+    ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
     faction: null,
     emailVerified: false,
   };
@@ -391,6 +397,7 @@ test("signup requests one initial code and returns an unverified account without
         username: user.username,
         email: user.email,
         password: "password123",
+        age: 18,
       },
     },
     {

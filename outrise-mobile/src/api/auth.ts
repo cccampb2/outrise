@@ -11,6 +11,7 @@ type AuthUser = {
   username: string;
   email: string;
   emailVerified: boolean;
+  ageEligibilityConfirmedAt: string | null;
   role: UserRole;
   faction: string | null;
 };
@@ -22,6 +23,7 @@ type LoginResponse = {
 };
 
 type RegisterCredentials = {
+  age: number;
   username: string;
   email: string;
   password: string;
@@ -113,6 +115,18 @@ export async function confirmEmailVerification(
   const response = await apiRequest("/auth/email-verification/confirm", {
     method: "POST",
     body: JSON.stringify({ code }),
+    signal,
+  });
+  return await response.json();
+}
+
+export async function confirmAgeEligibility(
+  age: number,
+  signal?: AbortSignal,
+): Promise<{ ageEligibilityConfirmedAt: string }> {
+  const response = await apiRequest("/auth/age-eligibility", {
+    method: "POST",
+    body: JSON.stringify({ age }),
     signal,
   });
   return await response.json();

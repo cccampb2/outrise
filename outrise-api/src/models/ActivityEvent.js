@@ -174,6 +174,7 @@ const activityEventSchema = new Schema(
 );
 
 activityEventSchema.index({ idempotencyKey: 1 }, { unique: true });
+activityEventSchema.index({ occurredAt: 1, _id: 1 });
 activityEventSchema.index({
   recipient: 1,
   audience: 1,

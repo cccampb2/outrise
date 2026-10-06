@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
 import Verification from "../models/Verification.js";
+import User from "../models/User.js";
+import { queueDeletingAccountUpload } from "./accountDeletion.service.js";
 import { recordVerificationActivity } from "./verificationActivity.service.js";
 import Exercise from "../models/Exercise.js";
 import NotFoundError from "../errors/NotFoundError.js";
@@ -166,20 +168,53 @@ export const createVerification = async ({
   let uploadedProof = null;
   try {
     uploadedProof = await uploadVerificationVideo(proofFile.buffer);
-    const verification = await Verification.create({
-      user: userId,
-      exercise: exercise._id,
-      measurementType: exercise.measurementType,
-      performance,
-      proof: uploadedProof,
-      ...(idempotencyKey ? { idempotencyKey, submissionFingerprint } : {}),
-    });
+    const session = await mongoose.startSession();
+    let verification;
+    try {
+      verification = await session.withTransaction(async () => {
+        const live = await User.updateOne(
+          {
+            _id: userId,
+            deletionRequestedAt: null,
+            accountStatus: { $in: ["active", "flagged"] },
+          },
+          { $inc: { accountMutationRevision: 1 } },
+          { session },
+        );
+        if (live.matchedCount !== 1)
+          throw new NotFoundError("This account is no longer available.");
+        const [created] = await Verification.create(
+          [
+            {
+              user: userId,
+              exercise: exercise._id,
+              measurementType: exercise.measurementType,
+              performance,
+              proof: uploadedProof,
+              ...(idempotencyKey
+                ? { idempotencyKey, submissionFingerprint }
+                : {}),
+            },
+          ],
+          { session },
+        );
+        return created;
+      });
+    } finally {
+      await session.endSession();
+    }
     return publicVerification(verification);
   } catch (error) {
     if (uploadedProof?.publicId) {
       try {
         await deleteVerificationVideo(uploadedProof.publicId);
-      } catch {}
+      } catch {
+        await queueDeletingAccountUpload({
+          userId,
+          publicId: uploadedProof.publicId,
+          resourceType: "video",
+        }).catch(() => {});
+      }
     }
     // A concurrent retry may have inserted the same attempt during the upload.
     if (idempotencyKey && error.code === 11000) {

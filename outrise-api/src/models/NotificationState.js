@@ -16,6 +16,7 @@ const notificationStateSchema = new Schema(
   { timestamps: true },
 );
 notificationStateSchema.index({ user: 1, event: 1 }, { unique: true });
+notificationStateSchema.index({ event: 1 });
 const NotificationState = model("NotificationState", notificationStateSchema);
 
 export default NotificationState;

@@ -1,3 +1,16 @@
+import { beforeEach } from "node:test";
+import UserBlock from "../src/models/UserBlock.js";
+beforeEach((t) => {
+  t.mock.method(UserBlock, "find", () => ({
+    select() {
+      return this;
+    },
+    session() {
+      return this;
+    },
+    lean: async () => [],
+  }));
+});
 import test from "node:test";
 import assert from "node:assert/strict";
 import mongoose from "mongoose";
@@ -461,4 +474,72 @@ test("request schemas enforce content limits, pagination bounds and reject forge
       userId: String(id()),
     }).error,
   );
+});
+
+test("announcement text remains readable after its notification expires", async (t) => {
+  viewer(t);
+  const message = {
+    _id: id(),
+    title: "Archived update",
+    text: "Announcement content",
+    createdAt: publishedAt,
+  };
+  t.mock.method(SystemMessage, "findOne", () => query(message));
+  t.mock.method(ActivityEvent, "findOne", () => query(null));
+  t.mock.method(NotificationState, "findOne", () =>
+    assert.fail("Expired events have no read state"),
+  );
+  const result = await getSystemMessage({
+    userId: id(),
+    messageId: message._id,
+  });
+  assert.equal(result.text, message.text);
+  assert.equal(result.eventId, null);
+  assert.equal(result.read, true);
+});
+test("announcement list does not show expired events as unread", async (t) => {
+  viewer(t);
+  const message = {
+    _id: id(),
+    title: "Archived update",
+    text: "Content",
+    createdAt: publishedAt,
+  };
+  t.mock.method(SystemMessage, "find", () => query([message]));
+  t.mock.method(SystemMessage, "countDocuments", async () => 1);
+  t.mock.method(ActivityEvent, "find", () => query([]));
+  t.mock.method(ActivityEvent, "countDocuments", async () => 0);
+  t.mock.method(NotificationState, "find", () => query([]));
+  const result = await getSystemMessages({ userId: id() });
+  assert.equal(result.messages[0].read, true);
+  assert.equal(result.messages[0].eventId, null);
+  assert.equal(result.unreadCount, 0);
+});
+test("retrying an old publication does not recreate its expired notification", async (t) => {
+  viewer(t, "owner");
+  const userId = id(),
+    input = {
+      userId,
+      title: "Archived update",
+      text: "Content",
+      idempotencyKey: "old-publication",
+    };
+  const message = {
+    _id: id(),
+    createdBy: userId,
+    ...input,
+    createdAt: publishedAt,
+  };
+  t.mock.method(SystemMessage, "findOne", () => query(message));
+  t.mock.method(ActivityEvent, "findOne", () => query(null));
+  t.mock.method(SystemMessage, "create", () =>
+    assert.fail("Must not republish"),
+  );
+  t.mock.method(ActivityEvent, "findOneAndUpdate", () =>
+    assert.fail("Must not recreate expired notification"),
+  );
+  const result = await publishSystemMessage(input);
+  assert.equal(result.created, false);
+  assert.equal(result.systemMessage._id, message._id);
+  assert.equal(result.systemMessage.eventId, null);
 });

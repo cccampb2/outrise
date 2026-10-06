@@ -2,6 +2,7 @@ import express from "express";
 import { validate } from "../middleware/validate.js";
 import {
   registerSchema,
+  ageEligibilitySchema,
   loginSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
@@ -10,6 +11,7 @@ import {
 } from "../middleware/validators/auth.validators.js";
 import {
   register,
+  confirmAgeEligibilityController,
   login,
   forgotPassword,
   resetPasswordController,
@@ -37,6 +39,12 @@ const limitVerificationAttempts = createPasswordResetLimiter({
 
 router.post("/register", validate(registerSchema), register);
 router.post("/login", validate(loginSchema), login);
+router.post(
+  "/age-eligibility",
+  authenticateUnverified,
+  validate(ageEligibilitySchema),
+  confirmAgeEligibilityController,
+);
 
 router.post(
   "/forgot-password",

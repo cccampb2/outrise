@@ -1,3 +1,16 @@
+import { beforeEach } from "node:test";
+import UserBlock from "../src/models/UserBlock.js";
+beforeEach((t) => {
+  t.mock.method(UserBlock, "find", () => ({
+    select() {
+      return this;
+    },
+    session() {
+      return this;
+    },
+    lean: async () => [],
+  }));
+});
 import test from "node:test";
 import assert from "node:assert/strict";
 import mongoose from "mongoose";
@@ -150,9 +163,10 @@ test("new messages save one recipient-only notification in the same transaction,
   t.mock.method(Conversation, "findOne", () =>
     query({ userLow: userId, userHigh: other }),
   );
-  t.mock.method(Conversation, "updateOne", async () => {});
+  t.mock.method(Conversation, "updateOne", async () => ({ matchedCount: 1 }));
   t.mock.method(Friendship, "findOne", () => query({ status: "accepted" }));
   t.mock.method(User, "findById", () => query({ username: "Caleb" }));
+  t.mock.method(User, "updateOne", async () => ({ matchedCount: 1 }));
   let saved,
     eventCount = 0;
   t.mock.method(Message, "findOne", () => query(saved ?? null));

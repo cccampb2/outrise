@@ -1,3 +1,4 @@
+import { getBlockRelationship } from "../services/block.service.js";
 import {
   getOrCreateConversation,
   sendMessage,
@@ -36,7 +37,13 @@ export const sendMessageController = async (req, res, next) => {
 
     const io = req.app.get("io");
 
-    if (conversation && io) {
+    const blocking = conversation
+      ? await getBlockRelationship({
+          userId: conversation.userLow,
+          otherUserId: conversation.userHigh,
+        })
+      : null;
+    if (conversation && io && !blocking.blocked) {
       io.to(`user:${conversation.userLow}`)
         .to(`user:${conversation.userHigh}`)
         .emit("message:new", message.toObject());

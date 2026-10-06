@@ -24,6 +24,15 @@ export function onSessionExpired(listener: () => void) {
   };
 }
 
+const ageEligibilityListeners = new Set<() => void>();
+
+export function onAgeEligibilityRequired(listener: () => void) {
+  ageEligibilityListeners.add(listener);
+  return () => {
+    ageEligibilityListeners.delete(listener);
+  };
+}
+
 const emailVerificationListeners = new Set<() => void>();
 
 export function onEmailVerificationRequired(listener: () => void) {
@@ -90,7 +99,8 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
   const token = await getToken();
   const authenticatedEndpoint =
     !endpoint.startsWith("/auth/") ||
-    endpoint.startsWith("/auth/email-verification/");
+    endpoint.startsWith("/auth/email-verification/") ||
+    endpoint === "/auth/age-eligibility";
 
   const isFormData = options.body instanceof FormData;
 
@@ -126,7 +136,7 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
     }
 
     if (
-      data.code === "SESSION_EXPIRED" &&
+      ["SESSION_EXPIRED", "ACCOUNT_DELETION_PENDING"].includes(data.code) &&
       token &&
       authenticatedEndpoint &&
       token === (await getToken())
@@ -140,6 +150,15 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
       token === (await getToken())
     ) {
       emailVerificationListeners.forEach((listener) => listener());
+    }
+
+    if (
+      data.code === "AGE_ELIGIBILITY_REQUIRED" &&
+      token &&
+      authenticatedEndpoint &&
+      token === (await getToken())
+    ) {
+      ageEligibilityListeners.forEach((listener) => listener());
     }
 
     const retryAfter = Number(

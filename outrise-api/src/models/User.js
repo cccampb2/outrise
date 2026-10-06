@@ -46,6 +46,9 @@ const userSchema = new Schema(
     },
     // Existing documents without this flag also require email verification.
     emailVerified: { type: Boolean, default: false },
+    accountMutationRevision: { type: Number, default: 0, select: false },
+    deletionRequestedAt: { type: Date, default: null },
+    ageEligibilityConfirmedAt: { type: Date, default: null },
     emailVerification: { type: emailVerificationSchema, select: false },
     emailVerificationRequestedAt: { type: Date, select: false },
     // Hidden recovery state; never included in normal profile/account queries.

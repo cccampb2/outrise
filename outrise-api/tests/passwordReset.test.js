@@ -391,6 +391,7 @@ test("JWT versions reject old tokens after reset, accept new/legacy tokens appro
     role: "user",
     emailVerified: true,
     accountStatus: "active",
+    ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
     tokenVersion: 1,
   };
   t.mock.method(User, "findById", () =>
@@ -424,6 +425,7 @@ test("JWT versions reject old tokens after reset, accept new/legacy tokens appro
     role: "user",
     emailVerified: true,
     accountStatus: "active",
+    ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
   };
   await authenticate(request(undefined), {}, (result) => {
     error = result;
@@ -457,6 +459,7 @@ test("login carries the current token version, including after an expired suspen
     ...user,
     tokenVersion: undefined,
     accountStatus: "active",
+    ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
   }));
   assert.equal((await loginUser({ email, password })).tokenVersion, 3);
   const res = response();
@@ -563,6 +566,7 @@ test("full reset works through Mongoose queries and real bcrypt, and only the ne
     faction: null,
     emailVerified: true,
     accountStatus: "active",
+    ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
     password: await bcrypt.hash("old password 123", 12),
   };
   t.mock.method(User.collection, "findOne", async () =>

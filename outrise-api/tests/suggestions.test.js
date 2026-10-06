@@ -104,9 +104,10 @@ test("inbox filters status and paginates; updates use revision checks without ov
   t.mock.method(Suggestion, "findOneAndUpdate", (filter, update, options) => {
     assert.equal(filter.revision, 3);
     assert.deepEqual(update, {
-      $set: { status: "closed" },
+      $set: { status: "closed", closedAt: update.$set.closedAt },
       $inc: { revision: 1 },
     });
+    assert.ok(update.$set.closedAt instanceof Date);
     assert.equal(options.returnDocument, "after");
     return query({ status: "closed", revision: 4 });
   });

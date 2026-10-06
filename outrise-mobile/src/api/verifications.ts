@@ -43,7 +43,9 @@ export type Verification = {
 
   performance: VerificationPerformance;
 
-  proof: VerificationProof;
+  proof: VerificationProof | null;
+
+  proofDeletedAt: string | null;
 
   status: VerificationStatus;
 

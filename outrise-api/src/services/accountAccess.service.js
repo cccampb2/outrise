@@ -22,6 +22,13 @@ export const ensureAccountAccess = async (user) => {
   if (!user) {
     throw new UnauthorizedError("Account not found");
   }
+  if (user.deletionRequestedAt) {
+    const error = new UnauthorizedError(
+      "Account deletion is in progress. This account cannot be used.",
+    );
+    error.code = "ACCOUNT_DELETION_PENDING";
+    throw error;
+  }
   const now = new Date();
   if (
     user.accountStatus === "suspended" &&

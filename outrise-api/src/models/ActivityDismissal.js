@@ -7,6 +7,7 @@ const activityDismissalSchema = new Schema({
   dismissedAt: { type: Date, required: true, default: Date.now },
 });
 activityDismissalSchema.index({ user: 1, event: 1 }, { unique: true });
+activityDismissalSchema.index({ event: 1 });
 const ActivityDismissal = model("ActivityDismissal", activityDismissalSchema);
 
 export default ActivityDismissal;

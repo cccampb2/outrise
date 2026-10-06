@@ -1,3 +1,11 @@
+import { startSupportRetentionJob } from "./jobs/supportRetention.job.js";
+import Suggestion from "./models/Suggestion.js";
+import { startActivityRetentionJob } from "./jobs/activityRetention.job.js";
+import ActivityEvent from "./models/ActivityEvent.js";
+import NotificationState from "./models/NotificationState.js";
+import ActivityDismissal from "./models/ActivityDismissal.js";
+import { startVerificationRetentionJob } from "./jobs/verificationRetention.job.js";
+import UserBlock from "./models/UserBlock.js";
 import "dotenv/config";
 import app from "./app.js";
 import { connectDB } from "./config/db.js";
@@ -19,6 +27,8 @@ import Verification from "./models/Verification.js";
 import Conversation from "./models/Conversation.js";
 import Message from "./models/Message.js";
 import SystemMessage from "./models/SystemMessage.js";
+import AccountDeletion from "./models/AccountDeletion.js";
+import { startAccountDeletionJob } from "./jobs/accountDeletion.job.js";
 import { createServer } from "node:http";
 import { Server } from "socket.io";
 import { socketAuth } from "./middleware/socketAuth.js";
@@ -80,10 +90,16 @@ const startServer = async () => {
     await Conversation.init();
     await Message.init();
     await SystemMessage.init();
+    await AccountDeletion.init();
+    await UserBlock.init();
     await AccountModeration.init();
     await IssueReport.init();
+    await Suggestion.init();
     await UserRoleChange.init();
     await Verification.init();
+    await ActivityEvent.init();
+    await NotificationState.init();
+    await ActivityDismissal.init();
     await restoreExpiredSuspensions();
     await Season.init();
     await WorkoutOfTheWeekOccurrence.init();
@@ -102,6 +118,10 @@ const startServer = async () => {
     }
     startSeasonJob();
     startAccountSuspensionJob();
+    startAccountDeletionJob(io);
+    startVerificationRetentionJob();
+    startActivityRetentionJob();
+    startSupportRetentionJob();
     startWorkoutOfTheWeekJob();
     httpServer.listen(PORT, () => {
       logger.info(`Outrise API is running on port ${PORT}`);

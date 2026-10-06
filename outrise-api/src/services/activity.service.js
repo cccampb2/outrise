@@ -1,3 +1,4 @@
+import { getBlockedUserIds } from "./block.service.js";
 import {
   ACCESSIBLE_ACCOUNT_STATUSES,
   canAccessAccount,
@@ -38,7 +39,9 @@ async function getActivityVisibility(userId) {
   if (canAccessAccount(user?.accountStatus) && user.faction) {
     audiences.push({ audience: "faction", faction: user.faction });
   }
+  const excluded = await getBlockedUserIds(userId);
   return {
+    actor: { $nin: excluded },
     type: { $nin: ["message_received", "system_announcement"] },
     $or: audiences,
   };

@@ -1,3 +1,16 @@
+import { beforeEach } from "node:test";
+import UserBlock from "../src/models/UserBlock.js";
+beforeEach((t) => {
+  t.mock.method(UserBlock, "find", () => ({
+    select() {
+      return this;
+    },
+    session() {
+      return this;
+    },
+    lean: async () => [],
+  }));
+});
 import test from "node:test";
 import assert from "node:assert/strict";
 import mongoose from "mongoose";

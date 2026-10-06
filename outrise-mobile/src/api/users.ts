@@ -25,6 +25,7 @@ export type CurrentUser = {
   username: string;
   email: string;
   emailVerified: boolean;
+  ageEligibilityConfirmedAt: string | null;
   role: UserRole;
   accountStatus: AccountStatus;
   faction: string | null;

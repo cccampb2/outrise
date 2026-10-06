@@ -6,7 +6,14 @@ const systemMessageSchema = new Schema(
   {
     title: { type: String, required: true, trim: true, maxLength: 120 },
     text: { type: String, required: true, trim: true, maxLength: 4000 },
-    createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    creatorRemovedAt: { type: Date, default: null },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: function () {
+        return !this.creatorRemovedAt;
+      },
+    },
     idempotencyKey: { type: String, required: true, maxLength: 100 },
   },
   { timestamps: true },

@@ -83,6 +83,7 @@ test("promotion and demotion save a role history entry in the same transaction",
     role: "user",
     emailVerified: true,
     accountStatus: "active",
+    ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
     lifetimeXP: 300,
     save: async (options) => {
       assert.equal(options.session, session);
@@ -140,6 +141,7 @@ test("the service protects owners, checks the acting owner and rejects stale or 
     role: "user",
     emailVerified: true,
     accountStatus: "active",
+    ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
   };
   t.mock.method(User, "findById", (value) =>
     query(value.toString() === ownerId.toString() ? { role: actorRole } : user),
@@ -259,6 +261,7 @@ test("a demoted admin loses permission on their next request despite an old admi
       role: "user",
       emailVerified: true,
       accountStatus: "active",
+      ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
     }),
   );
   const token = jwt.sign(

@@ -1,3 +1,16 @@
+import { beforeEach } from "node:test";
+import UserBlock from "../src/models/UserBlock.js";
+beforeEach((t) => {
+  t.mock.method(UserBlock, "find", () => ({
+    select() {
+      return this;
+    },
+    session() {
+      return this;
+    },
+    lean: async () => [],
+  }));
+});
 import test from "node:test";
 import assert from "node:assert/strict";
 import mongoose from "mongoose";
@@ -83,6 +96,7 @@ test("a database promotion to owner is recognized even with an older token", asy
     role: "owner",
     emailVerified: true,
     accountStatus: "active",
+    ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
   };
   t.mock.method(User, "findById", () => query(user));
   const token = jwt.sign(
@@ -109,6 +123,7 @@ test("another administrator cannot flag, suspend or ban an owner", async (t) => 
     role: "owner",
     emailVerified: true,
     accountStatus: "active",
+    ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
   };
   t.mock.method(User, "findById", () => query(owner));
   for (const status of ["flagged", "suspended", "banned"]) {

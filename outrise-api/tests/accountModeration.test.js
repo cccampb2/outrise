@@ -1,3 +1,16 @@
+import { beforeEach } from "node:test";
+import UserBlock from "../src/models/UserBlock.js";
+beforeEach((t) => {
+  t.mock.method(UserBlock, "find", () => ({
+    select() {
+      return this;
+    },
+    session() {
+      return this;
+    },
+    lean: async () => [],
+  }));
+});
 import test from "node:test";
 import assert from "node:assert/strict";
 import mongoose from "mongoose";
@@ -108,6 +121,7 @@ test("existing sessions use the database status and role, and cannot bypass a ne
     _id: userId,
     role: "user",
     emailVerified: true,
+    ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
     accountStatus: "flagged",
   };
   t.mock.method(User, "findById", () => query(user));
@@ -153,6 +167,7 @@ test("expired suspensions restore access at the boundary without overwriting a c
   const restored = {
     _id: userId,
     accountStatus: "active",
+    ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
     suspendedUntil: null,
   };
   let updateResult = restored;

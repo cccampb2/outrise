@@ -6,7 +6,10 @@ import ConflictError from "../errors/ConflictError.js";
 import UnauthorizedError from "../errors/UnauthorizedError.js";
 import { ensureAccountAccess } from "./accountAccess.service.js";
 
-export const registerUser = async ({ username, email, password }) => {
+import { validateAgeEligibility } from "./ageEligibility.service.js";
+
+export const registerUser = async ({ username, email, password, age }) => {
+  validateAgeEligibility(age);
   const existingEmail = await User.findOne({ email });
 
   if (existingEmail) {
@@ -25,6 +28,7 @@ export const registerUser = async ({ username, email, password }) => {
     username,
     email,
     password: hashedPassword,
+    ageEligibilityConfirmedAt: new Date(),
   });
   try {
     await requestEmailVerification({ userId: user._id });

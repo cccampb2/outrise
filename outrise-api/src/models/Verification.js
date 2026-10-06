@@ -74,8 +74,13 @@ const verificationSchema = new Schema(
     },
     proof: {
       type: proofSchema,
-      required: true,
+      default: null,
+      required() {
+        // Query.get also reads the fields being set during a cleanup update.
+        return this.get("status") === "pending" || !this.get("proofDeletedAt");
+      },
     },
+    proofDeletedAt: { type: Date, default: null },
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],
@@ -101,6 +106,13 @@ const verificationSchema = new Schema(
     timestamps: true,
   },
 );
+
+verificationSchema.index({
+  status: 1,
+  proofDeletedAt: 1,
+  reviewedAt: 1,
+  _id: 1,
+});
 
 verificationSchema.index(
   { user: 1, idempotencyKey: 1 },

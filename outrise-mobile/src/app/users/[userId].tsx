@@ -1,3 +1,4 @@
+import { BlockUserControls } from "@/components/block-user-controls";
 import { BrandHeader } from "@/components/brand-header";
 import { UserRoleBadge } from "@/components/user-role-badge";
 import { AppText as Text } from "@/components/app-text";
@@ -349,6 +350,7 @@ export default function PublicUserProfileScreen() {
         {/* COMPETITIVE RECORD */}
 
         <FriendshipControls user={user} />
+        <BlockUserControls userId={user.id} username={user.username} />
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionCode}>01</Text>

@@ -1,3 +1,9 @@
+import {
+  ensureNotBlocked,
+  getBlockedUserIds,
+  getBlockRelationship,
+  lockContactUsers,
+} from "./block.service.js";
 import { ACCESSIBLE_ACCOUNT_STATUSES } from "../constants/accountStatus.js";
 import mongoose from "mongoose";
 import { createActivityEvent } from "./activity.service.js";
@@ -22,6 +28,7 @@ async function getRelationshipList({ userId, page = 1, limit = 25, kind }) {
         status: "pending",
         [incoming ? "recipient" : "requester"]: currentUserId,
       };
+  const excluded = await getBlockedUserIds(userId);
   const otherUser = isFriends
     ? {
         $cond: [
@@ -37,6 +44,7 @@ async function getRelationshipList({ userId, page = 1, limit = 25, kind }) {
   const [result] = await Friendship.aggregate([
     { $match: match },
     { $set: { otherUserId: otherUser } },
+    { $match: { otherUserId: { $nin: excluded } } },
     {
       $lookup: {
         from: User.collection.name,
@@ -139,6 +147,8 @@ export const getFriendshipRelationship = async ({ userId, otherUserId }) => {
     return { status: "none", requestId: null };
   }
 
+  if ((await getBlockRelationship({ userId, otherUserId })).blocked)
+    return { status: "blocked", requestId: null };
   const pair = getFriendshipPair(userId, otherUserId);
   const friendship = await Friendship.findOne(pair)
     .select("requester status")
@@ -210,6 +220,7 @@ export const acceptFriendRequest = async ({ userId, requestId }) => {
     throw new NotFoundError("Pending friend request not found");
   }
 
+  await ensureNotBlocked({ userId, otherUserId: request.requester });
   const recipient = await User.findOne({
     _id: userId,
     accountStatus: { $in: ACCESSIBLE_ACCOUNT_STATUSES },
@@ -231,6 +242,16 @@ export const acceptFriendRequest = async ({ userId, requestId }) => {
   const mongoSession = await mongoose.startSession();
   try {
     return await mongoSession.withTransaction(async () => {
+      await lockContactUsers({
+        userId,
+        otherUserId: request.requester,
+        session: mongoSession,
+      });
+      await ensureNotBlocked({
+        userId,
+        otherUserId: request.requester,
+        session: mongoSession,
+      });
       // Recheck ownership and pending status when performing the update.
       const friendship = await Friendship.findOneAndUpdate(
         { _id: requestId, recipient: userId, status: "pending" },
@@ -269,6 +290,7 @@ export const sendFriendRequest = async ({ requesterId, recipientId }) => {
     throw new ConflictError("You cannot send a friend request to yourself");
   }
 
+  await ensureNotBlocked({ userId: requesterId, otherUserId: recipientId });
   const requester = await User.findOne({
     _id: requesterId,
     accountStatus: { $in: ACCESSIBLE_ACCOUNT_STATUSES },
@@ -315,6 +337,16 @@ export const sendFriendRequest = async ({ requesterId, recipientId }) => {
     const mongoSession = await mongoose.startSession();
     try {
       return await mongoSession.withTransaction(async () => {
+        await lockContactUsers({
+          userId: requesterId,
+          otherUserId: recipientId,
+          session: mongoSession,
+        });
+        await ensureNotBlocked({
+          userId: requesterId,
+          otherUserId: recipientId,
+          session: mongoSession,
+        });
         const [friendship] = await Friendship.create(
           [
             {
