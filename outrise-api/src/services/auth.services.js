@@ -1,4 +1,6 @@
 import bcrypt from "bcrypt";
+import { validateLegalAcceptance } from "./legal.service.js";
+import { TERMS_VERSION, PRIVACY_VERSION } from "../config/legal.js";
 import logger from "../utils/logger.js";
 import { requestEmailVerification } from "./emailVerification.service.js";
 import User from "../models/User.js";
@@ -8,8 +10,17 @@ import { ensureAccountAccess } from "./accountAccess.service.js";
 
 import { validateAgeEligibility } from "./ageEligibility.service.js";
 
-export const registerUser = async ({ username, email, password, age }) => {
+export const registerUser = async ({
+  username,
+  email,
+  password,
+  age,
+  accepted,
+  termsVersion,
+  privacyVersion,
+}) => {
   validateAgeEligibility(age);
+  validateLegalAcceptance({ accepted, termsVersion, privacyVersion });
   const existingEmail = await User.findOne({ email });
 
   if (existingEmail) {
@@ -29,6 +40,11 @@ export const registerUser = async ({ username, email, password, age }) => {
     email,
     password: hashedPassword,
     ageEligibilityConfirmedAt: new Date(),
+    legalAcceptance: {
+      acceptedAt: new Date(),
+      termsVersion: TERMS_VERSION,
+      privacyVersion: PRIVACY_VERSION,
+    },
   });
   try {
     await requestEmailVerification({ userId: user._id });

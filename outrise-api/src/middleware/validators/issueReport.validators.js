@@ -17,6 +17,12 @@ export const createIssueReportSchema = {
     reportedUserId: Joi.string().hex().length(24).optional(),
   }),
 };
+export const reportMessageSchema = {
+  params: Joi.object({ messageId: Joi.string().hex().length(24).required() }),
+  body: Joi.object({
+    reason: Joi.string().trim().min(10).max(3000).required(),
+  }),
+};
 export const issueReportListSchema = {
   query: Joi.object({
     page: Joi.number().integer().min(1).default(1),

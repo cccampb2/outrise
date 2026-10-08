@@ -11,14 +11,18 @@ import {
 import { Screen } from "@/components/screen";
 import { Colors, Fonts } from "@/constants/theme";
 import { ApiError } from "@/api/client";
-import { submitIssueReport } from "@/api/issue-reports";
+import { submitIssueReport, submitMessageReport } from "@/api/issue-reports";
 
 export default function ReportIssueScreen() {
   const params = useLocalSearchParams<{
+    messageId?: string;
+    messageText?: string;
     email?: string | string[];
     reportedUserId?: string | string[];
     reportedUsername?: string | string[];
   }>();
+  const messageId =
+    typeof params.messageId === "string" ? params.messageId : undefined;
   const currentUser = useSelector((state: RootState) => state.auth.user);
   const signedIn = Boolean(currentUser);
   const reportedUserId = Array.isArray(params.reportedUserId)
@@ -51,11 +55,11 @@ export default function ReportIssueScreen() {
   async function submit() {
     if (pending) return;
     setError("");
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    if (!messageId && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       setError("Enter a valid email address.");
       return;
     }
-    if (subject.trim().length < 3) {
+    if (!messageId && subject.trim().length < 3) {
       setError("Enter a subject of at least 3 characters.");
       return;
     }
@@ -65,12 +69,15 @@ export default function ReportIssueScreen() {
     }
     setPending(true);
     try {
-      await submitIssueReport({
-        email: email.trim().toLowerCase(),
-        subject: subject.trim(),
-        message: message.trim(),
-        ...(reportedUserId ? { reportedUserId } : {}),
-      });
+      if (messageId) {
+        await submitMessageReport(messageId, message.trim());
+      } else
+        await submitIssueReport({
+          email: email.trim().toLowerCase(),
+          subject: subject.trim(),
+          message: message.trim(),
+          ...(reportedUserId ? { reportedUserId } : {}),
+        });
       setSubmitted(true);
     } catch (error) {
       setError(
@@ -98,9 +105,11 @@ export default function ReportIssueScreen() {
         <Text style={styles.title}>
           {submitted
             ? "Report received"
-            : reportedUserId
-              ? "Report user"
-              : "Report an issue"}
+            : messageId
+              ? "Report message"
+              : reportedUserId
+                ? "Report user"
+                : "Report an issue"}
         </Text>
         {submitted ? (
           <>
@@ -132,11 +141,13 @@ export default function ReportIssueScreen() {
         ) : (
           <>
             <Text style={styles.text}>
-              {reportedUserId
-                ? "Tell the admin team what concerns you about this user. Their account is attached to your report."
-                : signedIn
-                  ? "Something not working, or have a concern? Describe what happened so the admin team can help."
-                  : "Having trouble signing in, or think your account was restricted by mistake? Tell the admin team what happened."}
+              {messageId
+                ? "Tell the admin team why this message concerns you. Only this message will be attached for review."
+                : reportedUserId
+                  ? "Tell the admin team what concerns you about this user. Their account is attached to your report."
+                  : signedIn
+                    ? "Something not working, or have a concern? Describe what happened so the admin team can help."
+                    : "Having trouble signing in, or think your account was restricted by mistake? Tell the admin team what happened."}
             </Text>
             {reportedUserId && (
               <View style={styles.reportedUser}>
@@ -144,35 +155,45 @@ export default function ReportIssueScreen() {
                 <Text style={styles.text}>{reportedUsername || "User"}</Text>
               </View>
             )}
-            <View style={styles.field}>
-              <Text style={styles.label}>EMAIL ADDRESS</Text>
-              <TextInput
-                accessibilityLabel="Email address"
-                editable={!pending}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                maxLength={254}
-                placeholder="Email used for your OUTRISE account"
-                placeholderTextColor={Colors.dark.textMuted}
-                style={styles.input}
-              />
-            </View>
-            <View style={styles.field}>
-              <Text style={styles.label}>SUBJECT</Text>
-              <TextInput
-                accessibilityLabel="Subject"
-                editable={!pending}
-                value={subject}
-                onChangeText={setSubject}
-                maxLength={120}
-                placeholder="Briefly describe the issue"
-                placeholderTextColor={Colors.dark.textMuted}
-                style={styles.input}
-              />
-            </View>
+            {messageId && typeof params.messageText === "string" && (
+              <View style={styles.reportedUser}>
+                <Text style={styles.label}>REPORTED MESSAGE</Text>
+                <Text style={styles.text}>{params.messageText}</Text>
+              </View>
+            )}
+            {!messageId && (
+              <View style={styles.field}>
+                <Text style={styles.label}>EMAIL ADDRESS</Text>
+                <TextInput
+                  accessibilityLabel="Email address"
+                  editable={!pending}
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  maxLength={254}
+                  placeholder="Email used for your OUTRISE account"
+                  placeholderTextColor={Colors.dark.textMuted}
+                  style={styles.input}
+                />
+              </View>
+            )}
+            {!messageId && (
+              <View style={styles.field}>
+                <Text style={styles.label}>SUBJECT</Text>
+                <TextInput
+                  accessibilityLabel="Subject"
+                  editable={!pending}
+                  value={subject}
+                  onChangeText={setSubject}
+                  maxLength={120}
+                  placeholder="Briefly describe the issue"
+                  placeholderTextColor={Colors.dark.textMuted}
+                  style={styles.input}
+                />
+              </View>
+            )}
             <View style={styles.field}>
               <Text style={styles.label}>WHAT HAPPENED?</Text>
               <TextInput

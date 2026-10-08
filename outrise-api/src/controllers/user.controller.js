@@ -1,3 +1,4 @@
+import { hasCurrentLegalAcceptance } from "../services/legal.service.js";
 import { getBlockedUserIds } from "../services/block.service.js";
 import { ACCESSIBLE_ACCOUNT_STATUSES } from "../constants/accountStatus.js";
 import mongoose from "mongoose";
@@ -32,6 +33,9 @@ export const getCurrentUser = async (req, res, next) => {
       email: user.email,
       emailVerified: user.emailVerified === true,
       ageEligibilityConfirmedAt: user.ageEligibilityConfirmedAt ?? null,
+      ageEligibilityRejectedAt: user.ageEligibilityRejectedAt ?? null,
+      legalAcceptance: user.legalAcceptance ?? null,
+      legalAcceptanceRequired: !hasCurrentLegalAcceptance(user),
       role: user.role,
       accountStatus: user.accountStatus,
       faction: user.faction,
@@ -238,6 +242,9 @@ export const updateCurrentUser = async (req, res, next) => {
       email: user.email,
       emailVerified: user.emailVerified === true,
       ageEligibilityConfirmedAt: user.ageEligibilityConfirmedAt ?? null,
+      ageEligibilityRejectedAt: user.ageEligibilityRejectedAt ?? null,
+      legalAcceptance: user.legalAcceptance ?? null,
+      legalAcceptanceRequired: !hasCurrentLegalAcceptance(user),
       role: user.role,
       accountStatus: user.accountStatus,
       faction: user.faction,
@@ -320,6 +327,9 @@ export const updateProfileImage = async (req, res, next) => {
       email: user.email,
       emailVerified: user.emailVerified === true,
       ageEligibilityConfirmedAt: user.ageEligibilityConfirmedAt ?? null,
+      ageEligibilityRejectedAt: user.ageEligibilityRejectedAt ?? null,
+      legalAcceptance: user.legalAcceptance ?? null,
+      legalAcceptanceRequired: !hasCurrentLegalAcceptance(user),
       role: user.role,
       accountStatus: user.accountStatus,
       faction: user.faction,
@@ -397,6 +407,9 @@ export const removeProfileImage = async (req, res, next) => {
       email: user.email,
       emailVerified: user.emailVerified === true,
       ageEligibilityConfirmedAt: user.ageEligibilityConfirmedAt ?? null,
+      ageEligibilityRejectedAt: user.ageEligibilityRejectedAt ?? null,
+      legalAcceptance: user.legalAcceptance ?? null,
+      legalAcceptanceRequired: !hasCurrentLegalAcceptance(user),
       role: user.role,
       accountStatus: user.accountStatus,
       faction: user.faction,

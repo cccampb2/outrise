@@ -24,6 +24,14 @@ export function onSessionExpired(listener: () => void) {
   };
 }
 
+const legalAcceptanceListeners = new Set<() => void>();
+export function onLegalAcceptanceRequired(listener: () => void) {
+  legalAcceptanceListeners.add(listener);
+  return () => {
+    legalAcceptanceListeners.delete(listener);
+  };
+}
+
 const ageEligibilityListeners = new Set<() => void>();
 
 export function onAgeEligibilityRequired(listener: () => void) {
@@ -100,7 +108,8 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
   const authenticatedEndpoint =
     !endpoint.startsWith("/auth/") ||
     endpoint.startsWith("/auth/email-verification/") ||
-    endpoint === "/auth/age-eligibility";
+    endpoint === "/auth/age-eligibility" ||
+    endpoint === "/auth/legal/accept";
 
   const isFormData = options.body instanceof FormData;
 
@@ -160,6 +169,14 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
     ) {
       ageEligibilityListeners.forEach((listener) => listener());
     }
+
+    if (
+      data.code === "LEGAL_ACCEPTANCE_REQUIRED" &&
+      token &&
+      authenticatedEndpoint &&
+      token === (await getToken())
+    )
+      legalAcceptanceListeners.forEach((listener) => listener());
 
     const retryAfter = Number(
       data.retryAfterSeconds ?? response.headers.get("Retry-After"),

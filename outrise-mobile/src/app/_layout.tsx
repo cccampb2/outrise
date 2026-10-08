@@ -18,6 +18,10 @@ function AuthenticatedStack() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
+      <Stack.Screen name="legal" />
+      <Stack.Protected guard={!!user}>
+        <Stack.Screen name="accept-terms" />
+      </Stack.Protected>
       <Stack.Screen name="(auth)" />
       <Stack.Protected guard={!!user}>
         <Stack.Screen name="delete-account" />
@@ -26,7 +30,11 @@ function AuthenticatedStack() {
         <Stack.Screen name="age-eligibility" />
       </Stack.Protected>
       <Stack.Protected
-        guard={user?.emailVerified === true && !!user.ageEligibilityConfirmedAt}
+        guard={
+          user?.emailVerified === true &&
+          !!user.ageEligibilityConfirmedAt &&
+          user.legalAcceptanceRequired === false
+        }
       >
         <Stack.Screen name="(onboarding)" />
         <Stack.Screen name="(tabs)" />

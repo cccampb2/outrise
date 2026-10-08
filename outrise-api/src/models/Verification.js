@@ -1,3 +1,4 @@
+import { pendingVerificationDeadline } from "../config/verification.js";
 import mongoose from "mongoose";
 
 const { Schema, model } = mongoose;
@@ -81,9 +82,10 @@ const verificationSchema = new Schema(
       },
     },
     proofDeletedAt: { type: Date, default: null },
+    expiredAt: { type: Date, default: null },
     status: {
       type: String,
-      enum: ["pending", "approved", "rejected"],
+      enum: ["pending", "approved", "rejected", "expired"],
       default: "pending",
       required: true,
     },
@@ -104,8 +106,16 @@ const verificationSchema = new Schema(
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   },
 );
+
+verificationSchema.virtual("pendingExpiresAt").get(function () {
+  return pendingVerificationDeadline(this.createdAt);
+});
+
+verificationSchema.index({ status: 1, createdAt: 1 });
 
 verificationSchema.index({
   status: 1,

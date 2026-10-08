@@ -1,3 +1,9 @@
+import { TERMS_VERSION, PRIVACY_VERSION } from "../src/config/legal.js";
+const legalAcceptance = {
+  acceptedAt: new Date("2026-10-07T12:00:00Z"),
+  termsVersion: TERMS_VERSION,
+  privacyVersion: PRIVACY_VERSION,
+};
 import test from "node:test";
 import assert from "node:assert/strict";
 import mongoose from "mongoose";
@@ -69,6 +75,7 @@ function setup(t, { expiresIn, tokenVersion = 0, deliveryFails = false } = {}) {
     role: "user",
     accountStatus: "active",
     ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
+    legalAcceptance,
     emailVerified: false,
     faction: null,
     tokenVersion,
@@ -88,11 +95,13 @@ function setup(t, { expiresIn, tokenVersion = 0, deliveryFails = false } = {}) {
     assert.ok(input.ageEligibilityConfirmedAt instanceof Date);
     assert.equal(input.age, undefined);
     user.ageEligibilityConfirmedAt = input.ageEligibilityConfirmedAt;
+    user.legalAcceptance = input.legalAcceptance;
     assert.deepEqual(input, {
       username: user.username,
       email: user.email,
       password: passwordHash,
       ageEligibilityConfirmedAt: user.ageEligibilityConfirmedAt,
+      legalAcceptance: user.legalAcceptance,
     });
     created = true;
     return user;
@@ -156,6 +165,9 @@ async function signup(fixture) {
         email: fixture.user.email,
         password,
         age: 18,
+        accepted: true,
+        termsVersion: TERMS_VERSION,
+        privacyVersion: PRIVACY_VERSION,
       },
     },
     res,
@@ -200,6 +212,9 @@ function assertSession(payload, fixture, expirySeconds) {
     email: fixture.user.email,
     emailVerified: fixture.user.emailVerified,
     ageEligibilityConfirmedAt: fixture.user.ageEligibilityConfirmedAt,
+    ageEligibilityRejectedAt: null,
+    legalAcceptance: fixture.user.legalAcceptance,
+    legalAcceptanceRequired: false,
     role: fixture.user.role,
     faction: fixture.user.faction,
   });

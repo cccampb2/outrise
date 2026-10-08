@@ -1,13 +1,11 @@
+import { MondayDatePicker } from "@/components/monday-date-picker";
 import { useState } from "react";
 import { View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getWotwTemplate, scheduleWotw } from "@/api/admin-workout-of-the-week";
 import { AppText as Text } from "@/components/app-text";
-import {
-  AdminField,
-  adminAchievementStyles as styles,
-} from "@/components/admin-achievement-ui";
+import { adminAchievementStyles as styles } from "@/components/admin-achievement-ui";
 import {
   AdminPage,
   AdminButton,
@@ -61,7 +59,7 @@ export default function ScheduleWotw() {
       return setError(
         "Edit this template to replace unavailable exercises before scheduling.",
       );
-    if (!window) return setError("Enter a valid Monday in YYYY-MM-DD format.");
+    if (!window) return setError("Choose a Monday from the calendar.");
     mutation.mutate(window.start);
   }
   return (
@@ -113,8 +111,7 @@ export default function ScheduleWotw() {
                     Choose a Monday. The challenge runs until the following
                     Monday at midnight, New York time.
                   </Text>
-                  <AdminField
-                    label="START DATE · YYYY-MM-DD"
+                  <MondayDatePicker
                     value={date}
                     disabled={mutation.isPending}
                     onChange={(value) => {

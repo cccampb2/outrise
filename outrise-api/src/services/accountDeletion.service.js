@@ -231,7 +231,7 @@ async function removeAccountRecords(job, session, setStep) {
   setStep("Workout.deleteMany");
   await Workout.deleteMany({ owner: userId }, { session });
   // Support records contain copied addresses and free text, not only User references.
-  const reportFilter = [{ reportedUser: userId }];
+  const reportFilter = [{ reportedUser: userId }, { reporter: userId }];
   if (user?.email)
     reportFilter.push({ email: user.email }, { "replies.to": user.email });
   setStep("IssueReport.deleteMany");

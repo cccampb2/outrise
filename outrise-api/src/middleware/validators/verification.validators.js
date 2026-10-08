@@ -44,7 +44,9 @@ export const verificationIdSchema = {
 
 export const getVerificationsSchema = {
   query: Joi.object({
-    status: Joi.string().valid("pending", "approved", "rejected").optional(),
+    status: Joi.string()
+      .valid("pending", "approved", "rejected", "expired")
+      .optional(),
 
     page: Joi.number().integer().min(1).default(1),
 

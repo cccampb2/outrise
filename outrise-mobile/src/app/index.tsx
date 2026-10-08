@@ -14,6 +14,7 @@ type Destination =
   | "/login"
   | "/age-eligibility"
   | "/verify-email"
+  | "/accept-terms"
   | "/(onboarding)/faction"
   | "/(tabs)";
 
@@ -46,6 +47,8 @@ export default function Index() {
           setDestination("/age-eligibility");
         } else if (user.emailVerified !== true) {
           setDestination("/verify-email");
+        } else if (user.legalAcceptanceRequired !== false) {
+          setDestination("/accept-terms");
         } else if (user.faction === null) {
           setDestination("/(onboarding)/faction");
         } else {
@@ -81,9 +84,11 @@ export default function Index() {
             ? "/age-eligibility"
             : currentUser.emailVerified !== true
               ? "/verify-email"
-              : currentUser.faction === null
-                ? "/(onboarding)/faction"
-                : "/(tabs)"
+              : currentUser.legalAcceptanceRequired !== false
+                ? "/accept-terms"
+                : currentUser.faction === null
+                  ? "/(onboarding)/faction"
+                  : "/(tabs)"
         }
       />
     );

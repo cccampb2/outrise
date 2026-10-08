@@ -1,3 +1,4 @@
+import { ExerciseSafety } from "@/components/exercise-safety";
 import { BrandHeader } from "@/components/brand-header";
 import { AppText as Text } from "@/components/app-text";
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
@@ -81,6 +82,7 @@ export default function ExerciseDetailScreen() {
         </View>
       </View>
 
+      <ExerciseSafety />
       {/* DESCRIPTION */}
 
       <View style={styles.section}>

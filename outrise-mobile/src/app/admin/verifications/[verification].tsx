@@ -502,6 +502,13 @@ export default function AdminVerificationScreen() {
           </View>
         </View>
 
+        {verification.status === "expired" ? (
+          <Text style={styles.pendingText}>
+            This submission expired without review after 30 days. It cannot be
+            approved or rejected; the user can submit again.
+          </Text>
+        ) : null}
+
         {/* PROOF */}
 
         <View style={styles.sectionHeader}>
@@ -517,7 +524,10 @@ export default function AdminVerificationScreen() {
         {verification.proof?.url ? (
           <VerificationVideo url={verification.proof.url} />
         ) : (
-          <ExpiredVerificationProof expired={!!verification.proofDeletedAt} />
+          <ExpiredVerificationProof
+            expired={!!verification.proofDeletedAt}
+            pendingExpired={verification.status === "expired"}
+          />
         )}
 
         {/* SUBMISSION DATA */}

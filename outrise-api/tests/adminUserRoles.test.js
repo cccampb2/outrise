@@ -1,3 +1,9 @@
+import { TERMS_VERSION, PRIVACY_VERSION } from "../src/config/legal.js";
+const legalAcceptance = {
+  acceptedAt: new Date("2026-10-07T12:00:00Z"),
+  termsVersion: TERMS_VERSION,
+  privacyVersion: PRIVACY_VERSION,
+};
 import test from "node:test";
 import assert from "node:assert/strict";
 import mongoose from "mongoose";
@@ -84,6 +90,7 @@ test("promotion and demotion save a role history entry in the same transaction",
     emailVerified: true,
     accountStatus: "active",
     ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
+    legalAcceptance,
     lifetimeXP: 300,
     save: async (options) => {
       assert.equal(options.session, session);
@@ -142,6 +149,7 @@ test("the service protects owners, checks the acting owner and rejects stale or 
     emailVerified: true,
     accountStatus: "active",
     ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
+    legalAcceptance,
   };
   t.mock.method(User, "findById", (value) =>
     query(value.toString() === ownerId.toString() ? { role: actorRole } : user),
@@ -262,6 +270,7 @@ test("a demoted admin loses permission on their next request despite an old admi
       emailVerified: true,
       accountStatus: "active",
       ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
+      legalAcceptance,
     }),
   );
   const token = jwt.sign(

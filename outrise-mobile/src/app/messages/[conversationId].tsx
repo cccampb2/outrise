@@ -1,6 +1,12 @@
 import { BlockUserControls } from "@/components/block-user-controls";
 import { useCallback, useRef, useState } from "react";
-import { ActivityIndicator, AppState, FlatList, View } from "react-native";
+import {
+  ActivityIndicator,
+  AppState,
+  FlatList,
+  Pressable,
+  View,
+} from "react-native";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
@@ -201,6 +207,30 @@ export default function ConversationScreen() {
                     minute: "2-digit",
                   })}
                 </Text>
+                {item.sender && item.sender !== userId && !item.removedAt && (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Report message"
+                    hitSlop={8}
+                    style={styles.reportAction}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/report-issue",
+                        params: {
+                          messageId: item._id,
+                          messageText: item.text,
+                          reportedUserId: item.sender,
+                          reportedUsername:
+                            typeof params.username === "string"
+                              ? params.username
+                              : "User",
+                        },
+                      })
+                    }
+                  >
+                    <Text style={styles.reportText}>REPORT →</Text>
+                  </Pressable>
+                )}
               </View>
             )}
             ListEmptyComponent={

@@ -2,7 +2,7 @@
 
 Outrise is a fitness app built around personal progress and friendly faction competition. Members create workouts, track performance, earn achievements, and contribute to their faction while connecting with friends.
 
-Created by Caleb Campbell. The project is currently being prepared for beta testing.
+Developed by Outrise Studio. The project is currently being prepared for beta testing.
 
 ## Features
 
@@ -38,6 +38,7 @@ Created by Caleb Campbell. The project is currently being prepared for beta test
 
 - Sign-up, sign-in, email verification, and password reset.
 - An 18+ eligibility gate based on user declaration, rather than independently verified age.
+- Existing-account age rejections persist until owner review. Before registration, a device stores a 24-hour retry delay; age and birth date are not saved.
 - Profile editing and profile pictures.
 - User, moderator, admin, and owner roles, with role indicators.
 - Active, flagged, suspended, and banned account states.
@@ -158,15 +159,15 @@ Jobs start with the backend. They run inside the API process, so scheduled work 
 
 Daily and hourly schedules explicitly use `America/New_York`. The every-minute jobs run once each minute.
 
-| Job                              | Schedule                     | Purpose                                                                                          |
-| -------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------ |
-| Seasons                          | Startup and hourly           | Reconcile season boundaries and season results.                                                  |
-| WOTW                             | Startup and hourly           | Reconcile weekly workout occurrences.                                                            |
-| Suspensions                      | Startup and every minute     | Restore accounts whose temporary suspension has ended.                                           |
-| Account deletion                 | Startup and every minute     | Process queued deletion requests and retry incomplete cleanup.                                   |
-| Reviewed verification videos     | Startup and daily at 3:00 AM | Remove videos 30 days after approval or rejection, preserving the verification result.           |
-| Activity retention               | Startup and daily at 3:30 AM | Remove activity events older than 90 days and their associated notification and dismissal state. |
-| Support and moderation retention | Startup and daily at 3:45 AM | Clean up eligible support reports, closed suggestions, and resolved moderation history.          |
+| Job                              | Schedule                     | Purpose                                                                                                    |
+| -------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Seasons                          | Startup and hourly           | Reconcile season boundaries and season results.                                                            |
+| WOTW                             | Startup and hourly           | Reconcile weekly workout occurrences.                                                                      |
+| Suspensions                      | Startup and every minute     | Restore accounts whose temporary suspension has ended.                                                     |
+| Account deletion                 | Startup and every minute     | Process queued deletion requests and retry incomplete cleanup.                                             |
+| Reviewed verification videos     | Startup and daily at 3:00 AM | Remove reviewed videos after 30 days; expire unreviewed submissions after 30 days and remove their videos. |
+| Activity retention               | Startup and daily at 3:30 AM | Remove activity events older than 90 days and their associated notification and dismissal state.           |
+| Support and moderation retention | Startup and daily at 3:45 AM | Clean up eligible support reports, closed suggestions, and resolved moderation history.                    |
 
 ### Retention behavior
 
@@ -174,7 +175,7 @@ Daily and hourly schedules explicitly use `America/New_York`. The every-minute j
 - Closed suggestions are eligible for deletion after 12 calendar months. Reopening a suggestion clears its cleanup timer; saving it as closed starts a fresh timer.
 - Moderation history stays while an account is flagged, suspended, or banned. For active accounts, cleanup assigns unresolved records a resolution date when first observed, then removes resolved history after 12 calendar months.
 - Older closed or resolved records without a saved date receive a fresh retention timer rather than being deleted immediately.
-- Pending verification videos remain available for review. Automatic expiry and an advance-warning flow are not implemented.
+- Pending verifications expire 30 days after submission without a review decision. The daily verification job removes their videos and retries failed deletions. Submission records remain; users can submit again. The submission screen shows the rule and pending details show the deadline. No advance reminder notification is sent.
 - Failed media cleanup keeps the saved reference so a later run can try again.
 - Account deletion removes associated personal data and uploads while keeping shared conversations usable for the remaining participant. Cleanup removes the deleted member's identity and message content.
 - Historical season winners remain recorded. Current standings use the remaining contribution records.
@@ -234,6 +235,14 @@ Faction seeding is available through `npm run seed:factions`; inspect the script
 - Configure Render log retention and Atlas backup retention during deployment.
 - Complete the Privacy Policy, Terms, and receiving support inbox before public release.
 
-## Creator
+## Outrise Studio
 
-Outrise is developed by Caleb Campbell.
+Outrise is developed by Outrise Studio. Contact support@outrisefitness.com for questions and support.
+
+## Legal documents and acceptance
+
+Current beta Terms and Privacy Policy are served publicly by `GET /auth/legal` from `outrise-api/src/config/legal.js`. Reviewable copies are in [Terms of Use](docs/TERMS_OF_USE.md) and [Privacy Policy](docs/PRIVACY_POLICY.md). Review these documents before public release and finalize provider logs/backups and production hosting details.
+
+Registration requires an explicit unchecked-by-default acknowledgment. The backend validates document versions and stores `legalAcceptance.acceptedAt`, `termsVersion`, and `privacyVersion` on the User. Existing accounts accept through `/accept-terms`; API and Socket.IO access require current acceptance. Recovery, legal document access, support, and account deletion remain available.
+
+When changing wording, update the corresponding document version and review copy. A version change requires renewed acceptance. The latest acceptance remains on the user record; this is not a separate immutable acceptance-history system. Safety notices appear on exercise details, active workouts, and WOTW. These notices do not guarantee legal immunity.

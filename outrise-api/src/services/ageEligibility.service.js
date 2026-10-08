@@ -14,25 +14,50 @@ export function validateAgeEligibility(age) {
 }
 
 export async function confirmAgeEligibility({ userId, age }) {
-  validateAgeEligibility(age);
+  if (!Number.isInteger(age) || age < 0 || age > 120)
+    throw new BadRequestError("Enter a valid whole-number age.");
   const account = await User.findById(userId);
   const user = await ensureAccountAccess(account);
-  if (user.ageEligibilityConfirmedAt) {
-    return { ageEligibilityConfirmedAt: user.ageEligibilityConfirmedAt };
-  }
-  // Conditional write preserves the original confirmation date on retries.
+  const result = (record) =>
+    record.ageEligibilityRejectedAt
+      ? {
+          ageEligibilityConfirmedAt: null,
+          ageEligibilityRejectedAt: record.ageEligibilityRejectedAt,
+        }
+      : { ageEligibilityConfirmedAt: record.ageEligibilityConfirmedAt };
+  if (user.ageEligibilityRejectedAt) return result(user);
+  if (age >= 18 && user.ageEligibilityConfirmedAt) return result(user);
+  const rejected = age < 18;
   const updated = await User.findOneAndUpdate(
-    { _id: userId, ageEligibilityConfirmedAt: null },
-    { $set: { ageEligibilityConfirmedAt: new Date() } },
+    {
+      _id: userId,
+      deletionRequestedAt: null,
+      ageEligibilityRejectedAt: null,
+      ...(!rejected ? { ageEligibilityConfirmedAt: null } : {}),
+    },
+    {
+      $set: rejected
+        ? {
+            ageEligibilityRejectedAt: new Date(),
+            ageEligibilityConfirmedAt: null,
+          }
+        : { ageEligibilityConfirmedAt: new Date() },
+      $inc: { accountMutationRevision: 1 },
+    },
     { returnDocument: "after", runValidators: true },
-  ).select("ageEligibilityConfirmedAt");
+  ).select("ageEligibilityConfirmedAt ageEligibilityRejectedAt");
   const confirmed =
     updated ??
-    (await User.findById(userId).select("ageEligibilityConfirmedAt"));
-  if (!confirmed?.ageEligibilityConfirmedAt) {
+    (await User.findById(userId).select(
+      "ageEligibilityConfirmedAt ageEligibilityRejectedAt",
+    ));
+  if (
+    !confirmed ||
+    (!confirmed.ageEligibilityConfirmedAt &&
+      !confirmed.ageEligibilityRejectedAt)
+  )
     throw new BadRequestError(
       "Unable to confirm age eligibility. Please try again.",
     );
-  }
-  return { ageEligibilityConfirmedAt: confirmed.ageEligibilityConfirmedAt };
+  return result(confirmed);
 }

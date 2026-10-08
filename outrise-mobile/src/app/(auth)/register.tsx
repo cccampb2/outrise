@@ -3,13 +3,19 @@ import {
   AppText as Text,
   AppTextInput as TextInput,
 } from "@/components/app-text";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { useDispatch } from "react-redux";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import {
+  getSignupAgeRestriction,
+  rememberSignupAgeRejection,
+} from "@/storage/age-eligibility";
+import { getLegalDocuments, type LegalVersions } from "@/api/legal";
+import { LegalAcceptance } from "@/components/legal-acceptance";
 import { register } from "@/api/auth";
 import { ApiError } from "@/api/client";
 import { Screen } from "@/components/screen";
@@ -23,10 +29,30 @@ export default function RegisterScreen() {
   const client = useQueryClient();
   const inFlight = useRef(false);
   const createdSession = useRef<{ token: string } | null>(null);
+  const legalQuery = useQuery({
+    queryKey: ["legal-documents"],
+    queryFn: getLegalDocuments,
+    staleTime: 0,
+  });
+  const [acceptedVersions, setAcceptedVersions] =
+    useState<LegalVersions | null>(null);
+  const legalVersions = legalQuery.data
+    ? {
+        termsVersion: legalQuery.data.terms.version,
+        privacyVersion: legalQuery.data.privacy.version,
+      }
+    : null;
+  const legalChecked = Boolean(
+    legalVersions &&
+    acceptedVersions?.termsVersion === legalVersions.termsVersion &&
+    acceptedVersions?.privacyVersion === legalVersions.privacyVersion,
+  );
   const [accountCreated, setAccountCreated] = useState(false);
   const [age, setAge] = useState("");
   const [ageAccepted, setAgeAccepted] = useState(false);
   const [ageBlocked, setAgeBlocked] = useState(false);
+  const [ageChecking, setAgeChecking] = useState(true);
+  const [retryAt, setRetryAt] = useState(0);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,15 +61,50 @@ export default function RegisterScreen() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    let cancelled = false;
+    async function check() {
+      try {
+        const until = await getSignupAgeRestriction();
+        if (!cancelled) {
+          setRetryAt(until);
+          setAgeBlocked(until > 0);
+          setAgeChecking(false);
+        }
+      } catch {
+        if (!cancelled) {
+          setAgeChecking(true);
+          setError(
+            "Unable to check age eligibility. Reopen this screen to try again.",
+          );
+        }
+      }
+    }
+    void check();
+    const timer = setInterval(() => {
+      void check();
+    }, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, []);
+
   function handleShowPassword() {
     setShowPassword((currentValue) => !currentValue);
   }
 
   async function handleRegister() {
-    if (inFlight.current) return;
+    if (inFlight.current || ageChecking || ageBlocked) return;
     setError("");
 
     if (!createdSession.current) {
+      if (!legalChecked || !legalVersions || legalQuery.isError) {
+        setError(
+          "Read and accept the current Terms before creating your account.",
+        );
+        return;
+      }
       if (
         !ageAccepted ||
         !/^\d{1,3}$/.test(age) ||
@@ -79,11 +140,20 @@ export default function RegisterScreen() {
 
     try {
       if (!createdSession.current) {
+        if (!legalChecked || !legalVersions || legalQuery.isError) {
+          setError(
+            "Read and accept the current Terms before creating your account.",
+          );
+          return;
+        }
         const data = await register({
           username: username.trim(),
           email: email.trim(),
           password,
           age: Number(age),
+          accepted: true,
+          termsVersion: legalVersions.termsVersion,
+          privacyVersion: legalVersions.privacyVersion,
         });
         // Preserve the session before local storage/cleanup. Continue can retry
         // without registering the account again or sending another signup email.
@@ -108,6 +178,10 @@ export default function RegisterScreen() {
         );
       } else if (error instanceof ApiError) {
         setError(error.getDisplayMessage());
+        if (error.status === 409 && error.message.includes("legal documents")) {
+          setAcceptedVersions(null);
+          void legalQuery.refetch();
+        }
       } else if (error instanceof Error) {
         setError(error.message);
       } else {
@@ -148,8 +222,8 @@ export default function RegisterScreen() {
           <View style={styles.form}>
             <Text style={styles.subtitle}>
               {ageBlocked
-                ? "Outrise beta is available to adults aged 18 or older."
-                : "Enter your current age to check eligibility. We save only the date you confirm eligibility, not your age."}
+                ? `Outrise is available to adults aged 18 or older. This device can check eligibility again after ${new Date(retryAt).toLocaleString()}. If you entered the wrong age, wait until then and enter your actual age.`
+                : "Enter your current age to check eligibility. We do not save your age or birth date. An under-18 answer starts a 24-hour delay on this device."}
             </Text>
             {!ageBlocked ? (
               <>
@@ -159,6 +233,7 @@ export default function RegisterScreen() {
                     style={styles.input}
                     value={age}
                     onChangeText={setAge}
+                    editable={!ageChecking}
                     keyboardType="number-pad"
                     maxLength={3}
                     placeholder="Enter your age"
@@ -169,22 +244,38 @@ export default function RegisterScreen() {
                 {error ? <Text style={styles.errorText}>{error}</Text> : null}
                 <Pressable
                   style={styles.createButton}
-                  onPress={() => {
+                  disabled={ageChecking}
+                  onPress={async () => {
                     setError("");
                     if (!/^\d{1,3}$/.test(age) || Number(age) > 120) {
                       setError("Enter a valid whole-number age.");
                       return;
                     }
-                    if (Number(age) < 18) {
-                      setAgeBlocked(true);
-                      setAge("");
-                      return;
+                    setAgeChecking(true);
+                    try {
+                      const existing = await getSignupAgeRestriction();
+                      if (existing || Number(age) < 18) {
+                        const until =
+                          existing || (await rememberSignupAgeRejection());
+                        setRetryAt(until);
+                        setAgeBlocked(true);
+                        setAge("");
+                        return;
+                      }
+                      setAgeAccepted(true);
+                    } catch {
+                      setError(
+                        "Unable to save age eligibility. Please try again.",
+                      );
+                    } finally {
+                      setAgeChecking(false);
                     }
-                    setAgeAccepted(true);
                   }}
                   accessibilityRole="button"
                 >
-                  <Text style={styles.createButtonText}>CONTINUE →</Text>
+                  <Text style={styles.createButtonText}>
+                    {ageChecking ? "CHECKING..." : "CONTINUE →"}
+                  </Text>
                 </Pressable>
               </>
             ) : null}
@@ -269,6 +360,34 @@ export default function RegisterScreen() {
               />
             </View>
 
+            {!accountCreated && (
+              <>
+                <LegalAcceptance
+                  checked={legalChecked}
+                  disabled={isLoading || !legalVersions || legalQuery.isError}
+                  onChange={(value) =>
+                    setAcceptedVersions(value ? legalVersions : null)
+                  }
+                />
+                {legalQuery.isPending && (
+                  <Text style={styles.subtitle}>
+                    Loading legal documents...
+                  </Text>
+                )}
+                {legalQuery.isError && (
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => {
+                      void legalQuery.refetch();
+                    }}
+                  >
+                    <Text style={styles.errorText}>
+                      Unable to load documents. RETRY →
+                    </Text>
+                  </Pressable>
+                )}
+              </>
+            )}
             {error ? (
               <View style={styles.errorMessage}>
                 <View style={styles.errorTop}>
@@ -282,12 +401,18 @@ export default function RegisterScreen() {
             ) : null}
 
             <Pressable
-              disabled={isLoading}
+              disabled={
+                isLoading ||
+                (!accountCreated && (!legalChecked || legalQuery.isError))
+              }
               onPress={handleRegister}
               style={({ pressed }) => [
                 styles.createButton,
                 pressed && !isLoading && styles.createButtonPressed,
-                isLoading ? styles.buttonDisabled : null,
+                isLoading ||
+                (!accountCreated && (!legalChecked || legalQuery.isError))
+                  ? styles.buttonDisabled
+                  : null,
               ]}
             >
               <View style={styles.buttonMarker} />

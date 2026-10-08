@@ -12,6 +12,13 @@ type AuthUser = {
   email: string;
   emailVerified: boolean;
   ageEligibilityConfirmedAt: string | null;
+  ageEligibilityRejectedAt?: string | null;
+  legalAcceptanceRequired?: boolean;
+  legalAcceptance?: {
+    acceptedAt: string;
+    termsVersion: string;
+    privacyVersion: string;
+  } | null;
   role: UserRole;
   faction: string | null;
 };
@@ -23,6 +30,9 @@ type LoginResponse = {
 };
 
 type RegisterCredentials = {
+  accepted: true;
+  termsVersion: string;
+  privacyVersion: string;
   age: number;
   username: string;
   email: string;
@@ -123,7 +133,16 @@ export async function confirmEmailVerification(
 export async function confirmAgeEligibility(
   age: number,
   signal?: AbortSignal,
-): Promise<{ ageEligibilityConfirmedAt: string }> {
+): Promise<{
+  ageEligibilityConfirmedAt: string | null;
+  ageEligibilityRejectedAt?: string | null;
+  legalAcceptanceRequired?: boolean;
+  legalAcceptance?: {
+    acceptedAt: string;
+    termsVersion: string;
+    privacyVersion: string;
+  } | null;
+}> {
   const response = await apiRequest("/auth/age-eligibility", {
     method: "POST",
     body: JSON.stringify({ age }),

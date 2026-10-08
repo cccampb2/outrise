@@ -162,7 +162,14 @@ type StatusPanelProps = {
 function StatusPanel({ verification }: StatusPanelProps) {
   const statusStyle = getStatusStyle(verification.status);
 
-  let description = "Your submission is waiting for review.";
+  let description = verification.pendingExpiresAt
+    ? `Waiting for review. If not reviewed, this submission expires on ${formatDateTime(verification.pendingExpiresAt)}.`
+    : "Waiting for review. Unreviewed submissions expire 30 days after submission.";
+
+  if (verification.status === "expired") {
+    description =
+      "This submission expired without review. You can submit a new verification. This is not a rejection.";
+  }
 
   if (verification.status === "approved") {
     description = "This performance has been approved.";
@@ -409,6 +416,7 @@ export default function VerificationDetailScreen() {
               ) : (
                 <ExpiredVerificationProof
                   expired={!!verification.proofDeletedAt}
+                  pendingExpired={verification.status === "expired"}
                 />
               )}
             </View>
@@ -461,6 +469,16 @@ export default function VerificationDetailScreen() {
                 ) : null}
               </View>
             </View>
+
+            {verification.status === "expired" ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => router.push("/verifications/submit")}
+                style={styles.backButton}
+              >
+                <Text style={styles.backText}>SUBMIT A NEW VERIFICATION →</Text>
+              </Pressable>
+            ) : null}
 
             {/* REJECTION DETAIL */}
 

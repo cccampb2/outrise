@@ -38,6 +38,7 @@ const FILTERS: {
     label: "REJECTED",
     value: "rejected",
   },
+  { label: "EXPIRED", value: "expired" },
 ];
 
 function formatDate(date: string) {
@@ -649,6 +650,7 @@ const styles = StyleSheet.create({
 
   filters: {
     flexDirection: "row",
+    flexWrap: "wrap",
     borderTopWidth: 1,
     borderBottomWidth: 1,
     borderColor: Colors.dark.border,
@@ -656,6 +658,7 @@ const styles = StyleSheet.create({
 
   filterButton: {
     flex: 1,
+    minWidth: 76,
     minHeight: 42,
     alignItems: "center",
     justifyContent: "center",

@@ -128,11 +128,32 @@ export default function IssueReportScreen() {
                     </Text>
                   )}
                 </View>
+                {report.reportedMessage && (
+                  <View style={styles.card}>
+                    <Text style={styles.cardTitle}>Reported message</Text>
+                    <Text selectable style={styles.text}>
+                      {report.reportedMessage.text}
+                    </Text>
+                    <Text style={styles.text}>
+                      Sent{" "}
+                      {new Date(report.reportedMessage.sentAt).toLocaleString()}
+                    </Text>
+                    <Text style={styles.text}>
+                      Only the reported message is attached. The rest of the
+                      conversation is private.
+                    </Text>
+                  </View>
+                )}
                 <View style={styles.card}>
-                  <Text style={styles.cardTitle}>Account with this email</Text>
+                  <Text style={styles.cardTitle}>
+                    {report.reporter
+                      ? "Reported by"
+                      : "Account with this email"}
+                  </Text>
                   <Text style={styles.text}>
-                    This is the contact email supplied with the report. A
-                    matching account does not prove account ownership.
+                    {report.reporter
+                      ? "Submitted by this signed-in account."
+                      : "This is the contact email supplied with the report. A matching account does not prove account ownership."}
                   </Text>
                   {query.data?.account ? (
                     <>

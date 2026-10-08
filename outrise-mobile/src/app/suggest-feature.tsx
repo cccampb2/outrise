@@ -52,7 +52,7 @@ export default function SuggestFeatureScreen() {
           <>
             <Text style={styles.text}>
               What would make Outrise better? Your suggestion goes directly to
-              the developer and is only visible to the owner.
+              Outrise Studio and is only visible to the owner.
             </Text>
             <AdminField
               label="TITLE (3–120 characters)"

@@ -1,3 +1,9 @@
+import { TERMS_VERSION, PRIVACY_VERSION } from "../src/config/legal.js";
+const legalAcceptance = {
+  acceptedAt: new Date("2026-10-07T12:00:00Z"),
+  termsVersion: TERMS_VERSION,
+  privacyVersion: PRIVACY_VERSION,
+};
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
@@ -392,6 +398,7 @@ test("JWT versions reject old tokens after reset, accept new/legacy tokens appro
     emailVerified: true,
     accountStatus: "active",
     ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
+    legalAcceptance,
     tokenVersion: 1,
   };
   t.mock.method(User, "findById", () =>
@@ -426,6 +433,7 @@ test("JWT versions reject old tokens after reset, accept new/legacy tokens appro
     emailVerified: true,
     accountStatus: "active",
     ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
+    legalAcceptance,
   };
   await authenticate(request(undefined), {}, (result) => {
     error = result;
@@ -460,6 +468,7 @@ test("login carries the current token version, including after an expired suspen
     tokenVersion: undefined,
     accountStatus: "active",
     ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
+    legalAcceptance,
   }));
   assert.equal((await loginUser({ email, password })).tokenVersion, 3);
   const res = response();
@@ -567,6 +576,7 @@ test("full reset works through Mongoose queries and real bcrypt, and only the ne
     emailVerified: true,
     accountStatus: "active",
     ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
+    legalAcceptance,
     password: await bcrypt.hash("old password 123", 12),
   };
   t.mock.method(User.collection, "findOne", async () =>

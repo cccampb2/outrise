@@ -1,4 +1,9 @@
 import express from "express";
+import {
+  getLegalDocumentsController,
+  acceptLegalDocumentsController,
+} from "../controllers/legal.controller.js";
+import { acceptLegalSchema } from "../middleware/validators/legal.validators.js";
 import { validate } from "../middleware/validate.js";
 import {
   registerSchema,
@@ -37,6 +42,13 @@ const limitVerificationAttempts = createPasswordResetLimiter({
     "Too many verification attempts. Please wait a few minutes and try again.",
 });
 
+router.get("/legal", getLegalDocumentsController);
+router.post(
+  "/legal/accept",
+  authenticateUnverified,
+  validate(acceptLegalSchema),
+  acceptLegalDocumentsController,
+);
 router.post("/register", validate(registerSchema), register);
 router.post("/login", validate(loginSchema), login);
 router.post(

@@ -2,7 +2,13 @@ import { StyleSheet, View } from "react-native";
 import { AppText as Text } from "@/components/app-text";
 import { Colors, Fonts } from "@/constants/theme";
 
-export function ExpiredVerificationProof({ expired }: { expired: boolean }) {
+export function ExpiredVerificationProof({
+  expired,
+  pendingExpired = false,
+}: {
+  expired: boolean;
+  pendingExpired?: boolean;
+}) {
   return (
     <View style={styles.panel}>
       <Text style={styles.title}>
@@ -10,7 +16,9 @@ export function ExpiredVerificationProof({ expired }: { expired: boolean }) {
       </Text>
       <Text style={styles.description}>
         {expired
-          ? "Verification videos are removed 30 days after review. The review decision and performance record are kept."
+          ? pendingExpired
+            ? "This submission expired without review after 30 days. Its video has been removed. You can submit again."
+            : "Verification videos are removed 30 days after review. The review decision and performance record are kept."
           : "The proof video is currently unavailable."}
       </Text>
     </View>

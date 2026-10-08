@@ -106,10 +106,16 @@ test("submission accepts signed-out or restricted users and reveals no account s
   });
   assert.deepEqual(Object.keys(payload), ["message"]);
   assert.ok(!JSON.stringify(payload).includes("Private"));
-  const publicPost = publicRoutes.stack[0].route;
+  const publicPost = publicRoutes.stack.find(
+    (layer) => layer.route?.path === "/",
+  ).route;
   assert.ok(publicPost.methods.post);
   assert.ok(publicPost.stack.every((layer) => layer.handle !== authenticate));
-  assert.equal(publicRoutes.stack.length, 1);
+  assert.equal(publicRoutes.stack.length, 2);
+  const messagePost = publicRoutes.stack.find(
+    (layer) => layer.route?.path === "/messages/:messageId",
+  ).route;
+  assert.ok(messagePost.stack.some((layer) => layer.handle === authenticate));
 });
 
 test("all admin inbox routes require authentication and an admin role", () => {

@@ -26,6 +26,13 @@ export type CurrentUser = {
   email: string;
   emailVerified: boolean;
   ageEligibilityConfirmedAt: string | null;
+  ageEligibilityRejectedAt?: string | null;
+  legalAcceptanceRequired?: boolean;
+  legalAcceptance?: {
+    acceptedAt: string;
+    termsVersion: string;
+    privacyVersion: string;
+  } | null;
   role: UserRole;
   accountStatus: AccountStatus;
   faction: string | null;

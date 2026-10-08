@@ -16,6 +16,7 @@ import {
   getAdminUser,
   setUserAccountStatus,
   setUserRole,
+  clearAgeRejection,
   type AdminUser,
   type AccountStatusInput,
   type UserRoleInput,
@@ -23,6 +24,61 @@ import {
 import type { AccountStatus } from "@/api/users";
 import { ApiError } from "@/api/client";
 import type { RootState } from "@/store/store";
+
+function AgeReview({ user }: { user: AdminUser }) {
+  const client = useQueryClient();
+  const [reason, setReason] = useState("");
+  const mutation = useMutation({
+    mutationFn: () => clearAgeRejection(user._id, reason.trim()),
+    onSuccess: async () => {
+      await client.invalidateQueries();
+    },
+  });
+  return (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>Age eligibility review</Text>
+      <Text style={styles.text}>
+        Clear a mistaken rejection after reviewing the support request. The user
+        must enter their actual age again. This does not lift a ban or
+        suspension.
+      </Text>
+      <AdminField
+        label="REVIEW REASON"
+        value={reason}
+        onChange={setReason}
+        disabled={mutation.isPending}
+      />
+      {mutation.isError && (
+        <Text style={styles.error}>
+          {mutation.error instanceof ApiError
+            ? mutation.error.getDisplayMessage()
+            : "Unable to clear restriction."}
+        </Text>
+      )}
+      <Pressable
+        accessibilityRole="button"
+        disabled={
+          mutation.isPending || !reason.trim() || reason.trim().length > 900
+        }
+        style={styles.button}
+        onPress={() =>
+          Alert.alert(
+            "Clear age restriction?",
+            "Only continue after reviewing the account eligibility concern.",
+            [
+              { text: "Cancel", style: "cancel" },
+              { text: "Clear restriction", onPress: () => mutation.mutate() },
+            ],
+          )
+        }
+      >
+        <Text style={styles.action}>
+          {mutation.isPending ? "SAVING..." : "CLEAR AGE RESTRICTION →"}
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
 
 function ModerationForm({ user }: { user: AdminUser }) {
   const client = useQueryClient();
@@ -319,6 +375,18 @@ export default function AdminUserScreen() {
                     </Text>
                   )}
                 </View>
+                {query.data.user.ageEligibilityRejectedAt && (
+                  <Text style={styles.error}>
+                    Age eligibility restricted since{" "}
+                    {new Date(
+                      query.data.user.ageEligibilityRejectedAt,
+                    ).toLocaleString()}
+                  </Text>
+                )}
+                {admin?.role === "owner" &&
+                  query.data.user.ageEligibilityRejectedAt && (
+                    <AgeReview user={query.data.user} />
+                  )}
                 {admin?.role === "owner" && (
                   <RoleManagement
                     key={`${userId}:${query.data.user.role}`}

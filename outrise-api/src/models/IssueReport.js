@@ -35,6 +35,27 @@ const issueReportSchema = new Schema(
       lowercase: true,
       maxlength: 254,
     },
+    reporter: { type: Schema.Types.ObjectId, ref: "User", default: null },
+    reportedMessage: {
+      type: new Schema(
+        {
+          messageId: {
+            type: Schema.Types.ObjectId,
+            ref: "Message",
+            required: true,
+          },
+          conversation: {
+            type: Schema.Types.ObjectId,
+            ref: "Conversation",
+            required: true,
+          },
+          text: { type: String, required: true, maxlength: 2000 },
+          sentAt: { type: Date, required: true },
+        },
+        { _id: false },
+      ),
+      default: null,
+    },
     reportedUser: { type: Schema.Types.ObjectId, ref: "User", default: null },
     subject: {
       type: String,

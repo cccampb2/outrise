@@ -3,7 +3,11 @@ import { File } from "expo-file-system";
 import { apiRequest } from "./client";
 import type { MeasurementType } from "./workout-sessions";
 
-export type VerificationStatus = "pending" | "approved" | "rejected";
+export type VerificationStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "expired";
 
 export type VerificationMeasurementType = Exclude<MeasurementType, "intervals">;
 
@@ -46,6 +50,10 @@ export type Verification = {
   proof: VerificationProof | null;
 
   proofDeletedAt: string | null;
+
+  expiredAt: string | null;
+
+  pendingExpiresAt: string | null;
 
   status: VerificationStatus;
 

@@ -215,19 +215,19 @@ export default function CommunityStandardsScreen() {
           <View style={styles.reportingDot} />
 
           <Text style={styles.reportingStatusText}>
-            REPORTING_SYSTEM // PLANNED
+            REPORTING_SYSTEM // ACTIVE
           </Text>
         </View>
 
         <Text style={styles.reportingText}>
-          Users will eventually be able to report content or behavior that
-          violates these rules directly from profiles, messages, and other
-          social features.
+          You can report inappropriate profiles and messages using their
+          reporting controls. For other concerns, use Report an Issue in the
+          app.
         </Text>
 
         <Text style={styles.reportingText}>
-          That reporting system is not live yet. These standards are available
-          now so expectations are clear before those features ship.
+          Admins review reports and may take action when these rules are
+          violated. You can also block a user to prevent further contact.
         </Text>
       </View>
 

@@ -233,6 +233,7 @@ test("job schedules daily cleanup, catches up on startup, and skips overlapping 
       },
     };
   });
+  t.mock.method(Verification, "updateMany", async () => ({ modifiedCount: 0 }));
   assert.equal(startVerificationRetentionJob(), task);
   assert.equal(reads, 1);
   await scheduled();
@@ -240,7 +241,7 @@ test("job schedules daily cleanup, catches up on startup, and skips overlapping 
   release();
   await new Promise((resolve) => setImmediate(resolve));
   await scheduled();
-  assert.equal(reads, 2);
+  assert.equal(reads, 4);
 });
 test("a failed scan does not prevent the next scheduled run", async (t) => {
   let scheduled,
@@ -266,10 +267,11 @@ test("a failed scan does not prevent the next scheduled run", async (t) => {
       },
     };
   });
+  t.mock.method(Verification, "updateMany", async () => ({ modifiedCount: 0 }));
   startVerificationRetentionJob();
   await new Promise((resolve) => setImmediate(resolve));
   await scheduled();
-  assert.equal(reads, 2);
+  assert.equal(reads, 3);
 });
 
 test("Mongoose update validation accepts proof removal only with its deletion marker", async () => {

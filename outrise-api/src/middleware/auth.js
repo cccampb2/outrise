@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { hasCurrentLegalAcceptance } from "../services/legal.service.js";
 import UnauthorizedError from "../errors/UnauthorizedError.js";
 import ForbiddenError from "../errors/ForbiddenError.js";
 import User from "../models/User.js";
@@ -19,7 +20,7 @@ const createAuthentication =
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       const account = await User.findById(decoded.userId).select(
-        "role accountStatus suspendedUntil emailVerified ageEligibilityConfirmedAt deletionRequestedAt +tokenVersion",
+        "role accountStatus suspendedUntil emailVerified legalAcceptance ageEligibilityConfirmedAt ageEligibilityRejectedAt deletionRequestedAt +tokenVersion",
       );
       // Legacy tokens/documents count as version zero until the first reset.
       if (
@@ -52,11 +53,21 @@ const createAuthentication =
         throw error;
       }
 
-      if (!allowUnverified && !user.ageEligibilityConfirmedAt) {
+      if (
+        !allowUnverified &&
+        (!user.ageEligibilityConfirmedAt || user.ageEligibilityRejectedAt)
+      ) {
         const error = new ForbiddenError(
           "Confirm your age eligibility before continuing.",
         );
         error.code = "AGE_ELIGIBILITY_REQUIRED";
+        throw error;
+      }
+      if (!allowUnverified && !hasCurrentLegalAcceptance(user)) {
+        const error = new ForbiddenError(
+          "Read and accept the current Terms before continuing.",
+        );
+        error.code = "LEGAL_ACCEPTANCE_REQUIRED";
         throw error;
       }
       next();

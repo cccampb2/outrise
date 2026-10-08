@@ -49,6 +49,18 @@ const userSchema = new Schema(
     accountMutationRevision: { type: Number, default: 0, select: false },
     deletionRequestedAt: { type: Date, default: null },
     ageEligibilityConfirmedAt: { type: Date, default: null },
+    ageEligibilityRejectedAt: { type: Date, default: null },
+    legalAcceptance: {
+      type: new Schema(
+        {
+          acceptedAt: { type: Date, required: true },
+          termsVersion: { type: String, required: true },
+          privacyVersion: { type: String, required: true },
+        },
+        { _id: false },
+      ),
+      default: null,
+    },
     emailVerification: { type: emailVerificationSchema, select: false },
     emailVerificationRequestedAt: { type: Date, select: false },
     // Hidden recovery state; never included in normal profile/account queries.

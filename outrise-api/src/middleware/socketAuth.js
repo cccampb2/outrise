@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { hasCurrentLegalAcceptance } from "../services/legal.service.js";
 import User from "../models/User.js";
 import { ensureAccountAccess } from "../services/accountAccess.service.js";
 
@@ -13,7 +14,7 @@ export const socketAuth = async (socket, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const account = await User.findById(decoded.userId).select(
-      "role accountStatus suspendedUntil emailVerified ageEligibilityConfirmedAt deletionRequestedAt +tokenVersion",
+      "role accountStatus suspendedUntil emailVerified legalAcceptance ageEligibilityConfirmedAt ageEligibilityRejectedAt deletionRequestedAt +tokenVersion",
     );
     if (
       account &&
@@ -28,10 +29,12 @@ export const socketAuth = async (socket, next) => {
       throw new Error("Verify your email before connecting");
     }
 
-    if (!user.ageEligibilityConfirmedAt) {
+    if (!user.ageEligibilityConfirmedAt || user.ageEligibilityRejectedAt) {
       throw new Error("Confirm your age eligibility before connecting");
     }
 
+    if (!hasCurrentLegalAcceptance(user))
+      throw new Error("Read and accept the current Terms before connecting");
     socket.data.userId = user._id.toString();
 
     next();

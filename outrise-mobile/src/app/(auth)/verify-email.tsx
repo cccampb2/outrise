@@ -64,9 +64,11 @@ export default function VerifyEmailScreen() {
     router.replace(
       !currentUser.ageEligibilityConfirmedAt
         ? "/age-eligibility"
-        : currentUser.faction === null
-          ? "/(onboarding)/faction"
-          : "/(tabs)",
+        : currentUser.legalAcceptanceRequired !== false
+          ? "/accept-terms"
+          : currentUser.faction === null
+            ? "/(onboarding)/faction"
+            : "/(tabs)",
     );
   }
 
@@ -190,12 +192,7 @@ export default function VerifyEmailScreen() {
   if (!user) return <Redirect href="/" />;
   if (!user.ageEligibilityConfirmedAt)
     return <Redirect href="/age-eligibility" />;
-  if (user.emailVerified === true)
-    return (
-      <Redirect
-        href={user.faction === null ? "/(onboarding)/faction" : "/(tabs)"}
-      />
-    );
+  if (user.emailVerified === true) return <Redirect href="/" />;
 
   return (
     <Screen scroll keyboardAvoiding>

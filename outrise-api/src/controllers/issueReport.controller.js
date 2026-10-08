@@ -1,3 +1,4 @@
+import { reportMessage } from "../services/messageReport.service.js";
 import {
   sendIssueReportReply,
   retryIssueReportReply,
@@ -8,6 +9,22 @@ import {
   getIssueReport,
   updateIssueReport,
 } from "../services/issueReport.service.js";
+
+export const reportMessageController = async (req, res, next) => {
+  try {
+    await reportMessage({
+      userId: req.user.userId,
+      messageId: req.params.messageId,
+      reason: req.body.reason,
+    });
+    res.status(201).json({
+      message:
+        "Your message report has been submitted to the OUTRISE admin team.",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const createIssueReportController = async (req, res, next) => {
   try {

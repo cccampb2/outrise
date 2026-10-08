@@ -1,3 +1,4 @@
+import { ExerciseSafety } from "@/components/exercise-safety";
 import { AppText as Text } from "@/components/app-text";
 import { Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
@@ -225,6 +226,7 @@ export default function WorkoutOfTheWeekScreen() {
   return (
     <Screen scroll>
       <View style={styles.page}>
+        <ExerciseSafety />
         {/* BACK */}
 
         <Pressable onPress={() => router.back()} style={styles.backButton}>

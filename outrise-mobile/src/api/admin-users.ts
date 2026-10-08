@@ -15,6 +15,7 @@ export type AdminUser = {
   role: UserRole;
   accountStatus: AccountStatus;
   suspendedUntil: string | null;
+  ageEligibilityRejectedAt?: string | null;
   moderationReason?: string;
   moderatedAt?: string;
   createdAt: string;
@@ -26,6 +27,7 @@ export type AccountModeration = {
   status: AccountStatus;
   reason: string;
   suspendedUntil: string | null;
+  ageEligibilityRejectedAt?: string | null;
   createdAt: string;
 };
 export type AccountStatusInput = {
@@ -95,5 +97,16 @@ export async function setUserRole(
     method: "PATCH",
     body: JSON.stringify(data),
   });
+  return response.json();
+}
+
+export async function clearAgeRejection(
+  userId: string,
+  reason: string,
+): Promise<{ user: AdminUser }> {
+  const response = await apiRequest(
+    `/admin/users/${userId}/age-eligibility/reset`,
+    { method: "POST", body: JSON.stringify({ reason }) },
+  );
   return response.json();
 }

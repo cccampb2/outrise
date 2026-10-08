@@ -10,7 +10,7 @@ import NotFoundError from "../errors/NotFoundError.js";
 import ConflictError from "../errors/ConflictError.js";
 
 const adminUserFields =
-  "username email role accountStatus suspendedUntil createdAt +moderationReason +moderatedBy +moderatedAt";
+  "username email role accountStatus suspendedUntil createdAt ageEligibilityRejectedAt +moderationReason +moderatedBy +moderatedAt";
 
 export const listAdminUsers = async ({
   page = 1,
@@ -213,3 +213,61 @@ export const setUserAccountStatus = async ({
     await session.endSession();
   }
 };
+
+export async function clearAgeEligibilityRejection({
+  userId,
+  ownerId,
+  reason,
+}) {
+  if (
+    typeof reason !== "string" ||
+    !reason.trim() ||
+    reason.trim().length > 900
+  )
+    throw new BadRequestError(
+      "Provide a review reason of up to 900 characters.",
+    );
+  const session = await mongoose.startSession();
+  try {
+    return await session.withTransaction(async () => {
+      const owner = await User.findById(ownerId).session(session);
+      if (!owner || owner.role !== "owner" || owner.deletionRequestedAt)
+        throw new ForbiddenError("Owner access required");
+      const user = await User.findOneAndUpdate(
+        {
+          _id: userId,
+          ageEligibilityRejectedAt: { $ne: null },
+          deletionRequestedAt: null,
+        },
+        {
+          $set: {
+            ageEligibilityRejectedAt: null,
+            ageEligibilityConfirmedAt: null,
+          },
+          $inc: { accountMutationRevision: 1 },
+        },
+        { session, returnDocument: "after", runValidators: true },
+      ).select(adminUserFields);
+      if (!user)
+        throw new ConflictError(
+          "This account has no age restriction to clear, or is being deleted.",
+        );
+      await AccountModeration.create(
+        [
+          {
+            user: user._id,
+            admin: ownerId,
+            previousStatus: user.accountStatus,
+            status: user.accountStatus,
+            reason: `Age eligibility rejection cleared after support review: ${reason.trim()}`,
+            suspendedUntil: user.suspendedUntil,
+          },
+        ],
+        { session },
+      );
+      return user;
+    });
+  } finally {
+    await session.endSession();
+  }
+}

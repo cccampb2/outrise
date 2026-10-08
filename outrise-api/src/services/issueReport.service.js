@@ -65,7 +65,9 @@ export const getIssueReport = async (reportId) => {
     throw new NotFoundError("Issue report not found");
   }
   // A supplied email is an unverified claim, not proof of account ownership.
-  const account = await User.findOne({ email: report.email })
+  const account = await User.findOne(
+    report.reporter ? { _id: report.reporter } : { email: report.email },
+  )
     .select("username accountStatus suspendedUntil")
     .lean();
   const reportedAccount = report.reportedUser

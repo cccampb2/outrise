@@ -1,3 +1,4 @@
+import { LegalLinks } from "@/components/legal-acceptance";
 import { BrandHeader } from "@/components/brand-header";
 import {
   AppText as Text,
@@ -103,6 +104,8 @@ export default function LoginScreen() {
         router.replace("/age-eligibility");
       } else if (user.emailVerified !== true) {
         router.replace("/verify-email");
+      } else if (user.legalAcceptanceRequired !== false) {
+        router.replace("/accept-terms");
       } else if (user.faction === null) {
         router.replace("/(onboarding)/faction");
       } else {
@@ -131,6 +134,7 @@ export default function LoginScreen() {
 
         <View style={styles.brandHeader}>
           <BrandHeader label="ACCESS" style={styles.brandLabelLayout} />
+          <LegalLinks />
 
           <Text style={styles.brand}>OUTRISE</Text>
 

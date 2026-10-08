@@ -28,6 +28,9 @@ const authSlice = createSlice({
       };
       state.accountNotice = null;
     },
+    setLegalAcceptanceRequired(state) {
+      if (state.user) state.user.legalAcceptanceRequired = true;
+    },
     clearCurrentUser(state) {
       state.user = null;
       state.accountNotice = null;
@@ -54,6 +57,7 @@ const authSlice = createSlice({
 });
 
 export const {
+  setLegalAcceptanceRequired,
   setCurrentUser,
   clearCurrentUser,
   setAccountRestriction,

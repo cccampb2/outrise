@@ -171,7 +171,7 @@ export default function AdminScreen() {
             <AdminOption
               code="OWNER"
               title="SUGGESTIONS"
-              description="Read member suggestions in your private developer inbox."
+              description="Read member suggestions in the private Outrise Studio inbox."
               status="OWNER ONLY"
               onPress={() => router.push("/admin/suggestions")}
             />

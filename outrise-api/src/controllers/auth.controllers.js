@@ -1,3 +1,4 @@
+import { hasCurrentLegalAcceptance } from "../services/legal.service.js";
 import { registerUser, loginUser } from "../services/auth.services.js";
 import jwt from "jsonwebtoken";
 import { confirmAgeEligibility } from "../services/ageEligibility.service.js";
@@ -19,9 +20,25 @@ const createSessionToken = (user) =>
 
 export const register = async (req, res, next) => {
   try {
-    const { username, email, password, age } = req.body;
+    const {
+      username,
+      email,
+      password,
+      age,
+      accepted,
+      termsVersion,
+      privacyVersion,
+    } = req.body;
 
-    const user = await registerUser({ username, email, password, age });
+    const user = await registerUser({
+      username,
+      email,
+      password,
+      age,
+      accepted,
+      termsVersion,
+      privacyVersion,
+    });
     const token = createSessionToken(user);
 
     res.status(201).json({
@@ -32,6 +49,9 @@ export const register = async (req, res, next) => {
         email: user.email,
         emailVerified: user.emailVerified === true,
         ageEligibilityConfirmedAt: user.ageEligibilityConfirmedAt ?? null,
+        ageEligibilityRejectedAt: user.ageEligibilityRejectedAt ?? null,
+        legalAcceptance: user.legalAcceptance ?? null,
+        legalAcceptanceRequired: !hasCurrentLegalAcceptance(user),
         role: user.role,
         faction: user.faction,
       },
@@ -58,6 +78,9 @@ export const login = async (req, res, next) => {
         email: user.email,
         emailVerified: user.emailVerified === true,
         ageEligibilityConfirmedAt: user.ageEligibilityConfirmedAt ?? null,
+        ageEligibilityRejectedAt: user.ageEligibilityRejectedAt ?? null,
+        legalAcceptance: user.legalAcceptance ?? null,
+        legalAcceptanceRequired: !hasCurrentLegalAcceptance(user),
         role: user.role,
         faction: user.faction,
       },

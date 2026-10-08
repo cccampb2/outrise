@@ -1,5 +1,8 @@
 import cron from "node-cron";
-import { cleanupReviewedVerificationVideos } from "../services/verificationRetention.service.js";
+import {
+  cleanupReviewedVerificationVideos,
+  cleanupPendingVerificationVideos,
+} from "../services/verificationRetention.service.js";
 import { APP_TIME_ZONE } from "../config/app.js";
 import logger from "../utils/logger.js";
 
@@ -11,6 +14,8 @@ export function startVerificationRetentionJob() {
     try {
       const result = await cleanupReviewedVerificationVideos();
       logger.info("Reviewed verification video cleanup completed", result);
+      const pending = await cleanupPendingVerificationVideos();
+      logger.info("Pending verification video cleanup completed", pending);
     } catch (error) {
       logger.warn(
         "Reviewed verification video cleanup could not complete its check.",

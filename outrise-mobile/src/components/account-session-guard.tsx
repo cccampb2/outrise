@@ -8,6 +8,7 @@ import {
   onSessionExpired,
   onEmailVerificationRequired,
   onAgeEligibilityRequired,
+  onLegalAcceptanceRequired,
   type AccountRestriction,
 } from "@/api/client";
 import { getCurrentUser } from "@/api/users";
@@ -18,6 +19,7 @@ import {
   clearCurrentUser,
   setEmailVerificationRequired,
   setAgeEligibilityRequired,
+  setLegalAcceptanceRequired,
 } from "@/store/auth-slice";
 import { store, type AppDispatch, type RootState } from "@/store/store";
 
@@ -28,6 +30,9 @@ export function AccountSessionGuard() {
   );
   const ageEligibilityConfirmedAt = useSelector(
     (state: RootState) => state.auth.user?.ageEligibilityConfirmedAt,
+  );
+  const legalAcceptanceRequired = useSelector(
+    (state: RootState) => state.auth.user?.legalAcceptanceRequired,
   );
   const dispatch = useDispatch<AppDispatch>();
   const client = useQueryClient();
@@ -89,6 +94,18 @@ export function AccountSessionGuard() {
       void client.cancelQueries().catch(console.error);
     });
 
+    const unsubscribeLegal = onLegalAcceptanceRequired(() => {
+      if (
+        cancelled ||
+        handlingRestriction ||
+        store.getState().auth.user?.id !== userId
+      )
+        return;
+      dispatch(setLegalAcceptanceRequired());
+      void client.cancelQueries().catch(console.error);
+      router.replace("/accept-terms");
+    });
+
     async function refreshAccount() {
       if (refreshing || cancelled || handlingRestriction) return;
       refreshing = true;
@@ -100,7 +117,9 @@ export function AccountSessionGuard() {
           !handlingRestriction &&
           currentUser?.id === userId &&
           currentUser?.emailVerified === emailVerified &&
-          currentUser?.ageEligibilityConfirmedAt === ageEligibilityConfirmedAt
+          currentUser?.ageEligibilityConfirmedAt ===
+            ageEligibilityConfirmedAt &&
+          currentUser?.legalAcceptanceRequired === legalAcceptanceRequired
         ) {
           dispatch(setCurrentUser(user));
         }
@@ -126,7 +145,15 @@ export function AccountSessionGuard() {
       unsubscribeSession();
       unsubscribeVerification();
       unsubscribeAge();
+      unsubscribeLegal();
     };
-  }, [userId, emailVerified, ageEligibilityConfirmedAt, dispatch, client]);
+  }, [
+    userId,
+    emailVerified,
+    ageEligibilityConfirmedAt,
+    legalAcceptanceRequired,
+    dispatch,
+    client,
+  ]);
   return null;
 }

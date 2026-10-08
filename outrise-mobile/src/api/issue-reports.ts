@@ -23,7 +23,14 @@ export type IssueReportReplyInput = {
 export type IssueReport = {
   _id: string;
   email: string;
+  reporter?: string | null;
   reportedUser?: string | null;
+  reportedMessage?: {
+    messageId: string;
+    conversation: string;
+    text: string;
+    sentAt: string;
+  } | null;
   subject: string;
   message: string;
   status: IssueReportStatus;
@@ -74,6 +81,17 @@ export async function submitIssueReport(data: {
   const response = await apiRequest("/issue-reports", {
     method: "POST",
     body: JSON.stringify(data),
+  });
+  return response.json();
+}
+
+export async function submitMessageReport(
+  messageId: string,
+  reason: string,
+): Promise<{ message: string }> {
+  const response = await apiRequest(`/issue-reports/messages/${messageId}`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
   });
   return response.json();
 }

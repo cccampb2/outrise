@@ -26,6 +26,9 @@ export function SocketSession() {
     (state: RootState) => state.auth.user?.emailVerified,
   );
 
+  const legalAcceptanceRequired = useSelector(
+    (state: RootState) => state.auth.user?.legalAcceptanceRequired,
+  );
   const client = useQueryClient();
   const pathname = usePathname();
   const params = useGlobalSearchParams<{ messageId?: string }>();
@@ -47,7 +50,12 @@ export function SocketSession() {
   }, [notice]);
 
   useEffect(() => {
-    if (!userId || !emailVerified || !ageEligibilityConfirmedAt) {
+    if (
+      !userId ||
+      !emailVerified ||
+      !ageEligibilityConfirmedAt ||
+      legalAcceptanceRequired !== false
+    ) {
       return;
     }
 
@@ -198,7 +206,13 @@ export function SocketSession() {
       socket.disconnect();
       socket.auth = {};
     };
-  }, [userId, emailVerified, ageEligibilityConfirmedAt, client]);
+  }, [
+    userId,
+    emailVerified,
+    ageEligibilityConfirmedAt,
+    legalAcceptanceRequired,
+    client,
+  ]);
 
   if (
     !notice ||
@@ -206,6 +220,7 @@ export function SocketSession() {
     !userId ||
     !emailVerified ||
     !ageEligibilityConfirmedAt ||
+    legalAcceptanceRequired !== false ||
     (notice.kind === "message"
       ? pathname === `/messages/${notice.conversation}`
       : pathname === "/messages/announcements" &&

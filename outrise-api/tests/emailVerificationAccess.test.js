@@ -1,3 +1,9 @@
+import { TERMS_VERSION, PRIVACY_VERSION } from "../src/config/legal.js";
+const legalAcceptance = {
+  acceptedAt: new Date("2026-10-07T12:00:00Z"),
+  termsVersion: TERMS_VERSION,
+  privacyVersion: PRIVACY_VERSION,
+};
 import test from "node:test";
 import assert from "node:assert/strict";
 import mongoose from "mongoose";
@@ -80,6 +86,7 @@ test("all accounts need database email verification, including legacy accounts w
       role: "user",
       accountStatus: "active",
       ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
+      legalAcceptance,
       emailVerified,
     };
     const { error } = await invoke(authenticate);
@@ -101,6 +108,7 @@ test("stale or forged JWT verification claims never override the database", asyn
       role: "user",
       accountStatus: "active",
       ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
+      legalAcceptance,
       emailVerified,
     }),
   );
@@ -130,6 +138,7 @@ test("the verification exception permits unverified identities while retaining s
     role: "user",
     accountStatus: "active",
     ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
+    legalAcceptance,
     emailVerified: false,
     tokenVersion: 1,
   };
@@ -178,6 +187,7 @@ test("restoring an expired suspension preserves the current database verificatio
     ...suspended,
     accountStatus: "active",
     ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
+    legalAcceptance,
     suspendedUntil: null,
   };
   t.mock.method(User, "findById", () => query(suspended));
@@ -368,6 +378,7 @@ test("signup requests one initial code and returns an unverified account without
     role: "user",
     accountStatus: "active",
     ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
+    legalAcceptance,
     faction: null,
     emailVerified: false,
   };
@@ -398,6 +409,9 @@ test("signup requests one initial code and returns an unverified account without
         email: user.email,
         password: "password123",
         age: 18,
+        accepted: true,
+        termsVersion: TERMS_VERSION,
+        privacyVersion: PRIVACY_VERSION,
       },
     },
     {

@@ -358,7 +358,10 @@ export default function SubmitVerificationScreen() {
 
           <Text style={styles.description}>
             Submit a recorded performance for review. Approved submissions
-            become part of your verified performance record.
+            become part of your verified performance record. Submissions not
+            reviewed within 30 days expire and their videos are removed. You can
+            submit again if that happens. Reviewed videos are removed 30 days
+            after review.
           </Text>
         </View>
 

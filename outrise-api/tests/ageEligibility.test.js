@@ -1,3 +1,9 @@
+import { TERMS_VERSION, PRIVACY_VERSION } from "../src/config/legal.js";
+const legalAcceptance = {
+  acceptedAt: new Date("2026-10-07T12:00:00Z"),
+  termsVersion: TERMS_VERSION,
+  privacyVersion: PRIVACY_VERSION,
+};
 import test from "node:test";
 import assert from "node:assert/strict";
 import jwt from "jsonwebtoken";
@@ -33,6 +39,7 @@ const account = (fields = {}) => ({
   role: "user",
   accountStatus: "active",
   emailVerified: true,
+  legalAcceptance,
   tokenVersion: 0,
   ...fields,
 });
@@ -58,7 +65,12 @@ test("only whole-number adult ages are accepted by service and request validatio
     Infinity,
   ]) {
     assert.throws(() => validateAgeEligibility(age));
-    assert.ok(ageEligibilitySchema.body.validate({ age }).error);
+    if (age === 17)
+      assert.equal(
+        ageEligibilitySchema.body.validate({ age }).error,
+        undefined,
+      );
+    else assert.ok(ageEligibilitySchema.body.validate({ age }).error);
   }
   for (const age of [18, 19, 120]) {
     assert.doesNotThrow(() => validateAgeEligibility(age));
@@ -102,7 +114,12 @@ test("confirmation persists only a server date and retry retains the original da
   let stored = account();
   t.mock.method(User, "findById", () => query(stored));
   t.mock.method(User, "findOneAndUpdate", (filter, update, options) => {
-    assert.deepEqual(filter, { _id: userId, ageEligibilityConfirmedAt: null });
+    assert.deepEqual(filter, {
+      _id: userId,
+      deletionRequestedAt: null,
+      ageEligibilityRejectedAt: null,
+      ageEligibilityConfirmedAt: null,
+    });
     assert.deepEqual(Object.keys(update.$set), ["ageEligibilityConfirmedAt"]);
     assert.ok(update.$set.ageEligibilityConfirmedAt instanceof Date);
     assert.equal(options.returnDocument, "after");
@@ -209,4 +226,44 @@ test("age eligibility errors reach the client with a machine-readable code", () 
   );
   assert.equal(status, 403);
   assert.equal(payload.code, "AGE_ELIGIBILITY_REQUIRED");
+});
+
+test("underage account rejection survives later adult answers and never stores the age", async (t) => {
+  let stored = account();
+  t.mock.method(User, "findById", () => query(stored));
+  t.mock.method(User, "findOneAndUpdate", (filter, update) => {
+    assert.equal(filter.ageEligibilityRejectedAt, null);
+    assert.equal(filter.deletionRequestedAt, null);
+    assert.equal(update.$set.ageEligibilityConfirmedAt, null);
+    stored = { ...stored, ...update.$set };
+    return query(stored);
+  });
+  const rejection = await confirmAgeEligibility({ userId, age: 15 });
+  assert.ok(rejection.ageEligibilityRejectedAt instanceof Date);
+  assert.equal(rejection.ageEligibilityConfirmedAt, null);
+  assert.deepEqual(await confirmAgeEligibility({ userId, age: 30 }), rejection);
+  assert.equal(User.findOneAndUpdate.mock.callCount(), 1);
+  assert.equal(stored.age, undefined);
+});
+
+test("a racing rejection wins over adult confirmation", async (t) => {
+  let reads = 0;
+  t.mock.method(User, "findById", () =>
+    query(
+      ++reads === 1
+        ? account()
+        : account({
+            ageEligibilityRejectedAt: date,
+            ageEligibilityConfirmedAt: null,
+          }),
+    ),
+  );
+  t.mock.method(User, "findOneAndUpdate", (filter) => {
+    assert.equal(filter.ageEligibilityRejectedAt, null);
+    return query(null);
+  });
+  assert.deepEqual(await confirmAgeEligibility({ userId, age: 30 }), {
+    ageEligibilityConfirmedAt: null,
+    ageEligibilityRejectedAt: date,
+  });
 });

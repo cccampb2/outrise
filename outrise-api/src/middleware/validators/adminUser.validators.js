@@ -14,6 +14,10 @@ export const adminUserListSchema = {
   }),
 };
 export const adminUserIdSchema = { params };
+export const clearAgeRejectionSchema = {
+  params,
+  body: Joi.object({ reason: Joi.string().trim().min(1).max(900).required() }),
+};
 export const adminUserStatusSchema = {
   params,
   body: Joi.object({

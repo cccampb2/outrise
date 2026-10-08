@@ -1,3 +1,4 @@
+import { ExerciseSafety } from "@/components/exercise-safety";
 import { AppText as Text } from "@/components/app-text";
 import { Pressable, StyleSheet, View, Alert } from "react-native";
 import { router } from "expo-router";
@@ -676,6 +677,7 @@ export default function ActiveWorkout() {
 
   return (
     <Screen scroll keyboardAvoiding>
+      <ExerciseSafety />
       <Pressable style={styles.backButton} onPress={() => router.back()}>
         <Text style={styles.backText}>← BACK</Text>
       </Pressable>

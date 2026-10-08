@@ -3,6 +3,7 @@ import {
   getAdminUser,
   setUserAccountStatus,
   setUserRole,
+  clearAgeEligibilityRejection,
 } from "../services/adminUser.service.js";
 
 export const listAdminUsersController = async (req, res, next) => {
@@ -45,6 +46,19 @@ export const setUserRoleController = async (req, res, next) => {
       ownerId: req.user.userId,
       role: req.body.role,
       expectedRole: req.body.expectedRole,
+      reason: req.body.reason,
+    });
+    res.status(200).json({ user });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const clearAgeRejectionController = async (req, res, next) => {
+  try {
+    const user = await clearAgeEligibilityRejection({
+      userId: req.params.userId,
+      ownerId: req.user.userId,
       reason: req.body.reason,
     });
     res.status(200).json({ user });

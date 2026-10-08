@@ -78,6 +78,13 @@ export const messageStyles = StyleSheet.create({
   avatarText: { color: Colors.dark.text, fontSize: 18, fontWeight: "800" },
   name: { color: Colors.dark.text, fontSize: 17, fontWeight: "700" },
   meta: { color: Colors.dark.textMuted, fontSize: 11, marginTop: 5 },
+  reportAction: { alignSelf: "flex-start", paddingVertical: 4, marginTop: 2 },
+  reportText: {
+    color: Colors.dark.accent,
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
   state: { paddingVertical: 20, gap: 12 },
   error: { color: Colors.dark.danger, fontSize: 12, lineHeight: 18 },
   button: {

@@ -1,3 +1,4 @@
+import { TERMS_VERSION, PRIVACY_VERSION } from "../src/config/legal.js";
 import { beforeEach } from "node:test";
 import UserBlock from "../src/models/UserBlock.js";
 beforeEach((t) => {
@@ -97,6 +98,11 @@ test("a database promotion to owner is recognized even with an older token", asy
     emailVerified: true,
     accountStatus: "active",
     ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
+    legalAcceptance: {
+      acceptedAt: new Date(),
+      termsVersion: TERMS_VERSION,
+      privacyVersion: PRIVACY_VERSION,
+    },
   };
   t.mock.method(User, "findById", () => query(user));
   const token = jwt.sign(
@@ -124,6 +130,11 @@ test("another administrator cannot flag, suspend or ban an owner", async (t) => 
     emailVerified: true,
     accountStatus: "active",
     ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
+    legalAcceptance: {
+      acceptedAt: new Date(),
+      termsVersion: TERMS_VERSION,
+      privacyVersion: PRIVACY_VERSION,
+    },
   };
   t.mock.method(User, "findById", () => query(owner));
   for (const status of ["flagged", "suspended", "banned"]) {

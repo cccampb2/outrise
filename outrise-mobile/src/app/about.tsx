@@ -1,3 +1,4 @@
+import { LegalLinks } from "@/components/legal-acceptance";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import * as Linking from "expo-linking";
@@ -39,6 +40,7 @@ export default function AboutScreen() {
           <Text style={styles.backText}>BACK</Text>
         </Pressable>
         <BrandHeader label="ABOUT" />
+        <LegalLinks />
         <View style={styles.hero}>
           <View style={styles.rule} />
           <View style={{ flex: 1 }}>
@@ -54,13 +56,12 @@ export default function AboutScreen() {
           find people who push you to get better.
         </Text>
         <View style={styles.card}>
-          <Text style={styles.label}>MEET THE CREATOR</Text>
-          <Text style={styles.name}>Caleb Campbell</Text>
-          <Text style={styles.role}>CREATOR & DEVELOPER</Text>
+          <Text style={styles.label}>BEHIND OUTRISE</Text>
+          <Text style={styles.name}>Outrise Studio</Text>
+          <Text style={styles.role}>FITNESS · PROGRESS · COMMUNITY</Text>
           <Text style={styles.body}>
-            I’m Caleb, the creator and developer behind Outrise. I’m building an
-            app that brings personal progress and friendly competition together,
-            with room to keep growing alongside its community.
+            Outrise Studio builds tools for personal progress and friendly
+            competition, with room to keep growing alongside the community.
           </Text>
           <Text style={styles.body}>
             Thanks for being part of it. Your ideas and feedback help shape what
@@ -68,13 +69,13 @@ export default function AboutScreen() {
           </Text>
         </View>
         <View style={styles.contact}>
-          <Text style={styles.label}>GET IN TOUCH</Text>
+          <Text style={styles.label}>CONTACT OUTRISE STUDIO</Text>
           <Text style={styles.body}>
             Have a question or just want to say hello?
           </Text>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Email the creator"
+            accessibilityLabel="Email Outrise Studio"
             onPress={() => {
               void openEmail();
             }}
@@ -85,7 +86,7 @@ export default function AboutScreen() {
           >
             <Ionicons name="mail-outline" size={20} color={Colors.dark.text} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.buttonText}>EMAIL ME</Text>
+              <Text style={styles.buttonText}>CONTACT OUTRISE STUDIO</Text>
               <Text selectable style={styles.email}>
                 {contactEmail}
               </Text>

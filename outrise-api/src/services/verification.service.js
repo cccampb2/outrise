@@ -1,3 +1,4 @@
+import { isPendingVerificationOverdue } from "../config/verification.js";
 import { createHash } from "node:crypto";
 import Verification from "../models/Verification.js";
 import User from "../models/User.js";
@@ -331,6 +332,11 @@ export const rejectVerification = async ({
       if (verification.status !== "pending") {
         throw new ConflictError("Only pending verifications can be rejected");
       }
+      if (isPendingVerificationOverdue(verification)) {
+        throw new ConflictError(
+          "This verification has expired. The user can submit again.",
+        );
+      }
       verification.status = "rejected";
       verification.reviewedBy = adminId;
       verification.reviewedAt = new Date();
@@ -344,7 +350,7 @@ export const rejectVerification = async ({
   }
 };
 
-// TODO: Make the pending-to-approved transition atomic for concurrent admin reviews.
+// The transaction conflicts if another review or retention cleanup changes this record.
 export const approveVerification = async ({ verificationId, adminId }) => {
   const mongoSession = await mongoose.startSession();
 
@@ -362,6 +368,11 @@ export const approveVerification = async ({ verificationId, adminId }) => {
       }
 
       const reviewedAt = new Date();
+      if (isPendingVerificationOverdue(verification, reviewedAt)) {
+        throw new ConflictError(
+          "This verification has expired. The user can submit again.",
+        );
+      }
 
       verification.status = "approved";
       verification.reviewedBy = adminId;

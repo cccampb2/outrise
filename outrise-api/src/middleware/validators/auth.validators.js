@@ -10,7 +10,12 @@ const ageSchema = Joi.number()
     "number.min": "Outrise beta is available to adults aged 18 or older.",
   });
 
-export const ageEligibilitySchema = { body: Joi.object({ age: ageSchema }) };
+// Under-18 answers must reach the service so authenticated rejections can be remembered.
+export const ageEligibilitySchema = {
+  body: Joi.object({
+    age: Joi.number().integer().min(0).max(120).strict().required(),
+  }),
+};
 
 const passwordSchema = Joi.string()
   .min(8)
@@ -27,6 +32,9 @@ export const registerSchema = {
   body: Joi.object({
     username: Joi.string().trim().min(3).max(30).required(),
     age: ageSchema,
+    accepted: Joi.boolean().valid(true).strict().required(),
+    termsVersion: Joi.string().max(50).required(),
+    privacyVersion: Joi.string().max(50).required(),
     email: Joi.string().trim().email().required(),
     password: passwordSchema.required(),
   }),

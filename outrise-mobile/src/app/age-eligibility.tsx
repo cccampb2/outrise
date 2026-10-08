@@ -22,7 +22,7 @@ export default function AgeEligibilityScreen() {
   const dispatch = useDispatch<AppDispatch>();
   const client = useQueryClient();
   const [age, setAge] = useState("");
-  const [blocked, setBlocked] = useState(false);
+  const blocked = Boolean(user?.ageEligibilityRejectedAt);
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const inFlight = useRef(false);
@@ -36,18 +36,32 @@ export default function AgeEligibilityScreen() {
       setError("Enter a valid whole-number age.");
       return;
     }
-    if (Number(age) < 18) {
-      setBlocked(true);
-      setAge("");
-      return;
-    }
     const userId = user.id;
     const controller = new AbortController();
     activeRequest.current = controller;
     inFlight.current = true;
     setPending(true);
     try {
-      await confirmAgeEligibility(Number(age), controller.signal);
+      const result = await confirmAgeEligibility(
+        Number(age),
+        controller.signal,
+      );
+      if (result.ageEligibilityRejectedAt) {
+        if (
+          !controller.signal.aborted &&
+          store.getState().auth.user?.id === userId
+        ) {
+          dispatch(
+            setCurrentUser({
+              ...user,
+              ageEligibilityConfirmedAt: null,
+              ageEligibilityRejectedAt: result.ageEligibilityRejectedAt,
+            }),
+          );
+          setAge("");
+        }
+        return;
+      }
       const currentUser = await getCurrentUser(controller.signal);
       if (
         controller.signal.aborted ||
@@ -103,8 +117,8 @@ export default function AgeEligibilityScreen() {
         <Text style={styles.title}>Confirm your eligibility</Text>
         <Text style={styles.text}>
           {blocked
-            ? "Outrise beta is available to adults aged 18 or older. You cannot continue with this age."
-            : "Enter your current age to continue. We save only the date you confirm eligibility, not your age or birth date."}
+            ? "Outrise is available to adults aged 18 or older. This account is restricted based on your age answer. Signing in again or changing your answer will not clear it. Contact support if you made a mistake or are now eligible."
+            : "Enter your current age to continue. We do not save your age or birth date. An under-18 answer restricts this account until support reviews it."}
         </Text>
         {!blocked ? (
           <View style={styles.form}>
@@ -135,6 +149,15 @@ export default function AgeEligibilityScreen() {
             </Pressable>
           </View>
         ) : null}
+        {blocked && (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push("/report-issue")}
+            style={styles.signOut}
+          >
+            <Text style={styles.link}>CONTACT SUPPORT →</Text>
+          </Pressable>
+        )}
         <Pressable
           accessibilityRole="button"
           onPress={() => router.push("/delete-account")}

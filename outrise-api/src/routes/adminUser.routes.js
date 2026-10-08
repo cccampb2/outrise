@@ -7,12 +7,14 @@ import {
   adminUserIdSchema,
   adminUserStatusSchema,
   adminUserRoleSchema,
+  clearAgeRejectionSchema,
 } from "../middleware/validators/adminUser.validators.js";
 import {
   listAdminUsersController,
   getAdminUserController,
   setUserAccountStatusController,
   setUserRoleController,
+  clearAgeRejectionController,
 } from "../controllers/adminUser.controller.js";
 
 const router = express.Router();
@@ -29,5 +31,12 @@ router.patch(
   requireRole("owner"),
   validate(adminUserRoleSchema),
   setUserRoleController,
+  clearAgeRejectionController,
+);
+router.post(
+  "/:userId/age-eligibility/reset",
+  requireRole("owner"),
+  validate(clearAgeRejectionSchema),
+  clearAgeRejectionController,
 );
 export default router;

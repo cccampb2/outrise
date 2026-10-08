@@ -24,9 +24,11 @@ export const errorHandler = (error, req, res, next) => {
   }
   if (
     error.statusCode === 403 &&
-    ["EMAIL_VERIFICATION_REQUIRED", "AGE_ELIGIBILITY_REQUIRED"].includes(
-      error.code,
-    )
+    [
+      "EMAIL_VERIFICATION_REQUIRED",
+      "AGE_ELIGIBILITY_REQUIRED",
+      "LEGAL_ACCEPTANCE_REQUIRED",
+    ].includes(error.code)
   ) {
     return res
       .status(403)
