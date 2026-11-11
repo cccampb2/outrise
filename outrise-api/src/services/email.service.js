@@ -273,3 +273,26 @@ export const sendEmailVerificationEmail = async ({
     config,
   );
 };
+
+export const getAccountExistsEmailConfig = () => {
+  if (!process.env.RESEND_API_KEY?.trim())
+    throw new AppError("Email sending is not configured on the server.", 503);
+  return {
+    from: process.env.EMAIL_FROM?.trim() || DEFAULT_FROM,
+    templateId:
+      process.env.RESEND_ACCOUNT_EXISTS_TEMPLATE?.trim() ||
+      "account-exists-notice",
+  };
+};
+export const sendAccountExistsEmail = async ({ to, requestId }) => {
+  const config = getAccountExistsEmailConfig();
+  return sendAuthEmail(
+    {
+      to: [to],
+      subject: "Your Outrise account",
+      template: { id: config.templateId },
+    },
+    `account-exists/${requestId}`,
+    config,
+  );
+};

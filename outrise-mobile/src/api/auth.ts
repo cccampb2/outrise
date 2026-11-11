@@ -40,8 +40,10 @@ type RegisterCredentials = {
 };
 
 type RegisterResponse = {
-  token: string;
-  user: AuthUser;
+  message: string;
+  requestId: string;
+  expiresInMinutes: number;
+  resendAfterSeconds: number;
 };
 
 export async function login(
@@ -146,6 +148,28 @@ export async function confirmAgeEligibility(
   const response = await apiRequest("/auth/age-eligibility", {
     method: "POST",
     body: JSON.stringify({ age }),
+    signal,
+  });
+  return await response.json();
+}
+
+export async function resendRegistration(input: {
+  requestId: string;
+  email: string;
+}): Promise<RegisterResponse> {
+  const response = await apiRequest("/auth/register/resend", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  return await response.json();
+}
+export async function confirmRegistration(
+  input: { requestId: string; email: string; code: string },
+  signal?: AbortSignal,
+): Promise<{ token: string; user: AuthUser }> {
+  const response = await apiRequest("/auth/register/confirm", {
+    method: "POST",
+    body: JSON.stringify(input),
     signal,
   });
   return await response.json();

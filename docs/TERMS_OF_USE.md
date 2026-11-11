@@ -1,8 +1,8 @@
 # Outrise Terms of Use
 
-Effective date: 2026-10-07
+Effective date: 2026-10-08
 
-Version: 2026-10-07.1
+Version: 2026-10-08
 
 ## 1. About these Terms
 
@@ -13,6 +13,8 @@ Outrise is operated by Caleb Campbell in North Carolina, United States. These Te
 You must be at least 18 years old. Give your actual age when asked. Outrise relies on your declaration; an accepted answer is not independently verified age. An under-18 answer can restrict an existing account or temporarily prevent registration on that device. Do not evade these restrictions. Contact support about a mistake or if you are now eligible; restoration requires review.
 
 ## 3. Your account
+
+Registration requires confirming ownership of the email address before an account is created. Unfinished registration requests expire; you can request another code or restart registration.
 
 Provide accurate information, maintain access to your registered email, and keep your password confidential. Do not share, sell, or transfer your account, impersonate someone, or access an account without permission. Contact support if you suspect unauthorized access.
 

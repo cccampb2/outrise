@@ -1,3 +1,4 @@
+import { startRegistrationEmailJob } from "./jobs/registrationEmail.job.js";
 import { startSupportRetentionJob } from "./jobs/supportRetention.job.js";
 import Suggestion from "./models/Suggestion.js";
 import { startActivityRetentionJob } from "./jobs/activityRetention.job.js";
@@ -122,6 +123,7 @@ const startServer = async () => {
     startVerificationRetentionJob();
     startActivityRetentionJob();
     startSupportRetentionJob();
+    startRegistrationEmailJob();
     startWorkoutOfTheWeekJob();
     httpServer.listen(PORT, () => {
       logger.info(`Outrise API is running on port ${PORT}`);

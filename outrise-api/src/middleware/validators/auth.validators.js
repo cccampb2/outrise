@@ -35,14 +35,14 @@ export const registerSchema = {
     accepted: Joi.boolean().valid(true).strict().required(),
     termsVersion: Joi.string().max(50).required(),
     privacyVersion: Joi.string().max(50).required(),
-    email: Joi.string().trim().email().required(),
+    email: Joi.string().trim().lowercase().email().max(254).required(),
     password: passwordSchema.required(),
   }),
 };
 
 export const loginSchema = {
   body: Joi.object({
-    email: Joi.string().trim().email().required(),
+    email: Joi.string().trim().lowercase().email().max(254).required(),
     password: Joi.string().required(),
   }),
 };
@@ -74,6 +74,23 @@ export const requestEmailVerificationSchema = {
 
 export const verifyEmailSchema = {
   body: Joi.object({
+    code: Joi.string()
+      .trim()
+      .pattern(/^\d{6}$/)
+      .required(),
+  }),
+};
+
+export const resendRegistrationSchema = {
+  body: Joi.object({
+    requestId: Joi.string()
+      .pattern(/^[a-f0-9]{48}$/)
+      .required(),
+    email: Joi.string().trim().lowercase().email().max(254).required(),
+  }),
+};
+export const confirmRegistrationSchema = {
+  body: resendRegistrationSchema.body.keys({
     code: Joi.string()
       .trim()
       .pattern(/^\d{6}$/)

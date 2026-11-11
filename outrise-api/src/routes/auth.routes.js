@@ -7,6 +7,8 @@ import { acceptLegalSchema } from "../middleware/validators/legal.validators.js"
 import { validate } from "../middleware/validate.js";
 import {
   registerSchema,
+  resendRegistrationSchema,
+  confirmRegistrationSchema,
   ageEligibilitySchema,
   loginSchema,
   forgotPasswordSchema,
@@ -16,6 +18,8 @@ import {
 } from "../middleware/validators/auth.validators.js";
 import {
   register,
+  resendRegistrationController,
+  confirmRegistrationController,
   confirmAgeEligibilityController,
   login,
   forgotPassword,
@@ -49,7 +53,24 @@ router.post(
   validate(acceptLegalSchema),
   acceptLegalDocumentsController,
 );
-router.post("/register", validate(registerSchema), register);
+router.post(
+  "/register",
+  limitVerificationRequests,
+  validate(registerSchema),
+  register,
+);
+router.post(
+  "/register/resend",
+  limitVerificationRequests,
+  validate(resendRegistrationSchema),
+  resendRegistrationController,
+);
+router.post(
+  "/register/confirm",
+  limitVerificationAttempts,
+  validate(confirmRegistrationSchema),
+  confirmRegistrationController,
+);
 router.post("/login", validate(loginSchema), login);
 router.post(
   "/age-eligibility",

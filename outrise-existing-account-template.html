@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="supported-color-schemes" content="dark" />
+    <title>Your Outrise account</title>
+    <style>
+      body,
+      table,
+      td,
+      p,
+      h1 {
+        margin: 0;
+        padding: 0;
+      }
+      table {
+        border-collapse: collapse;
+      }
+      @media only screen and (max-width: 600px) {
+        .outer-padding {
+          padding: 24px 12px !important;
+        }
+        .card-padding {
+          padding: 28px 22px !important;
+        }
+        .email-title {
+          font-size: 26px !important;
+          line-height: 34px !important;
+        }
+      }
+    </style>
+  </head>
+  <!--
+    OUTRISE / RESEND EXISTING ACCOUNT TEMPLATE
+
+    Import: Resend > Templates > Create template, then paste or import this HTML.
+    Template alias: account-exists-notice
+    Sender: Outrise Support <support@outrisefitness.com>
+    Suggested subject: Your Outrise account
+
+    No custom variables are required.
+    Send only to the email address entered during registration, after the backend
+    confirms it belongs to an existing account. Do not return this information
+    in the public registration response.
+    Rate-limit delivery so repeated registration attempts cannot flood a mailbox.
+    This template does not sign anyone in, reset a password, or change an account.
+    No password, verification code, login token, or user profile details belong here.
+    Importing this file does not wire up the proposed registration flow.
+  -->
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      background-color: #03060a;
+      color: #b7c0c9;
+      -webkit-text-size-adjust: 100%;
+    "
+  >
+    <div
+      style="
+        display: none;
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        mso-hide: all;
+      "
+    >
+      An Outrise account already uses this email. Sign in or use Forgot Password
+      in the app.
+    </div>
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+      bgcolor="#03060A"
+      style="width: 100%; background-color: #03060a"
+    >
+      <tr>
+        <td class="outer-padding" align="center" style="padding: 48px 20px">
+          <!--[if mso]>
+          <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td>
+          <![endif]-->
+          <table
+            role="presentation"
+            width="100%"
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
+            style="width: 100%; max-width: 600px"
+          >
+            <tr>
+              <td
+                style="
+                  padding: 0 0 24px;
+                  font-family:
+                    &quot;Barlow Condensed&quot;, &quot;Arial Narrow&quot;,
+                    Arial, sans-serif;
+                  font-size: 30px;
+                  line-height: 36px;
+                  font-weight: 800;
+                  letter-spacing: 4px;
+                  color: #f1f5f9;
+                "
+              >
+                OUTRISE
+              </td>
+            </tr>
+            <tr>
+              <td
+                bgcolor="#050B14"
+                style="
+                  background-color: #050b14;
+                  border: 1px solid #162636;
+                  border-top: 3px solid #8c1a35;
+                "
+              >
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                >
+                  <tr>
+                    <td class="card-padding" style="padding: 36px 36px 32px">
+                      <p
+                        style="
+                          font-family: &quot;Barlow&quot;, Arial, sans-serif;
+                          font-size: 11px;
+                          line-height: 18px;
+                          font-weight: 700;
+                          letter-spacing: 1.6px;
+                          color: #9ba7b2;
+                        "
+                      >
+                        OUTRISE // ACCOUNT SUPPORT
+                      </p>
+                      <h1
+                        class="email-title"
+                        style="
+                          margin: 18px 0 24px;
+                          font-family:
+                            &quot;Barlow Condensed&quot;,
+                            &quot;Arial Narrow&quot;, Arial, sans-serif;
+                          font-size: 30px;
+                          line-height: 38px;
+                          font-weight: 700;
+                          color: #f1f5f9;
+                        "
+                      >
+                        You already have an account
+                      </h1>
+                      <p
+                        style="
+                          margin: 0 0 24px;
+                          font-family: &quot;Barlow&quot;, Arial, sans-serif;
+                          font-size: 16px;
+                          line-height: 26px;
+                          color: #c5ced7;
+                        "
+                      >
+                        Someone tried to create an Outrise account using this
+                        email address. An account already exists, so you don’t
+                        need to register again.
+                      </p>
+                      <table
+                        role="presentation"
+                        width="100%"
+                        cellpadding="0"
+                        cellspacing="0"
+                        border="0"
+                        bgcolor="#060D17"
+                        style="
+                          background-color: #060d17;
+                          border: 1px solid #1b334a;
+                        "
+                      >
+                        <tr>
+                          <td style="padding: 22px 24px">
+                            <p
+                              style="
+                                margin: 0 0 12px;
+                                font-family:
+                                  &quot;Barlow&quot;, Arial, sans-serif;
+                                font-size: 11px;
+                                line-height: 18px;
+                                font-weight: 700;
+                                letter-spacing: 1.6px;
+                                color: #9ba7b2;
+                              "
+                            >
+                              CONTINUE IN THE OUTRISE APP
+                            </p>
+                            <p
+                              style="
+                                font-family:
+                                  &quot;Barlow&quot;, Arial, sans-serif;
+                                font-size: 16px;
+                                line-height: 26px;
+                                color: #d3dbe3;
+                              "
+                            >
+                              Open Outrise and sign in. If you don’t remember
+                              your password, select
+                              <strong style="color: #f1f5f9"
+                                >Forgot Password</strong
+                              >
+                              on the sign-in screen.
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
+                      <p
+                        style="
+                          margin: 24px 0 0;
+                          font-family: &quot;Barlow&quot;, Arial, sans-serif;
+                          font-size: 14px;
+                          line-height: 23px;
+                          color: #b7c0c9;
+                        "
+                      >
+                        If this wasn’t you, you can ignore this email. This
+                        registration attempt has not changed your password or
+                        signed anyone into your account.
+                      </p>
+                      <p
+                        style="
+                          margin: 24px 0 0;
+                          font-family: &quot;Barlow&quot;, Arial, sans-serif;
+                          font-size: 15px;
+                          line-height: 24px;
+                          color: #b7c0c9;
+                        "
+                      >
+                        Outrise Studios
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      class="card-padding"
+                      style="
+                        padding: 22px 36px;
+                        border-top: 1px solid #162636;
+                        font-family: &quot;Barlow&quot;, Arial, sans-serif;
+                        font-size: 13px;
+                        line-height: 22px;
+                        color: #9ba7b2;
+                      "
+                    >
+                      Need help? Contact
+                      <a
+                        href="mailto:support@outrisefitness.com"
+                        style="color: #c5ced7; text-decoration: underline"
+                        >support@outrisefitness.com</a
+                      >
+                      or use
+                      <strong style="color: #c5ced7">Report an Issue</strong> on
+                      the sign-in screen.
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding: 26px 16px 0">
+                <p
+                  style="
+                    margin: 0 0 8px;
+                    font-family: &quot;Barlow&quot;, Arial, sans-serif;
+                    font-size: 11px;
+                    line-height: 18px;
+                    font-weight: 700;
+                    letter-spacing: 1.8px;
+                    color: #9ba7b2;
+                  "
+                >
+                  RISE BEYOND. GET BETTER.
+                </p>
+                <p
+                  style="
+                    font-family: &quot;Barlow&quot;, Arial, sans-serif;
+                    font-size: 12px;
+                    line-height: 20px;
+                    color: #9ba7b2;
+                  "
+                >
+                  outrisefitness.com
+                </p>
+              </td>
+            </tr>
+          </table>
+          <!--[if mso]>
+          </td></tr></table>
+          <![endif]-->
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

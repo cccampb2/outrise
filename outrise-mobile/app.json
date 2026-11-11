@@ -6,17 +6,58 @@
     "orientation": "portrait",
     "scheme": "outrise",
     "userInterfaceStyle": "automatic",
-    "ios": {},
+    "ios": {
+      "bundleIdentifier": "com.cccampb2.outrise",
+      "icon": "./assets/images/branding/app-icon.png"
+    },
     "android": {
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "output": "static"
+      "output": "static",
+      "favicon": "./assets/images/branding/app-icon.png"
     },
-    "plugins": ["expo-router", "expo-secure-store", "expo-video"],
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-video",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "enableSceneSupport": true
+          }
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/branding/splash.png",
+          "imageWidth": 300,
+          "resizeMode": "contain",
+          "backgroundColor": "#03060A",
+          "dark": {
+            "image": "./assets/images/branding/splash.png",
+            "backgroundColor": "#03060A"
+          },
+          "android": {
+            "image": "./assets/images/branding/app-icon.png",
+            "imageWidth": 200,
+            "resizeMode": "contain",
+            "backgroundColor": "#03060A",
+            "dark": {
+              "image": "./assets/images/branding/app-icon.png",
+              "backgroundColor": "#03060A"
+            }
+          }
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "icon": "./assets/images/branding/app-icon.png",
+    "backgroundColor": "#03060A"
   }
 }

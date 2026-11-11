@@ -10,6 +10,7 @@ import { AccountSessionGuard } from "@/components/account-session-guard";
 import { SocketSession } from "@/components/socket-session";
 
 SplashScreen.preventAutoHideAsync();
+SplashScreen.setOptions({ duration: 250, fade: true });
 
 const queryClient = new QueryClient();
 

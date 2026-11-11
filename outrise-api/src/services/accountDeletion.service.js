@@ -1,3 +1,4 @@
+import RegistrationRequest from "../models/RegistrationRequest.js";
 import UserBlock from "../models/UserBlock.js";
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
@@ -230,6 +231,16 @@ async function removeAccountRecords(job, session, setStep) {
   }
   setStep("Workout.deleteMany");
   await Workout.deleteMany({ owner: userId }, { session });
+  setStep("RegistrationRequest.deleteMany");
+  await RegistrationRequest.deleteMany(
+    {
+      $or: [
+        { completedUser: userId },
+        ...(user?.email ? [{ email: user.email }] : []),
+      ],
+    },
+    { session },
+  );
   // Support records contain copied addresses and free text, not only User references.
   const reportFilter = [{ reportedUser: userId }, { reporter: userId }];
   if (user?.email)

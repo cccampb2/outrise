@@ -7,8 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import AntDesign from "@expo/vector-icons/AntDesign";
-import { useDispatch } from "react-redux";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
 import {
   getSignupAgeRestriction,
@@ -20,15 +19,9 @@ import { register } from "@/api/auth";
 import { ApiError } from "@/api/client";
 import { Screen } from "@/components/screen";
 import { Colors, Fonts } from "@/constants/theme";
-import { saveToken } from "@/storage/auth-storage";
-import { clearCurrentUser } from "@/store/auth-slice";
-import type { AppDispatch } from "@/store/store";
 
 export default function RegisterScreen() {
-  const dispatch = useDispatch<AppDispatch>();
-  const client = useQueryClient();
   const inFlight = useRef(false);
-  const createdSession = useRef<{ token: string } | null>(null);
   const legalQuery = useQuery({
     queryKey: ["legal-documents"],
     queryFn: getLegalDocuments,
@@ -47,7 +40,6 @@ export default function RegisterScreen() {
     acceptedVersions?.termsVersion === legalVersions.termsVersion &&
     acceptedVersions?.privacyVersion === legalVersions.privacyVersion,
   );
-  const [accountCreated, setAccountCreated] = useState(false);
   const [age, setAge] = useState("");
   const [ageAccepted, setAgeAccepted] = useState(false);
   const [ageBlocked, setAgeBlocked] = useState(false);
@@ -98,94 +90,72 @@ export default function RegisterScreen() {
     if (inFlight.current || ageChecking || ageBlocked) return;
     setError("");
 
-    if (!createdSession.current) {
-      if (!legalChecked || !legalVersions || legalQuery.isError) {
-        setError(
-          "Read and accept the current Terms before creating your account.",
-        );
-        return;
-      }
-      if (
-        !ageAccepted ||
-        !/^\d{1,3}$/.test(age) ||
-        Number(age) < 18 ||
-        Number(age) > 120
-      ) {
-        setError("Confirm your age eligibility before creating an account.");
-        return;
-      }
-      if (!username.trim()) {
-        setError("Username is required");
-        return;
-      }
+    if (!legalChecked || !legalVersions || legalQuery.isError) {
+      setError(
+        "Read and accept the current Terms before creating your account.",
+      );
+      return;
+    }
+    if (
+      !ageAccepted ||
+      !/^\d{1,3}$/.test(age) ||
+      Number(age) < 18 ||
+      Number(age) > 120
+    ) {
+      setError("Confirm your age eligibility before creating an account.");
+      return;
+    }
+    if (!username.trim()) {
+      setError("Username is required");
+      return;
+    }
 
-      if (!email.trim()) {
-        setError("Email is required");
-        return;
-      }
+    if (!email.trim()) {
+      setError("Email is required");
+      return;
+    }
 
-      if (!password) {
-        setError("Password is required");
-        return;
-      }
+    if (!password) {
+      setError("Password is required");
+      return;
+    }
 
-      if (password !== confirmPassword) {
-        setError("Passwords do not match");
-        return;
-      }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
     }
 
     inFlight.current = true;
     setIsLoading(true);
 
     try {
-      if (!createdSession.current) {
-        if (!legalChecked || !legalVersions || legalQuery.isError) {
-          setError(
-            "Read and accept the current Terms before creating your account.",
-          );
-          return;
-        }
-        const data = await register({
-          username: username.trim(),
-          email: email.trim(),
-          password,
-          age: Number(age),
-          accepted: true,
-          termsVersion: legalVersions.termsVersion,
-          privacyVersion: legalVersions.privacyVersion,
-        });
-        // Preserve the session before local storage/cleanup. Continue can retry
-        // without registering the account again or sending another signup email.
-        createdSession.current = { token: data.token };
-        setAccountCreated(true);
-        setAge("");
-        setPassword("");
-        setConfirmPassword("");
-      }
-
-      await client.cancelQueries();
-      client.clear();
-      dispatch(clearCurrentUser());
-      await saveToken(createdSession.current.token);
-      // The existing entry screen loads /users/me and routes to verification.
-      // A temporary connection failure there keeps this token and offers retry.
-      router.replace("/");
+      const data = await register({
+        username: username.trim(),
+        email: email.trim().toLowerCase(),
+        password,
+        age: Number(age),
+        accepted: true,
+        ...legalVersions,
+      });
+      setPassword("");
+      setConfirmPassword("");
+      router.push({
+        pathname: "/confirm-registration",
+        params: {
+          email: email.trim().toLowerCase(),
+          requestId: data.requestId,
+          resendAt: String(Date.now() + data.resendAfterSeconds * 1000),
+        },
+      });
     } catch (error) {
-      if (createdSession.current) {
-        setError(
-          "Your account was created, but we couldn’t open your session. Tap Continue to try again.",
-        );
-      } else if (error instanceof ApiError) {
+      if (error instanceof ApiError) {
         setError(error.getDisplayMessage());
         if (error.status === 409 && error.message.includes("legal documents")) {
           setAcceptedVersions(null);
           void legalQuery.refetch();
         }
-      } else if (error instanceof Error) {
-        setError(error.message);
       } else {
-        setError("Unable to create account");
+        setError("Unable to start registration. Please try again.");
       }
     } finally {
       inFlight.current = false;
@@ -291,7 +261,7 @@ export default function RegisterScreen() {
               <TextInput
                 style={styles.input}
                 value={username}
-                editable={!isLoading && !accountCreated}
+                editable={!isLoading}
                 onChangeText={setUsername}
                 placeholder="Choose a username"
                 placeholderTextColor={Colors.dark.textMuted}
@@ -306,7 +276,7 @@ export default function RegisterScreen() {
               <TextInput
                 style={styles.input}
                 value={email}
-                editable={!isLoading && !accountCreated}
+                editable={!isLoading}
                 onChangeText={setEmail}
                 placeholder="Enter your email"
                 placeholderTextColor={Colors.dark.textMuted}
@@ -322,7 +292,7 @@ export default function RegisterScreen() {
                 <TextInput
                   style={[styles.input, styles.passwordInput]}
                   value={password}
-                  editable={!isLoading && !accountCreated}
+                  editable={!isLoading}
                   onChangeText={setPassword}
                   placeholder="Create a password"
                   placeholderTextColor={Colors.dark.textMuted}
@@ -330,7 +300,7 @@ export default function RegisterScreen() {
                 />
 
                 <Pressable
-                  disabled={isLoading || accountCreated}
+                  disabled={isLoading}
                   onPress={handleShowPassword}
                   style={({ pressed }) => [
                     styles.passwordShow,
@@ -352,7 +322,7 @@ export default function RegisterScreen() {
               <TextInput
                 style={[styles.input, styles.passwordInput]}
                 value={confirmPassword}
-                editable={!isLoading && !accountCreated}
+                editable={!isLoading}
                 onChangeText={setConfirmPassword}
                 placeholder="Enter your password again"
                 placeholderTextColor={Colors.dark.textMuted}
@@ -360,34 +330,30 @@ export default function RegisterScreen() {
               />
             </View>
 
-            {!accountCreated && (
-              <>
-                <LegalAcceptance
-                  checked={legalChecked}
-                  disabled={isLoading || !legalVersions || legalQuery.isError}
-                  onChange={(value) =>
-                    setAcceptedVersions(value ? legalVersions : null)
-                  }
-                />
-                {legalQuery.isPending && (
-                  <Text style={styles.subtitle}>
-                    Loading legal documents...
+            <>
+              <LegalAcceptance
+                checked={legalChecked}
+                disabled={isLoading || !legalVersions || legalQuery.isError}
+                onChange={(value) =>
+                  setAcceptedVersions(value ? legalVersions : null)
+                }
+              />
+              {legalQuery.isPending && (
+                <Text style={styles.subtitle}>Loading legal documents...</Text>
+              )}
+              {legalQuery.isError && (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => {
+                    void legalQuery.refetch();
+                  }}
+                >
+                  <Text style={styles.errorText}>
+                    Unable to load documents. RETRY →
                   </Text>
-                )}
-                {legalQuery.isError && (
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={() => {
-                      void legalQuery.refetch();
-                    }}
-                  >
-                    <Text style={styles.errorText}>
-                      Unable to load documents. RETRY →
-                    </Text>
-                  </Pressable>
-                )}
-              </>
-            )}
+                </Pressable>
+              )}
+            </>
             {error ? (
               <View style={styles.errorMessage}>
                 <View style={styles.errorTop}>
@@ -401,16 +367,12 @@ export default function RegisterScreen() {
             ) : null}
 
             <Pressable
-              disabled={
-                isLoading ||
-                (!accountCreated && (!legalChecked || legalQuery.isError))
-              }
+              disabled={isLoading || !legalChecked || legalQuery.isError}
               onPress={handleRegister}
               style={({ pressed }) => [
                 styles.createButton,
                 pressed && !isLoading && styles.createButtonPressed,
-                isLoading ||
-                (!accountCreated && (!legalChecked || legalQuery.isError))
+                isLoading || !legalChecked || legalQuery.isError
                   ? styles.buttonDisabled
                   : null,
               ]}
@@ -418,13 +380,7 @@ export default function RegisterScreen() {
               <View style={styles.buttonMarker} />
 
               <Text style={styles.createButtonText}>
-                {isLoading
-                  ? accountCreated
-                    ? "OPENING_ACCOUNT..."
-                    : "CREATING_ACCOUNT..."
-                  : accountCreated
-                    ? "CONTINUE"
-                    : "CREATE_ACCOUNT"}
+                {isLoading ? "SENDING_REQUEST..." : "CONTINUE"}
               </Text>
 
               <Text style={styles.buttonArrow}>→</Text>

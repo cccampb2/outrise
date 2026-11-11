@@ -125,6 +125,7 @@ EMAIL_FROM="Outrise Support <support@outrisefitness.com>"
 RESEND_SUPPORT_TEMPLATE=support-update
 RESEND_PASSWORD_RESET_TEMPLATE=password-reset
 RESEND_EMAIL_VERIFICATION_TEMPLATE=email-verification
+RESEND_ACCOUNT_EXISTS_TEMPLATE=account-exists-notice
 ```
 
 The email sender must be configured in Resend. Publish the corresponding Resend templates before testing email delivery. Environment files and real credentials should remain outside source control.
@@ -243,6 +244,16 @@ Outrise is developed by Outrise Studio. Contact support@outrisefitness.com for q
 
 Current beta Terms and Privacy Policy are served publicly by `GET /auth/legal` from `outrise-api/src/config/legal.js`. Reviewable copies are in [Terms of Use](docs/TERMS_OF_USE.md) and [Privacy Policy](docs/PRIVACY_POLICY.md). Review these documents before public release and finalize provider logs/backups and production hosting details.
 
-Registration requires an explicit unchecked-by-default acknowledgment. The backend validates document versions and stores `legalAcceptance.acceptedAt`, `termsVersion`, and `privacyVersion` on the User. Existing accounts accept through `/accept-terms`; API and Socket.IO access require current acceptance. Recovery, legal document access, support, and account deletion remain available.
+Registration requires an explicit unchecked-by-default acknowledgment. The backend validates document versions before requesting verification and again before creating the account, then stores `legalAcceptance.acceptedAt`, `termsVersion`, and `privacyVersion` on the User. Existing accounts accept through `/accept-terms`; API and Socket.IO access require current acceptance. Recovery, legal document access, support, and account deletion remain available.
 
 When changing wording, update the corresponding document version and review copy. A version change requires renewed acceptance. The latest acceptance remains on the user record; this is not a separate immutable acceptance-history system. Safety notices appear on exercise details, active workouts, and WOTW. These notices do not guarantee legal immunity.
+
+### Private registration
+
+`POST /auth/register` returns HTTP 202 with the same message, opaque request ID, and code/cooldown durations for every valid request. It does not check account availability or return a session. A temporary `RegistrationRequest` stores a password hash and legal/age confirmation dates; no plaintext password or entered age is retained.
+
+The registration email job runs at startup and every 10 seconds. It sends `email-verification` for a new address, or `account-exists-notice` for an existing one. Publish both Resend templates. `RESEND_ACCOUNT_EXISTS_TEMPLATE` optionally overrides the existing-account alias. A database cooldown limits deliveries to one registration email per address per minute; IP limits and five guesses per code also apply. Failed delivery retries up to three attempts while the request is valid.
+
+`POST /auth/register/confirm` accepts `requestId`, `email`, and the six-digit `code`. It creates the account transactionally with `emailVerified: true`, then returns a session. A successful confirmation can be retried with the same code before expiry without creating a second account. Username availability is checked only after email ownership is proven. `POST /auth/register/resend` accepts `requestId` and `email`, rotates the code after the cooldown, and returns the same generic response. Expired requests require starting again if TTL cleanup has already removed them.
+
+Requests expire after 10 minutes, including saved password hashes; MongoDB TTL deletion is asynchronous. The registration-email cooldown stores a keyed hash of the email, expires after 24 hours, and is not a user record. Existing account login, password reset, and verification remain available. No pending registration can overwrite an existing account or bypass its restrictions.

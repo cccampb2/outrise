@@ -1,6 +1,6 @@
 import { getToken } from "@/storage/auth-storage";
 
-export const API_URL = "http://192.168.1.144:3000";
+export const API_URL = "http://192.168.1.168:3000";
 
 export type ValidationErrorDetail = {
   segment: string;

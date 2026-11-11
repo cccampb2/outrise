@@ -1,63 +1,8 @@
 import bcrypt from "bcrypt";
-import { validateLegalAcceptance } from "./legal.service.js";
-import { TERMS_VERSION, PRIVACY_VERSION } from "../config/legal.js";
-import logger from "../utils/logger.js";
-import { requestEmailVerification } from "./emailVerification.service.js";
 import User from "../models/User.js";
-import ConflictError from "../errors/ConflictError.js";
 import UnauthorizedError from "../errors/UnauthorizedError.js";
 import { ensureAccountAccess } from "./accountAccess.service.js";
-
-import { validateAgeEligibility } from "./ageEligibility.service.js";
-
-export const registerUser = async ({
-  username,
-  email,
-  password,
-  age,
-  accepted,
-  termsVersion,
-  privacyVersion,
-}) => {
-  validateAgeEligibility(age);
-  validateLegalAcceptance({ accepted, termsVersion, privacyVersion });
-  const existingEmail = await User.findOne({ email });
-
-  if (existingEmail) {
-    throw new ConflictError("Email already in use");
-  }
-
-  const existingUsername = await User.findOne({ username });
-
-  if (existingUsername) {
-    throw new ConflictError("Username already in use");
-  }
-
-  const hashedPassword = await bcrypt.hash(password, 12);
-
-  const user = await User.create({
-    username,
-    email,
-    password: hashedPassword,
-    ageEligibilityConfirmedAt: new Date(),
-    legalAcceptance: {
-      acceptedAt: new Date(),
-      termsVersion: TERMS_VERSION,
-      privacyVersion: PRIVACY_VERSION,
-    },
-  });
-  try {
-    await requestEmailVerification({ userId: user._id });
-  } catch (error) {
-    // The account already exists. Continue into the verification screen with a
-    // session so the user can request another code without repeating signup.
-    logger.warn(
-      "Initial verification email delivery could not be confirmed.",
-      error.deliveryFailure || { reason: "EMAIL_CONFIGURATION" },
-    );
-  }
-  return user;
-};
+export { requestRegistration as registerUser } from "./registration.service.js";
 
 export const loginUser = async ({ email, password }) => {
   const user = await User.findOne({ email }).select("+password +tokenVersion");

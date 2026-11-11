@@ -1,8 +1,8 @@
 # Outrise Privacy Policy
 
-Effective date: 2026-10-07
+Effective date: 2026-10-08
 
-Version: 2026-10-07.1
+Version: 2026-10-08
 
 ## 1. Who operates Outrise
 
@@ -10,7 +10,7 @@ Caleb Campbell operates Outrise in North Carolina, United States. Contact suppor
 
 ## 2. Information you provide
 
-We store account email, username, a password hash rather than your original password, email-verification status, and account settings. Optional profile information includes names, name visibility, bio, and a profile image. We store faction membership, workout templates and sessions, exercise performance, personal records, XP, levels, achievements, competition contributions, verification submissions and review results, friendships, messages and read status, blocks, notifications, reports, suggestions, and moderation records. Legal acceptance stores a server date and document versions. We do not store your entered age or birth date; accepted and rejected age answers are recorded as dates. Registration can store a temporary age-retry deadline on your device.
+We store account email, username, a password hash rather than your original password, email-verification status, and account settings. Before account creation, a temporary registration request stores your email, chosen username, password hash, age-eligibility confirmation date, legal acknowledgment, and hashed verification state. Email ownership must be confirmed before an account or login session is created. Optional profile information includes names, name visibility, bio, and a profile image. We store faction membership, workout templates and sessions, exercise performance, personal records, XP, levels, achievements, competition contributions, verification submissions and review results, friendships, messages and read status, blocks, notifications, reports, suggestions, and moderation records. Legal acceptance stores a server date and document versions. We do not store your entered age or birth date; accepted and rejected age answers are recorded as dates. Registration can store a temporary age-retry deadline on your device.
 
 ## 3. Technical information and device storage
 
@@ -34,7 +34,7 @@ MongoDB Atlas stores application records. Cloudinary stores and serves profile i
 
 ## 8. Retention
 
-Most account, workout, progress, relationship, and message records remain while the account exists unless removed through available features. Reviewed verification videos are eligible for removal 30 days after approval or rejection, while the result remains. Pending submissions expire without approval or rejection 30 days after submission. Their videos become eligible for removal, while the submission record remains and the user can submit again. Activity events are eligible for removal after 90 days, together with associated notification and dismissal state; owner announcement records have a separate lifecycle. Resolved support reports and closed suggestions are eligible for removal after 12 calendar months. Reports with pending email replies remain. Moderation history stays while an account is flagged, suspended, or banned; for active accounts, the cleanup records resolution when first observed and removes resolved history after 12 months. Old resolved records lacking dates receive a fresh timer. Reopening a suggestion clears its timer; saving it as closed starts a new timer. Scheduled cleanup depends on backend availability and retries failures. Separate provider logs and backup retention are not yet assigned a finalized duration, so this notice does not promise a fixed deadline for those copies.
+Most account, workout, progress, relationship, and message records remain while the account exists unless removed through available features. Temporary registration requests and their password hashes expire after 10 minutes; requesting a new code renews that period. Expired requests are removed by database cleanup, which may run after the exact expiry time. A hashed email identifier enforces a registration-email cooldown and expires after 24 hours. Reviewed verification videos are eligible for removal 30 days after approval or rejection, while the result remains. Pending submissions expire without approval or rejection 30 days after submission. Their videos become eligible for removal, while the submission record remains and the user can submit again. Activity events are eligible for removal after 90 days, together with associated notification and dismissal state; owner announcement records have a separate lifecycle. Resolved support reports and closed suggestions are eligible for removal after 12 calendar months. Reports with pending email replies remain. Moderation history stays while an account is flagged, suspended, or banned; for active accounts, the cleanup records resolution when first observed and removes resolved history after 12 months. Old resolved records lacking dates receive a fresh timer. Reopening a suggestion clears its timer; saving it as closed starts a new timer. Scheduled cleanup depends on backend availability and retries failures. Separate provider logs and backup retention are not yet assigned a finalized duration, so this notice does not promise a fixed deadline for those copies.
 
 ## 9. Deletion and your choices
 

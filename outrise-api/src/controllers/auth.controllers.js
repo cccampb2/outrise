@@ -1,3 +1,7 @@
+import {
+  resendRegistration,
+  confirmRegistration,
+} from "../services/registration.service.js";
 import { hasCurrentLegalAcceptance } from "../services/legal.service.js";
 import { registerUser, loginUser } from "../services/auth.services.js";
 import jwt from "jsonwebtoken";
@@ -30,7 +34,7 @@ export const register = async (req, res, next) => {
       privacyVersion,
     } = req.body;
 
-    const user = await registerUser({
+    const result = await registerUser({
       username,
       email,
       password,
@@ -39,8 +43,24 @@ export const register = async (req, res, next) => {
       termsVersion,
       privacyVersion,
     });
-    const token = createSessionToken(user);
+    res.status(202).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
 
+export const resendRegistrationController = async (req, res, next) => {
+  try {
+    const result = await resendRegistration(req.body);
+    res.status(202).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+export const confirmRegistrationController = async (req, res, next) => {
+  try {
+    const user = await confirmRegistration(req.body);
+    const token = createSessionToken(user);
     res.status(201).json({
       token,
       user: {

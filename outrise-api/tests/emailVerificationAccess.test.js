@@ -1,3 +1,4 @@
+import RegistrationRequest from "../src/models/RegistrationRequest.js";
 import { TERMS_VERSION, PRIVACY_VERSION } from "../src/config/legal.js";
 const legalAcceptance = {
   acceptedAt: new Date("2026-10-07T12:00:00Z"),
@@ -363,50 +364,32 @@ test("new accounts start unverified and verification secrets are excluded from n
   }
 });
 
-test("signup requests one initial code and returns an unverified account without exposing code state", async (t) => {
+test("registration starts privately without touching accounts or returning a session", async (t) => {
   withSecret(t);
   const previousKey = process.env.RESEND_API_KEY;
-  process.env.RESEND_API_KEY = "re_verification_access_test_only";
+  process.env.RESEND_API_KEY = "test-key";
   t.after(() => {
     if (previousKey === undefined) delete process.env.RESEND_API_KEY;
     else process.env.RESEND_API_KEY = previousKey;
   });
-  const user = {
-    _id: userId,
-    username: "Tester",
-    email: "tester@example.com",
-    role: "user",
-    accountStatus: "active",
-    ageEligibilityConfirmedAt: new Date("2026-10-05T12:00:00Z"),
-    legalAcceptance,
-    faction: null,
-    emailVerified: false,
-  };
-  t.mock.method(User, "findOne", (filter) => query(filter._id ? user : null));
-  t.mock.method(User, "create", async () => user);
-  t.mock.method(User, "findById", () => query(user));
-  const writes = [];
-  t.mock.method(User, "findOneAndUpdate", (filter, update) => {
-    writes.push({ filter, update });
-    return query(user);
-  });
+  t.mock.method(User, "findOne", () => assert.fail("no account lookup"));
+  t.mock.method(User, "create", () => assert.fail("no account creation"));
   t.mock.method(bcrypt, "hash", async () => "test-password-hash");
-  const deliveries = [];
-  t.mock.method(globalThis, "fetch", async (url, options) => {
-    assert.equal(url, "https://api.resend.com/emails");
-    deliveries.push(JSON.parse(options.body));
-    return {
-      ok: true,
-      status: 200,
-      json: async () => ({ id: "verification-signup-test-email" }),
-    };
+  t.mock.method(RegistrationRequest, "create", async (input) => {
+    assert.equal(input.passwordHash, "test-password-hash");
+    assert.equal(input.age, undefined);
+    assert.equal(input.password, undefined);
+    return input;
   });
+  t.mock.method(globalThis, "fetch", () =>
+    assert.fail("no email delivery in HTTP request"),
+  );
   let payload;
   await register(
     {
       body: {
-        username: user.username,
-        email: user.email,
+        username: "Tester",
+        email: "tester@example.com",
         password: "password123",
         age: 18,
         accepted: true,
@@ -416,7 +399,7 @@ test("signup requests one initial code and returns an unverified account without
     },
     {
       status(code) {
-        assert.equal(code, 201);
+        assert.equal(code, 202);
         return this;
       },
       json(value) {
@@ -427,21 +410,8 @@ test("signup requests one initial code and returns an unverified account without
       throw error;
     },
   );
-  // Allow a deliberately detached email send to settle without relying on network.
-  await new Promise((resolve) => setImmediate(resolve));
-  assert.equal(payload.user.emailVerified, false);
-  assert.equal(
-    writes.filter(({ update }) => update.$set?.emailVerification).length,
-    1,
-  );
-  assert.equal(deliveries.length, 1);
-  assert.deepEqual(deliveries[0].to, [user.email]);
-  assert.match(deliveries[0].template.variables.VERIFICATION_CODE, /^\d{6}$/);
-  assert.equal(
-    typeof deliveries[0].template.variables.VERIFICATION_CODE,
-    "string",
-  );
-  assert.equal(payload.user.emailVerification, undefined);
-  assert.equal(payload.user.emailVerificationRequestedAt, undefined);
+  assert.match(payload.requestId, /^[a-f0-9]{48}$/);
+  assert.equal(payload.token, undefined);
+  assert.equal(payload.user, undefined);
   assert.ok(!JSON.stringify(payload).includes("codeHash"));
 });

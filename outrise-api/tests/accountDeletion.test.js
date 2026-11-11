@@ -1,6 +1,10 @@
+import RegistrationRequest from "../src/models/RegistrationRequest.js";
 import { beforeEach } from "node:test";
 import UserBlock from "../src/models/UserBlock.js";
 beforeEach((t) => {
+  t.mock.method(RegistrationRequest, "deleteMany", async () => ({
+    deletedCount: 0,
+  }));
   t.mock.method(UserBlock, "find", () => ({
     select() {
       return this;

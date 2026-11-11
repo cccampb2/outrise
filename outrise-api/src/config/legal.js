@@ -3,8 +3,8 @@
 export const legalDocuments = {
   terms: {
     title: "Terms of Use",
-    version: "2026-10-07.1",
-    effectiveDate: "2026-10-07",
+    version: "2026-10-08",
+    effectiveDate: "2026-10-08",
     sections: [
       {
         title: "About these Terms",
@@ -16,7 +16,7 @@ export const legalDocuments = {
       },
       {
         title: "Your account",
-        body: "Provide accurate information, maintain access to your registered email, and keep your password confidential. Do not share, sell, or transfer your account, impersonate someone, or access an account without permission. Contact support if you suspect unauthorized access.",
+        body: "Registration requires confirming ownership of the email address before an account is created. Unfinished registration requests expire; you can request another code or restart registration. Provide accurate information, maintain access to your registered email, and keep your password confidential. Do not share, sell, or transfer your account, impersonate someone, or access an account without permission. Contact support if you suspect unauthorized access.",
       },
       {
         title: "Exercise safety and acknowledgment of risk",
@@ -86,8 +86,8 @@ export const legalDocuments = {
   },
   privacy: {
     title: "Privacy Policy",
-    version: "2026-10-07.1",
-    effectiveDate: "2026-10-07",
+    version: "2026-10-08",
+    effectiveDate: "2026-10-08",
     sections: [
       {
         title: "Who operates Outrise",
@@ -95,7 +95,7 @@ export const legalDocuments = {
       },
       {
         title: "Information you provide",
-        body: "We store account email, username, a password hash rather than your original password, email-verification status, and account settings. Optional profile information includes names, name visibility, bio, and a profile image. We store faction membership, workout templates and sessions, exercise performance, personal records, XP, levels, achievements, competition contributions, verification submissions and review results, friendships, messages and read status, blocks, notifications, reports, suggestions, and moderation records. Legal acceptance stores a server date and document versions. We do not store your entered age or birth date; accepted and rejected age answers are recorded as dates. Registration can store a temporary age-retry deadline on your device.",
+        body: "We store account email, username, a password hash rather than your original password, email-verification status, and account settings. Before account creation, a temporary registration request stores your email, chosen username, password hash, age-eligibility confirmation date, legal acknowledgment, and hashed verification state. Email ownership must be confirmed before an account or login session is created. Optional profile information includes names, name visibility, bio, and a profile image. We store faction membership, workout templates and sessions, exercise performance, personal records, XP, levels, achievements, competition contributions, verification submissions and review results, friendships, messages and read status, blocks, notifications, reports, suggestions, and moderation records. Legal acceptance stores a server date and document versions. We do not store your entered age or birth date; accepted and rejected age answers are recorded as dates. Registration can store a temporary age-retry deadline on your device.",
       },
       {
         title: "Technical information and device storage",
@@ -119,7 +119,7 @@ export const legalDocuments = {
       },
       {
         title: "Retention",
-        body: "Most account, workout, progress, relationship, and message records remain while the account exists unless removed through available features. Reviewed verification videos are eligible for removal 30 days after approval or rejection, while the result remains. Pending submissions expire without approval or rejection 30 days after submission. Their videos become eligible for removal, while the submission record remains and the user can submit again. Activity events are eligible for removal after 90 days, together with associated notification and dismissal state; owner announcement records have a separate lifecycle. Resolved support reports and closed suggestions are eligible for removal after 12 calendar months. Reports with pending email replies remain. Moderation history stays while an account is flagged, suspended, or banned; for active accounts, the cleanup records resolution when first observed and removes resolved history after 12 months. Old resolved records lacking dates receive a fresh timer. Reopening a suggestion clears its timer; saving it as closed starts a new timer. Scheduled cleanup depends on backend availability and retries failures. Separate provider logs and backup retention are not yet assigned a finalized duration, so this notice does not promise a fixed deadline for those copies.",
+        body: "Most account, workout, progress, relationship, and message records remain while the account exists unless removed through available features. Temporary registration requests and their password hashes expire after 10 minutes; requesting a new code renews that period. Expired requests are removed by database cleanup, which may run after the exact expiry time. A hashed email identifier enforces a registration-email cooldown and expires after 24 hours. Reviewed verification videos are eligible for removal 30 days after approval or rejection, while the result remains. Pending submissions expire without approval or rejection 30 days after submission. Their videos become eligible for removal, while the submission record remains and the user can submit again. Activity events are eligible for removal after 90 days, together with associated notification and dismissal state; owner announcement records have a separate lifecycle. Resolved support reports and closed suggestions are eligible for removal after 12 calendar months. Reports with pending email replies remain. Moderation history stays while an account is flagged, suspended, or banned; for active accounts, the cleanup records resolution when first observed and removes resolved history after 12 months. Old resolved records lacking dates receive a fresh timer. Reopening a suggestion clears its timer; saving it as closed starts a new timer. Scheduled cleanup depends on backend availability and retries failures. Separate provider logs and backup retention are not yet assigned a finalized duration, so this notice does not promise a fixed deadline for those copies.",
       },
       {
         title: "Deletion and your choices",
